@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap');
 
 @import "tailwindcss";
 :root {
@@ -56,6 +57,11 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.trade-font {
+  font-family: 'Trade Winds';
+}
+
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -68,3 +74,5 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
