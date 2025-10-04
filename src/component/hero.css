@@ -1,20 +1,73 @@
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
-    width: 100vw;
-    height: 100vh;
-  }
-  
-  /* Background */
-  .bg {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Sky background */
+.bg {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: url('../images/sky.png'); 
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/background.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-  }
+    z-index: -1;
+    /* Use a negative z-index so it's behind everything else. */
+}
+
+/* Castle foreground */
+.castle {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    /* The castle div should be full-width */
+    height: 98vh;
+    
+    scale:1;
+    z-index: 5;
+    /* A positive z-index to bring it in front of the background */
+}
+
+.cloud1 {
+    position: absolute;
   
+    right: 0;
+    top: 25%;
+    height: 80vh;
+    width: 70%;
+    scale: 1;
+    z-index: 3;
+}
+
+.cloud2 {
+   
+    position: absolute;
+    left: 10%;
+    top: 20%;
+    height: 80vh;
+    width: 70%;
+    scale: 1.4;
+    z-index: 1;
+}
+
+.icon {
+    background-image: url('../images/icon.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: fixed;
+    top: 5;
+    left: 15;
+    height: 20vh;
+    width: 20%;
+    z-index: 5;
+}
