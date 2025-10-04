@@ -4,6 +4,7 @@ import Typewriter from "./typewriter";
 import "./navbar.css";
 import Hover_Animate from "./gsap/nav_icon";
 
+import { Link } from "react-router-dom";
 
 
 
@@ -49,9 +50,9 @@ export default function Sidebar() {
             onClick={() => setMenu(false)}
           >
             {/* Icon */}
-            <TextSplit text_name="icon_name">             
+            
               <Typewriter text="Chaitanya 1.0" className="icon_name  price-font mr-45"></Typewriter>
-            </TextSplit>
+           
 
             {/* Text */}
 
@@ -80,11 +81,28 @@ export default function Sidebar() {
 
             {/* Links */}
             <ul className="trade-font text-3xl p-5 space-y-4 gap-y-6 text-white">
-              <li className="hover:text-shadow-white cursor-pointer" onClick={() => setMenu(false)}>Home</li>
-              <li className="hover:text-shadow-white cursor-pointer" onClick={() => setMenu(false)}>About Us</li>
-              <li className="hover:text-shadow-white cursor-pointer" onClick={() => setMenu(false)}>Events</li>
-              <li className="hover:text-shadow-white cursor-pointer" onClick={() => setMenu(false)}>Register</li>
+              <li>
+                <Link to="/" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/events" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                  Register
+                </Link>
+              </li>
             </ul>
+
           </div>
         </>
       )}
