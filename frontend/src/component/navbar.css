@@ -1,0 +1,33 @@
+/* Ensure icon-fest uses correct size and font */
+.icon_name {
+  font-family: 'price-down', cursive; /* Uses @font-face */       
+  font-size: 7rem;
+  color: white;
+  justify-self: center;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  margin-bottom: 2rem;
+  padding-right: 25rem;
+  animation: glow 2s infinite alternate;
+}
+
+/* Style for nav links container */
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+/* Ensure trade-font applies */
+.trade-font {
+  font-family: 'Trade Winds', cursive;
+}
+
+/* Optional: Hover effect */
+.hover\:text-shadow-white:hover {
+  text-shadow: 0 0 4px white;
+}
+
+/* Optional: Glowing animation */

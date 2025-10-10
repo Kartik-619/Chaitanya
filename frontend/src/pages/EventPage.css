@@ -1,0 +1,153 @@
+/* EventPage.css */
+
+/* Base styles */
+.relative {
+  position: relative;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.text-white {
+  color: white;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.z-0 {
+  z-index: 0;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+/* Background gradient */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.from-\[#0f0524\] {
+  --tw-gradient-from: #0f0524;
+  --tw-gradient-to: rgba(15, 5, 36, 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.via-\[#1a0b2f\] {
+  --tw-gradient-to: rgba(26, 11, 47, 0);
+  --tw-gradient-stops: var(--tw-gradient-from), #1a0b2f, var(--tw-gradient-to);
+}
+
+.to-\[#0f0524\] {
+  --tw-gradient-to: #0f0524;
+}
+
+/* Sparkle pattern */
+.bg-sparkle-pattern {
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.7), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+}
+
+/* Additional utility classes needed */
+.top-20 {
+  top: 5rem;
+}
+
+.-top-10 {
+  top: -2.5rem;
+}
+
+.w-\[200\%\] {
+  width: 200%;
+}
+
+.w-\[150\%\] {
+  width: 150%;
+}
+
+.w-\[180\%\] {
+  width: 180%;
+}
+
+.opacity-20 {
+  opacity: 0.2;
+}
+
+/* Ensure background divs fully cover screen */
+.absolute.inset-0 {
+  width: 100%;
+  height: 100%;
+}
+
+/* Smooth scrolling behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .bg-sparkle-pattern {
+    background-size: 150px 75px;
+  }
+}
+
+/* Fix for very small screens */
+@media (max-width: 480px) {
+  .bg-sparkle-pattern {
+    background-size: 100px 50px;
+    opacity: 0.15;
+  }
+}
+
+/* Ensure the EventSection content is properly positioned */
+.relative.z-10 {
+  position: relative;
+  z-index: 10;
+}
+
+/* Prevent horizontal scroll */
+body {
+  overflow-x: hidden;
+}
+
+/* Fix for background layers stacking */
+.absolute.inset-0 > div {
+  pointer-events: none;
+}
+
+.relative.z-10 {
+  pointer-events: auto;
+}

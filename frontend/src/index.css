@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap');
+/*@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap');*/
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
 :root {
@@ -18,7 +19,7 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #ffffff;
   text-decoration: inherit;
 }
 a:hover {
@@ -56,9 +57,19 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+@font-face {
+  font-family: "price-down";
+  src: url("/pricedown.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.price-font {
+  font-family: "price-down", sans-serif;
+}
 
 .trade-font {
-  font-family: 'Trade Winds';
+  font-family: 'Trade Winds', cursive;
 }
 
 
@@ -74,5 +85,6 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
 
 
