@@ -2,14 +2,7 @@
 import { useState } from "react";
 import Typewriter from "./typewriter";
 import "./navbar.css";
-import Hover_Animate from "./gsap/nav_icon";
-
 import { Link } from "react-router-dom";
-
-
-
-
-
 
 // Hamburger Icon (☰)
 const MenuIcon = (props) => (
@@ -30,7 +23,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Tiny Toggle Button - Always Top-Right */}
+      {/* Toggle Button */}
       <button
         type="button"
         className="fixed top-5 right-5 z-50 p-2 cursor-pointer text-white hover:bg-white hover:bg-opacity-10 rounded transition"
@@ -40,69 +33,79 @@ export default function Sidebar() {
         <MenuIcon className="w-6 h-6" />
       </button>
 
-      {/* Sidebar Overlay - Only Appears When Open */}
+      {/* Overlay (when open) */}
       {menu && (
         <>
           {/* Backdrop */}
-
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-40"
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
             onClick={() => setMenu(false)}
           >
-            {/* Icon */}
-            
-              <Typewriter text="Chaitanya 1.0" className="icon_name  price-font mr-45"></Typewriter>
-           
-
-            {/* Text */}
-
+            {/* Logo Text */}
+            <Typewriter
+              text="Chaitanya 1.0"
+              className="icon_name price-font text-9xl md:text-9xl text-center"
+            />
           </div>
-
-
 
           {/* Sidebar Panel */}
           <div
-            className="fixed top-0 right-0 h-full w-96 bg-stone-800 shadow-xl z-50 transform transition-transform duration-300"
-            style={{ boxShadow: "0 0 30px rgba(0,0,0,0.3)" }}
+            className="fixed top-0 right-0 h-full w-110 bg-stone-900 shadow-xl z-50 transform transition-transform duration-300 ease-in-out"
+            style={{ boxShadow: "0 0 30px rgba(0,0,0,0.5)" }}
             onClick={(e) => e.stopPropagation()}
           >
-
             {/* Header */}
-            <div className="p-5 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="price-font text-4xl  font-bold text-gray-100">Menu</h3>
+            <div className="p-5 pl-25 border-b border-gray-600 flex justify-between items-center bg-stone-800">
+              <h3 className="trade-font self-center ml-25rem text-3xl  font-bold text-white">Menu</h3>
               <button
                 onClick={() => setMenu(false)}
-                className="p-1 hover:bg-gray-100 rounded transition"
+                className="p-1 hover:bg-gray-700 rounded transition"
                 aria-label="Close menu"
               >
                 <CloseIcon className="text-white w-5 h-5" />
               </button>
             </div>
 
-            {/* Links */}
-            <ul className="trade-font text-3xl p-5 space-y-4 gap-y-6 text-white">
+            {/* Navigation Links */}
+            <ul className="nav-links">
               <li>
-                <Link to="/" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                <Link
+                  to="/"
+                  onClick={() => setMenu(false)}
+                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                >
                   Home
                 </Link>
               </li>
+              
               <li>
-                <Link to="/about" onClick={() => setMenu(false)} className="hover:text-shadow-white">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/events" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                <Link
+                  to="/events"
+                  onClick={() => setMenu(false)}
+                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                >
                   Events
                 </Link>
               </li>
               <li>
-                <Link to="/register" onClick={() => setMenu(false)} className="hover:text-shadow-white">
+                <Link
+                  to="/register"
+                  onClick={() => setMenu(false)}
+                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                >
                   Register
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/sponsor"
+                  onClick={() => setMenu(false)}
+                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                >
+                 Sponsor Us
+                </Link>
+              </li>
             </ul>
-
           </div>
         </>
       )}

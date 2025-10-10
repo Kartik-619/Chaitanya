@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap');
+/*@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap');*/
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
-
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -19,7 +19,7 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #ffffff;
   text-decoration: inherit;
 }
 a:hover {
@@ -69,7 +69,7 @@ button:focus-visible {
 }
 
 .trade-font {
-  font-family: 'Trade Winds';
+  font-family: 'Trade Winds', cursive;
 }
 
 
@@ -85,5 +85,6 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
 
 

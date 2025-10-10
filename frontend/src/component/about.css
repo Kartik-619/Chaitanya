@@ -1,0 +1,342 @@
+/* ===== VARIABLES ===== */
+:root {
+  --parchment: #fdf6e3;
+  --border-gold: #c19a6b;
+  --dark-gold: #8b5a2b;
+  --primary-brown: #5b3415;
+  --secondary-brown: #3e2a14;
+  --shadow-light: rgba(0,0,0,0.1);
+  --shadow-medium: rgba(0,0,0,0.2);
+  --shadow-dark: rgba(0,0,0,0.3);
+  --transition: 0.3s ease;
+}
+
+/* ===== MAIN SECTION ===== */
+.about-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: 
+    linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)),
+    url('/images/bg2.jpg') center/cover no-repeat;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  perspective: 2000px;
+}
+
+/* ===== BOOK CONTAINER ===== */
+.book-container {
+  position: relative;
+  width: min(90%, 800px);
+  height: min(70vh, 500px);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 15px 30px var(--shadow-dark));
+}
+
+/* ===== PAGES ===== */
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  border-radius: 8px 15px 15px 8px;
+  transform-origin: left center;
+  transition: transform 1.5s ease;
+}
+
+.front-page {
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+.back-page {
+  z-index: 1;
+  transform: rotateY(180deg);
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+  padding: 2.5rem;
+  background: 
+    radial-gradient(circle at top left, rgba(255, 255, 200, 0.3), transparent 70%),
+    radial-gradient(circle at bottom right, rgba(180, 120, 60, 0.2), transparent 70%),
+    url('https://www.transparenttextures.com/patterns/papyrus.png'),
+    var(--parchment);
+  background-blend-mode: multiply;
+  background-size: cover;
+  border: 2px solid var(--border-gold);
+  border-radius: inherit;
+  box-shadow: 
+    inset 0 0 20px var(--shadow-light),
+    0 5px 15px var(--shadow-medium);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== PAGE SHADOW ===== */
+.page-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--shadow-dark) 0%,
+    transparent 3%,
+    transparent 97%,
+    var(--shadow-dark) 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.3;
+}
+
+/* ===== PAGE CORNER FOLD ===== */
+.page-corner {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 50px;
+  background: linear-gradient(135deg, transparent 45%, var(--shadow-dark) 50%, transparent 55%);
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.page-corner.visible {
+  opacity: 0.6;
+}
+
+.page-corner.forward {
+  right: 8%;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.page-corner.backward {
+  left: 8%;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+/* ===== SCROLL INDICATORS ===== */
+.scroll-indicators {
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 100;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  transition: all var(--transition);
+}
+
+.indicator.active {
+  background: var(--border-gold);
+  border-color: var(--dark-gold);
+  transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(193, 154, 107, 0.5);
+}
+
+/* ===== SCROLL HINT ===== */
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* ===== SECTION COUNTER ===== */
+.section-counter {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10;
+  border: 1px solid rgba(193, 154, 107, 0.3);
+}
+
+/* ===== SCROLL PROTECTION ===== */
+.scroll-protection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 9999;
+  cursor: not-allowed;
+}
+
+/* ===== TYPOGRAPHY ===== */
+.page-content h1 {
+  font-family: "Cinzel", serif;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  color: var(--primary-brown);
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 3px var(--shadow-light);
+}
+
+.page-content p {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+  line-height: 1.6;
+  color: var(--secondary-brown);
+  margin-bottom: 1rem;
+}
+
+.website-link {
+  color: #1e40af !important;
+  font-weight: 600;
+}
+
+.website-link a {
+  color: #1d4ed8;
+  text-decoration: none;
+  border-bottom: 2px solid #1d4ed8;
+  transition: all var(--transition);
+}
+
+.website-link a:hover {
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .about-section {
+    padding: 1rem;
+  }
+  
+  .book-container {
+    width: 40%;
+    height: 60vh;
+  }
+  
+  .page-content {
+    padding: 1.5rem;
+  }
+  
+  .page-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .page-content p {
+    font-size: 1.1rem;
+  }
+  
+  .scroll-indicators {
+    right: 1rem;
+  }
+  
+  .scroll-hint {
+    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
+  }
+  
+  .section-counter {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+  }
+  
+  .page-corner {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-container {
+    height: 50vh;
+  }
+  
+  .page-content {
+    padding: 1rem;
+  }
+  
+  .page-content h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .page-content p {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    transition-duration: 0.1s;
+  }
+  
+  .scroll-hint {
+    animation: none;
+  }
+}
+
+/* ===== ENHANCED FOCUS STATES ===== */
+.page-content:focus-within {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 3px;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .about-section {
+    background: white !important;
+  }
+  
+  .page-content {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+  
+  .scroll-indicators,
+  .scroll-hint,
+  .page-corner,
+  .scroll-protection-overlay {
+    display: none !important;
+  }
+}
