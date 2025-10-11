@@ -1,67 +1,43 @@
 /* EventPage.css */
 
-/* Base styles */
-.relative {
-  position: relative;
+/* Cloud radial gradients */
+.bg-radial-cloud {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(168, 85, 247, 0.15) 0%,
+    rgba(192, 132, 252, 0.1) 25%,
+    rgba(236, 72, 153, 0.05) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
-.min-h-screen {
-  min-height: 100vh;
+.bg-radial-cloud2 {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.08) 25%,
+    rgba(168, 85, 247, 0.04) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
-.overflow-hidden {
-  overflow: hidden;
-}
-
-.text-white {
-  color: white;
-}
-
-.absolute {
-  position: absolute;
-}
-
-.inset-0 {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
-.z-0 {
-  z-index: 0;
-}
-
-.z-10 {
-  z-index: 10;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.h-full {
-  height: 100%;
-}
-
-/* Background gradient */
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
-}
-
-.from-\[#0f0524\] {
-  --tw-gradient-from: #0f0524;
-  --tw-gradient-to: rgba(15, 5, 36, 0);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.via-\[#1a0b2f\] {
-  --tw-gradient-to: rgba(26, 11, 47, 0);
-  --tw-gradient-stops: var(--tw-gradient-from), #1a0b2f, var(--tw-gradient-to);
-}
-
-.to-\[#0f0524\] {
-  --tw-gradient-to: #0f0524;
+.bg-radial-cloud3 {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(236, 72, 153, 0.08) 0%,
+    rgba(244, 114, 182, 0.06) 25%,
+    rgba(249, 168, 212, 0.03) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 /* Sparkle pattern */
@@ -76,29 +52,38 @@
   background-size: 200px 100px;
 }
 
-/* Additional utility classes needed */
-.top-20 {
-  top: 5rem;
+/* Cloud Animations */
+@keyframes cloudMove {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(-5%) translateY(2%); }
+  50% { transform: translateX(-10%) translateY(0); }
+  75% { transform: translateX(-5%) translateY(-2%); }
+  100% { transform: translateX(0) translateY(0); }
 }
 
-.-top-10 {
-  top: -2.5rem;
+@keyframes cloudMove2 {
+  0% { transform: translateX(0) translateY(0); }
+  33% { transform: translateX(8%) translateY(1%); }
+  66% { transform: translateX(4%) translateY(-1%); }
+  100% { transform: translateX(0) translateY(0); }
 }
 
-.w-\[200\%\] {
-  width: 200%;
+@keyframes cloudMove3 {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-3%) translateY(1%); }
+  100% { transform: translateX(0) translateY(0); }
 }
 
-.w-\[150\%\] {
-  width: 150%;
+.animate-cloudMovement {
+  animation: cloudMove 40s ease-in-out infinite;
 }
 
-.w-\[180\%\] {
-  width: 180%;
+.animate-cloudMovement2 {
+  animation: cloudMove2 50s ease-in-out infinite;
 }
 
-.opacity-20 {
-  opacity: 0.2;
+.animate-cloudMovement3 {
+  animation: cloudMove3 60s ease-in-out infinite;
 }
 
 /* Ensure background divs fully cover screen */
@@ -107,47 +92,104 @@
   height: 100%;
 }
 
-/* Smooth scrolling behavior */
-html {
-  scroll-behavior: smooth;
+/* New CSS for the converted Tailwind classes */
+.event-page-container {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: white;
 }
 
-/* Performance optimizations */
-* {
-  box-sizing: border-box;
+.background-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .bg-sparkle-pattern {
-    background-size: 150px 75px;
-  }
+.background-gradient {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f0524 0%, #1a0b2f 50%, #0f0524 100%);
 }
 
-/* Fix for very small screens */
-@media (max-width: 480px) {
-  .bg-sparkle-pattern {
-    background-size: 100px 50px;
-    opacity: 0.15;
-  }
+.cloud-layer {
+  position: absolute;
+  height: 100%;
 }
 
-/* Ensure the EventSection content is properly positioned */
-.relative.z-10 {
+.cloud-layer-1 {
+  width: 200%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(168, 85, 247, 0.15) 0%,
+    rgba(192, 132, 252, 0.1) 25%,
+    rgba(236, 72, 153, 0.05) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.4;
+  animation: cloudMove 40s ease-in-out infinite;
+}
+
+.cloud-layer-2 {
+  width: 150%;
+  top: 80px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.08) 25%,
+    rgba(168, 85, 247, 0.04) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.3;
+  animation: cloudMove2 50s ease-in-out infinite;
+}
+
+.cloud-layer-3 {
+  width: 180%;
+  top: -40px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(236, 72, 153, 0.08) 0%,
+    rgba(244, 114, 182, 0.06) 25%,
+    rgba(249, 168, 212, 0.03) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.25;
+  animation: cloudMove3 60s ease-in-out infinite;
+}
+
+.sparkle-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.7), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  opacity: 0.2;
+}
+
+.content-container {
   position: relative;
   z-index: 10;
-}
-
-/* Prevent horizontal scroll */
-body {
-  overflow-x: hidden;
-}
-
-/* Fix for background layers stacking */
-.absolute.inset-0 > div {
-  pointer-events: none;
-}
-
-.relative.z-10 {
-  pointer-events: auto;
 }

@@ -1,0 +1,31 @@
+/* Dark bluish-black gradient background */
+.bg-dark-gradient {
+  background: linear-gradient(to bottom, #0a0a1f, #0c0c33, #0a0a1f);
+  position: relative;
+}
+
+/* Cloud layers */
+.cloud-layer {
+  position: absolute;
+  width: 150%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 5%, transparent 50%);
+  filter: blur(120px);
+  opacity: 0.5;
+  top: 0;
+  left: 0;
+}
+
+/* Different depth layers */
+.layer1 { z-index: 1; filter: blur(140px); opacity: 0.45; }
+.layer2 { z-index: 2; filter: blur(180px); opacity: 0.35; }
+.layer3 { z-index: 3; filter: blur(220px); opacity: 0.25; }
+
+/* Cloud animations */
+@keyframes cloud1Anim { 0%, 100% { transform: translateX(-30%); } 50% { transform: translateX(30%); } }
+@keyframes cloud2Anim { 0%, 100% { transform: translateX(20%); } 50% { transform: translateX(-20%); } }
+@keyframes cloud3Anim { 0%, 100% { transform: translateX(-15%); } 50% { transform: translateX(15%); } }
+
+.animate-cloud1 { animation: cloud1Anim 100s linear infinite; }
+.animate-cloud2 { animation: cloud2Anim 120s linear infinite; }
+.animate-cloud3 { animation: cloud3Anim 140s linear infinite; }
