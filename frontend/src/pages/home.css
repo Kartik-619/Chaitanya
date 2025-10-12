@@ -8,7 +8,7 @@ html, body {
 /* Hero section */
 .hero-section {
   height: 200vh; /* Match the GSAP height */
-  width: 100%;
+  width: 100vw;
   position: relative;
 }
 

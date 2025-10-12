@@ -89,7 +89,7 @@ export default function Sidebar() {
               </li>
               <li>
                 <Link
-                  to="/register"
+                  to="http://localhost:3000"
                   onClick={() => setMenu(false)}
                   className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
                 >
