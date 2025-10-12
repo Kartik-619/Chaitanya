@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import EventSection from '../component/Events/EventSection';
 import './EventPage.css';
+import Sidebar from '../component/navbar';
+import Social from '../component/socials';
 
 export default function EventPage() {
   const cloud1Ref = useRef(null);
@@ -27,36 +29,42 @@ export default function EventPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-white">
+    <div id="event-page-container" className="event-page-container">
       {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-[#0f0524] via-[#1a0b2f] to-[#0f0524]">
+      <div id="background-container" className="background-container">
+        <div id="background-gradient" className="background-gradient">
           {/* Cloud Layers */}
           <div
             ref={cloud1Ref}
-            className="absolute w-[200%] h-full bg-radial-cloud animate-cloudMovement opacity-40"
+            id="cloud-layer-1"
+            className="cloud-layer cloud-layer-1"
           ></div>
           <div
             ref={cloud2Ref}
-            className="absolute w-[150%] h-full top-20 bg-radial-cloud2 animate-cloudMovement2 opacity-30"
+            id="cloud-layer-2"
+            className="cloud-layer cloud-layer-2"
           ></div>
           <div
             ref={cloud3Ref}
-            className="absolute w-[180%] h-full -top-10 bg-radial-cloud3 animate-cloudMovement3 opacity-25"
+            id="cloud-layer-3"
+            className="cloud-layer cloud-layer-3"
           ></div>
 
           {/* Sparkles */}
           <div
             ref={sparkleRef}
-            className="absolute inset-0 bg-sparkle-pattern opacity-20"
+            id="sparkle-overlay"
+            className="sparkle-overlay"
           ></div>
         </div>
       </div>
 
       {/* Foreground Content */}
-      <div className="relative z-10">
+      <div id="content-container" className="content-container">
         <EventSection />
       </div>
+      <Sidebar/>
+      <Social/>
     </div>
   );
 }

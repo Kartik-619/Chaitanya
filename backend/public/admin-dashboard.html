@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<head>
+    <title>Admin Dashboard - TechFest</title>
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .logout { background: #dc3545; }
+        .logout:hover { background: #c82333; }
+        .error { color: red; margin: 10px 0; }
+        .success { color: green; margin: 10px 0; }
+        .filter-bar { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .filter-option { margin: 0 10px; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }
+        .badge-individual { background: #e3f2fd; color: #1976d2; }
+        .badge-team { background: #f3e5f5; color: #7b1fa2; }
+        .type-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
+        .type-toggle button { background: #6c757d; }
+        .type-toggle button.active { background: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 Chaitanya 2025 Admin Dashboard</h1>
+        <button class="logout" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="totalRegistrations">0</div>
+            <div>Total Registrations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalRevenue">₹0</div>
+            <div>Total Revenue</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="individualCount">0</div>
+            <div>Individual Registrations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="teamCount">0</div>
+            <div>Team Registrations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="completedPayments">0</div>
+            <div>Completed Payments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="teamMembersCount">0</div>
+            <div>Total Participants</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📊 Registration Statistics</h2>
+        <button id="refreshStatsBtn">Refresh Stats</button>
+        <div id="statsData"></div>
+    </div>
+
+    <div class="section">
+        <h2>👥 All Registrations</h2>
+        <div class="type-toggle">
+            <button id="showAllBtn" class="active">All Types</button>
+            <button id="showIndividualBtn">Individual Only</button>
+            <button id="showTeamBtn">Team Only</button>
+        </div>
+        <button id="loadRegistrationsBtn">Load Registrations</button>
+        <div id="registrationsData"></div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Event Participation</h2>
+        <button id="loadEventsBtn">Load Event Data</button>
+        <div id="eventsData"></div>
+    </div>
+
+    <div class="section">
+        <h2>💳 Export Financial Data</h2>
+        <button id="exportDataBtn">Export to JSON</button>
+        <div id="exportData"></div>
+    </div>
+
+    <script>
+    // Simple authentication check
+    function checkAuth() {
+        const token = localStorage.getItem('adminToken');
+        const user = localStorage.getItem('adminUser');
+        
+        console.log('🔐 Auth check - Token exists:', !!token);
+        console.log('🔐 Auth check - User exists:', !!user);
+        
+        if (!token || !user) {
+            console.log('❌ No auth found - redirecting to login');
+            window.location.href = '/admin-login.html';
+            return false;
+        }
+        return true;
+    }
+
+    // Make authenticated API requests
+    async function makeAuthenticatedRequest(url) {
+        try {
+            console.log('🔐 Making request to:', url);
+            
+            const token = localStorage.getItem('adminToken');
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            console.log('📡 Response status:', response.status);
+            
+            if (response.status === 401) {
+                console.log('❌ Unauthorized - redirecting to login');
+                window.location.href = '/admin-login.html';
+                return null;
+            }
+            
+            const data = await response.json();
+            console.log('📊 Response data:', data);
+            return data;
+            
+        } catch (error) {
+            console.error('❌ API call failed:', error);
+            return { 
+                success: false, 
+                message: 'API call failed: ' + error.message 
+            };
+        }
+    }
+
+    let currentRegistrationType = 'all'; // 'all', 'individual', 'team'
+    let allRegistrations = [];
+
+    // Load and display statistics
+    async function loadStats() {
+        console.log('🔄 Loading stats...');
+        
+        const statsDataDiv = document.getElementById('statsData');
+        if (statsDataDiv) {
+            statsDataDiv.innerHTML = '<p>🔄 Loading statistics...</p>';
+        }
+        
+        const data = await makeAuthenticatedRequest('/api/admin/stats');
+        
+        if (!data) {
+            console.log('❌ No data returned');
+            return;
+        }
+
+        if (data.success) {
+            console.log('✅ Stats loaded successfully:', data.data);
+            
+            // Update stat cards
+            const totalRegEl = document.getElementById('totalRegistrations');
+            const revenueEl = document.getElementById('totalRevenue');
+            const individualEl = document.getElementById('individualCount');
+            const teamEl = document.getElementById('teamCount');
+            const completedEl = document.getElementById('completedPayments');
+            const teamMembersEl = document.getElementById('teamMembersCount');
+            
+            if (totalRegEl) totalRegEl.textContent = data.data.totalRegistrations;
+            if (revenueEl) revenueEl.textContent = `₹${data.data.totalRevenue}`;
+            if (individualEl) individualEl.textContent = data.data.registrationTypes?.individual || 0;
+            if (teamEl) teamEl.textContent = data.data.registrationTypes?.team || 0;
+            if (completedEl) completedEl.textContent = data.data.paymentStatus.completed;
+            if (teamMembersEl) teamMembersEl.textContent = data.data.totalParticipants || data.data.totalRegistrations;
+            
+            // Display detailed data
+            if (statsDataDiv) {
+                let revenueStats = '';
+                if (data.data.revenue) {
+                    revenueStats = `
+                        <h3>💰 Revenue Breakdown:</h3>
+                        <pre>Individual: ₹${data.data.revenue.individual} | Team: ₹${data.data.revenue.team} | Total: ₹${data.data.revenue.total}</pre>
+                    `;
+                }
+
+                statsDataDiv.innerHTML = `
+                    <h3>📊 Registration Types:</h3>
+                    <pre>Individual: ${data.data.registrationTypes?.individual || 0} | Team: ${data.data.registrationTypes?.team || 0}</pre>
+                    
+                    ${revenueStats}
+                    
+                    <h3>🎯 Event-wise Registration:</h3>
+                    <pre>${JSON.stringify(data.data.events, null, 2)}</pre>
+                    
+                    <h3>🏫 College-wise Distribution:</h3>
+                    <pre>${JSON.stringify(data.data.colleges, null, 2)}</pre>
+                    
+                    <h3>💰 Payment Status:</h3>
+                    <pre>Completed: ${data.data.paymentStatus.completed} | Pending: ${data.data.paymentStatus.pending} | Failed: ${data.data.paymentStatus.failed}</pre>
+                `;
+            }
+            
+            console.log('✅ Dashboard updated successfully');
+        } else {
+            console.log('❌ Failed to load stats:', data.message);
+            if (statsDataDiv) {
+                statsDataDiv.innerHTML = `<div class="error">❌ Failed to load stats: ${data.message}</div>`;
+            }
+        }
+    }
+
+    // Load registrations with Individual/Team filtering
+    async function loadRegistrations() {
+        console.log('🔄 Loading registrations...');
+        const registrationsDataDiv = document.getElementById('registrationsData');
+        
+        if (registrationsDataDiv) {
+            registrationsDataDiv.innerHTML = '<p>🔄 Loading registrations...</p>';
+        }
+        
+        const data = await makeAuthenticatedRequest('/api/admin/registrations');
+        
+        if (data && data.success) {
+            console.log('✅ Registrations loaded:', data.count);
+            allRegistrations = data.data || [];
+            
+            displayFilteredRegistrations();
+        } else {
+            console.log('❌ Failed to load registrations');
+            if (registrationsDataDiv) {
+                registrationsDataDiv.innerHTML = `<div class="error">❌ Failed to load registrations</div>`;
+            }
+        }
+    }
+
+    // Display filtered registrations based on current type
+    function displayFilteredRegistrations() {
+        const registrationsDataDiv = document.getElementById('registrationsData');
+        if (!registrationsDataDiv) return;
+
+        let filteredRegistrations = allRegistrations;
+        
+        if (currentRegistrationType === 'individual') {
+            filteredRegistrations = allRegistrations.filter(reg => 
+                reg.registrationType === 'individual' || reg.registrationId?.includes('IND')
+            );
+        } else if (currentRegistrationType === 'team') {
+            filteredRegistrations = allRegistrations.filter(reg => 
+                reg.registrationType === 'team' || !reg.registrationId?.includes('IND')
+            );
+        }
+
+        let html = `<p><strong>Total: ${filteredRegistrations.length} registrations (${currentRegistrationType})</strong></p>`;
+        
+        if (filteredRegistrations.length > 0) {
+            html += '<table><tr><th>Type</th><th>Name</th><th>Email</th><th>College</th><th>Event</th><th>Amount</th><th>Status</th><th>ID</th></tr>';
+            
+            filteredRegistrations.forEach(reg => {
+                const isIndividual = reg.registrationType === 'individual' || reg.registrationId?.includes('IND');
+                const typeBadge = isIndividual ? 
+                    '<span class="badge badge-individual">Individual</span>' : 
+                    '<span class="badge badge-team">Team</span>';
+                
+                const name = reg.personalDetails?.name || reg.teamHeadName || reg.name || 'N/A';
+                const email = reg.personalDetails?.email || reg.teamHeadEmail || reg.email || 'N/A';
+                const college = reg.personalDetails?.college || reg.teamHeadCollege || reg.college || 'N/A';
+                const event = isIndividual ? 
+                    (reg.prelimEvents?.join(', ') || 'Prelim Events') : 
+                    (reg.mainEvent || 'Team Event');
+                const amount = reg.totalAmount || reg.amount || 0;
+                const status = reg.paymentStatus || 'completed';
+                const regId = reg.registrationId || 'N/A';
+
+                html += `<tr>
+                    <td>${typeBadge}</td>
+                    <td>${name}</td>
+                    <td>${email}</td>
+                    <td>${college}</td>
+                    <td>${event}</td>
+                    <td>₹${amount}</td>
+                    <td>${status}</td>
+                    <td><small>${regId}</small></td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+        } else {
+            html += '<p>No registration data found.</p>';
+        }
+        
+        registrationsDataDiv.innerHTML = html;
+    }
+
+    // Load event participation data
+    async function loadEventsData() {
+        console.log('🔄 Loading events data...');
+        const eventsDataDiv = document.getElementById('eventsData');
+        
+        if (eventsDataDiv) {
+            eventsDataDiv.innerHTML = '<p>🔄 Loading event participation data...</p>';
+        }
+        
+        try {
+            const data = await makeAuthenticatedRequest('/api/admin/events');
+            
+            if (data && data.success) {
+                console.log('✅ Events data loaded:', data.count, 'records');
+                
+                if (data.data && data.data.length > 0) {
+                    // Create event summary
+                    const eventSummary = {};
+                    data.data.forEach(event => {
+                        const eventName = event.eventName;
+                        if (!eventSummary[eventName]) {
+                            eventSummary[eventName] = {
+                                name: eventName,
+                                type: event.eventType,
+                                participants: 0,
+                                revenue: 0,
+                                individual: 0,
+                                team: 0
+                            };
+                        }
+                        eventSummary[eventName].participants++;
+                        eventSummary[eventName].revenue += (event.eventPrice || 0);
+                        if (event.registrationType === 'individual') {
+                            eventSummary[eventName].individual++;
+                        } else {
+                            eventSummary[eventName].team++;
+                        }
+                    });
+                    
+                    if (eventsDataDiv) {
+                        let html = `<p><strong>Event Participation Summary (${data.count} records from ${data.totalRegistrations} registrations)</strong></p>`;
+                        html += '<table><tr><th>Event Name</th><th>Type</th><th>Total</th><th>Individual</th><th>Team</th><th>Revenue</th></tr>';
+                        
+                        Object.values(eventSummary).forEach(event => {
+                            html += `<tr>
+                                <td><strong>${event.name}</strong></td>
+                                <td>${event.type}</td>
+                                <td>${event.participants}</td>
+                                <td>${event.individual}</td>
+                                <td>${event.team}</td>
+                                <td>₹${event.revenue}</td>
+                            </tr>`;
+                        });
+                        
+                        html += '</table>';
+                        eventsDataDiv.innerHTML = html;
+                    }
+                } else {
+                    // No data yet
+                    if (eventsDataDiv) {
+                        eventsDataDiv.innerHTML = `
+                            <div class="success">📊 Events tracking is ready and working!</div>
+                            <p><strong>Status:</strong> API endpoint active, waiting for registration data</p>
+                            <p><small>Event participation data will appear here once registrations are completed with payment.</small></p>
+                            <p>✅ Events endpoint: <code>/api/admin/events</code> ✅</p>
+                        `;
+                    }
+                }
+            } else {
+                throw new Error(data?.message || 'Failed to load events data');
+            }
+        } catch (error) {
+            console.log('❌ Events data error:', error.message);
+            if (eventsDataDiv) {
+                eventsDataDiv.innerHTML = `
+                    <div class="error">❌ Events data temporarily unavailable</div>
+                    <p><small>Error: ${error.message}</small></p>
+                    <p><strong>Solution:</strong> Make sure the events endpoint is added to adminController.js</p>
+                `;
+            }
+        }
+    }
+
+    // Export financial data
+    async function exportFinanceData() {
+        console.log('💳 Exporting financial data...');
+        const exportDataDiv = document.getElementById('exportData');
+        
+        if (exportDataDiv) {
+            exportDataDiv.innerHTML = '<p>🔄 Preparing export...</p>';
+        }
+        
+        const data = await makeAuthenticatedRequest('/api/admin/export-finance');
+        
+        if (data && data.success) {
+            console.log('✅ Export ready:', data.data.length, 'records');
+            
+            // Create and download JSON file
+            const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chaitanya-2025-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            if (exportDataDiv) {
+                exportDataDiv.innerHTML = `<div class="success">✅ Exported ${data.data.length} records (₹${data.totalAmount} total)</div>`;
+            }
+        } else {
+            console.log('❌ Export failed');
+            if (exportDataDiv) {
+                exportDataDiv.innerHTML = `<div class="error">❌ Export failed</div>`;
+            }
+        }
+    }
+
+    // Setup registration type filtering
+    function setupTypeFiltering() {
+        const showAllBtn = document.getElementById('showAllBtn');
+        const showIndividualBtn = document.getElementById('showIndividualBtn');
+        const showTeamBtn = document.getElementById('showTeamBtn');
+        
+        function setActiveButton(activeBtn) {
+            [showAllBtn, showIndividualBtn, showTeamBtn].forEach(btn => {
+                btn.classList.remove('active');
+            });
+            activeBtn.classList.add('active');
+        }
+        
+        showAllBtn.addEventListener('click', function() {
+            currentRegistrationType = 'all';
+            setActiveButton(this);
+            displayFilteredRegistrations();
+        });
+        
+        showIndividualBtn.addEventListener('click', function() {
+            currentRegistrationType = 'individual';
+            setActiveButton(this);
+            displayFilteredRegistrations();
+        });
+        
+        showTeamBtn.addEventListener('click', function() {
+            currentRegistrationType = 'team';
+            setActiveButton(this);
+            displayFilteredRegistrations();
+        });
+    }
+
+    // Logout function
+    function logout() {
+        console.log('🚪 Logging out...');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin-login.html';
+    }
+
+    // Initialize dashboard
+    function initializeDashboard() {
+        console.log('🎯 Initializing dashboard...');
+        
+        // Load initial data
+        loadStats();
+        
+        // Setup button event listeners
+        const refreshBtn = document.getElementById('refreshStatsBtn');
+        const registrationsBtn = document.getElementById('loadRegistrationsBtn');
+        const eventsBtn = document.getElementById('loadEventsBtn');
+        const exportBtn = document.getElementById('exportDataBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (refreshBtn) refreshBtn.addEventListener('click', loadStats);
+        if (registrationsBtn) registrationsBtn.addEventListener('click', loadRegistrations);
+        if (eventsBtn) eventsBtn.addEventListener('click', loadEventsData);
+        if (exportBtn) exportBtn.addEventListener('click', exportFinanceData);
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        
+        // Setup filtering
+        setupTypeFiltering();
+        
+        console.log('✅ Dashboard fully initialized with Individual/Team support');
+    }
+
+    // Wait for DOM to be fully loaded
+    console.log('🔍 DOM Check - readyState:', document.readyState);
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM fully loaded');
+            if (checkAuth()) {
+                initializeDashboard();
+            }
+        });
+    } else {
+        console.log('✅ DOM already loaded');
+        if (checkAuth()) {
+            initializeDashboard();
+        }
+    }
+    </script>
+</body>
+</html>

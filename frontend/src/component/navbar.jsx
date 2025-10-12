@@ -89,7 +89,7 @@ export default function Sidebar() {
               </li>
               <li>
                 <Link
-                  to="/register"
+                  to="http://localhost:3000"
                   onClick={() => setMenu(false)}
                   className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
                 >
@@ -103,6 +103,15 @@ export default function Sidebar() {
                   className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
                 >
                  Sponsor Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/about"
+                  onClick={() => setMenu(false)}
+                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                >
+                About
                 </Link>
               </li>
             </ul>
