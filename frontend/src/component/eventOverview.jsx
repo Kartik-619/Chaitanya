@@ -7,23 +7,22 @@ export default function EventsCarousel() {
   const events = [
     { 
       img: "/images/events/I1.jpg", 
-      title: "Integration Bee",
-      description: "Test your calculus !!"
+      title: "Integration Bee"
+    
     },
     { 
       img: "/images/events/I2.jpg", 
-      title: "Code Wars",
-      description: "The Cold Code Battle is here"
+      title: "Code Wars"
+     
     },
     { 
       img: "/images/events/I3.jpg", 
-      title: "Under The  Hood",
-      description: "Hands-on workshops on emerging technologies"
+      title: "Under The  Hood"
+     
     },
     { 
       img: "/images/events/i4.jpg",  
-      title: "The Nexus Key",
-      description: "Explore the mysteries of this unique treasure hunt"
+      title: "The Nexus Key"
     }
   ];
 
@@ -58,7 +57,7 @@ export default function EventsCarousel() {
       <h1>Events & Activities</h1>
       <br/>
       <p className="carousel-description">
-        Discover the exciting events and activities happening at Chaitanya 1.0
+        Participate in the events and win the cash prize worth of   <b className='red text-xl'>₹ 75000</b>
       </p>
       
       <div className="carousel-wrapper">

@@ -200,23 +200,7 @@ Thank you,
             justifyContent: 'space-between',
             marginBottom: '24px'
           }}>
-            <div
-              style={{
-                fontSize: '24px',
-                fontWeight: 'bold',
-                letterSpacing: '0.15em',
-                fontFamily: 'Impact, "Arial Black", sans-serif',
-                color: '#93C5FD',
-                textTransform: 'uppercase',
-                textShadow: '3px 3px 0px #1a1333, 6px 6px 0px rgba(147, 197, 253, 0.3), 0 0 30px rgba(147, 197, 253, 0.5)',
-                transform: 'scaleY(1.1)',
-                top:'10%',
-                left:'15vw',
-                WebkitTextStroke: '1px rgba(167, 139, 250, 0.5)',
-              }}
-            >
-              CHAITANYA
-            </div>
+
 
             <div style={{
               flex: 1,
@@ -224,10 +208,7 @@ Thank you,
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Sparkles size={40} style={{ 
-                color: '#93C5FD',
-                animation: 'pulse 2s ease-in-out infinite'
-              }} />
+              
               <h1
                 style={{
                   fontSize: '48px',
@@ -242,10 +223,7 @@ Thank you,
               >
                 OUR SPONSORS
               </h1>
-              <Sparkles size={40} style={{ 
-                color: '#A78BFA',
-                animation: 'pulse 2s ease-in-out infinite'
-              }} />
+             
             </div>
 
             <div style={{ width: '128px' }}></div>

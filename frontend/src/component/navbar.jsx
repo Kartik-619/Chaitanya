@@ -55,8 +55,8 @@ export default function Sidebar() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-5 pl-25 border-b border-gray-600 flex justify-between items-center bg-stone-800">
-              <h3 className="trade-font self-center ml-25rem text-3xl  font-bold text-white">Menu</h3>
+            <div className="p-5 pl-25 ml-50 border-b border-gray-600 flex justify-between items-center bg-stone-800">
+              <h3 className="price-font  ml-[25%] text-5xl  font-bold text-white">Menu</h3>
               <button
                 onClick={() => setMenu(false)}
                 className="p-1 hover:bg-gray-700 rounded transition"
@@ -72,7 +72,7 @@ export default function Sidebar() {
                 <Link
                   to="/"
                   onClick={() => setMenu(false)}
-                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >
                   Home
                 </Link>
@@ -82,25 +82,25 @@ export default function Sidebar() {
                 <Link
                   to="/events"
                   onClick={() => setMenu(false)}
-                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >
                   Events
                 </Link>
               </li>
               <li>
-                <Link
-                  to="http://localhost:3000"
+                <a
+                  href="http://localhost:3000"
                   onClick={() => setMenu(false)}
-                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >
                   Register
-                </Link>
+                </a>
               </li>
               <li>
                 <Link
                   to="/sponsor"
                   onClick={() => setMenu(false)}
-                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >
                  Sponsor Us
                 </Link>
@@ -109,7 +109,7 @@ export default function Sidebar() {
                 <Link
                   to="/about"
                   onClick={() => setMenu(false)}
-                  className="trade-font text-2xl md:text-3xl text-white hover:text-shadow-white transition"
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >
                 About
                 </Link>
