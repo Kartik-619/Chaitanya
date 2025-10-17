@@ -13,7 +13,7 @@ export const mainEvents = [
     image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800",
     color: "#FF6B9D",
     category: "Main Event",
-    highlights: ["Work with latest technologies", "Mentorship from experts", "Networking opportunities", "Amazing prizes"],
+    highlights: [{ "Team Structure": "Teams must have 2–5 members with diverse roles coding, design, presentation, etc." }, { "Project Requirements Originality": "Core code must be created during the 36-hour event; use of public libraries/frameworks is allowed" }, { " Pre-Built Components": "Open-source tools can be used, but no prior work or commercial code as the main submission." }, { "Submission": " Must include a live demo link, project description, and source code repository link submitted before the deadline." }, { " Code of Conduct": "Participants must maintain respect, fairness, and collaboration; any harassment, discrimination, or cheating leads to disqualification." }],
     schedule: [
       { time: "9:00 AM", activity: "Registration & Team Formation" },
       { time: "11:00 AM", activity: "Opening Ceremony" },
@@ -35,7 +35,26 @@ export const mainEvents = [
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
     color: "#C084FC",
     category: "Main Event",
-    highlights: ["Real-world datasets", "Cloud computing resources", "Expert evaluation", "Industry recognition"],
+    highlights: [
+      {
+        "Team Structure": "Individuals or teams up to 4"
+      },
+      {
+        "Project Requirements": "Any technical domain with a functional prototype/simulation"
+      },
+      {
+        "Originality": "Must be original work"
+      },
+      {
+        "Submission": "Must be present at booth for judging"
+      },
+      {
+        "Intellectual Property": "Participants retain intellectual property; organizers can use project info for promotion"
+      },
+      {
+        "Code of Conduct": "Professionalism and safety are required"
+      }
+    ],
     schedule: [
       { time: "10:00 AM", activity: "Problem Statement Release" },
       { time: "11:00 AM", activity: "Coding Begins" },
@@ -59,7 +78,27 @@ export const prelimEvents = {
       venue: "Innovation Hall",
       participants: "100+ Teams",
       prize: "$8,000",
-      category: "Technical Event"
+      category: "Technical Event",
+      highlights: [
+        {
+          "Team Structure": "Projects can be submitted by individuals or teams of up to 4 members"
+        },
+        {
+          "Project Requirements": "Projects can be from any technical domain (software, hardware, IoT, AI/ML, robotics, etc.) and must have a functional prototype or comprehensive simulation"
+        },
+        {
+          "Originality": "The project must be the original work of the participants"
+        },
+        {
+          "Submission": "Participants must be present at their designated booth for the entire duration of the judging rounds"
+        },
+        {
+          "Intellectual Property": "Participants retain full intellectual property rights but grant Techfest Chaitanya 2025 the right to use project descriptions and images for promotional purposes"
+        },
+        {
+          "Code of Conduct": "Professionalism in presentation and interaction is expected; all projects must adhere to safety regulations and be safe for public viewing"
+        }
+      ]
     },
     {
       id: 'pt2',
@@ -72,7 +111,27 @@ export const prelimEvents = {
       venue: "Mathematics Hall",
       participants: "100+",
       prize: "$5,000",
-      category: "Technical Event"
+      category: "Technical Event",
+      highlights: [
+        {
+          "Team Structure": "Individual Participation: This is a solo competition"
+        },
+        {
+          "Project Requirements": "Qualifier Round: 20 integrals in 30 minutes; Regular Season: Head-to-head matches; Playoffs: Single-elimination bracket with 8 minutes per head-to-head round"
+        },
+        {
+          "Originality": "All integrals are developed and verified by the Engineering Department to ensure they are fair, appropriately challenging, and academically sound"
+        },
+        {
+           "Evaluation Method":"During knockout rounds, integrals presented one at a time; first participant to provide correct solution wins and advances"
+        },
+        {
+           "Problem Integrity": "All integrals are developed and verified by the Engineering Department"
+        },
+        {
+          "Code of Conduct": "High standard of academic integrity and sportsmanship expected; cheating or unprofessional behavior results in immediate disqualification; calculators, notes, textbooks, or electronic devices strictly prohibited"
+        }
+      ]
     },
     {
       id: 'pt3',
@@ -85,7 +144,29 @@ export const prelimEvents = {
       venue: "Computer Lab 3",
       participants: "60+",
       prize: "$5,500",
-      category: "Technical Event"
+      category: "Technical Event",
+      "highlights": [
+        {
+          "Team Structure": "1-3 members per team (solo participation allowed). All participants must be currently registered students with valid institutional identification"
+        },
+        {
+          "Project Requirements": "Capture-the-flag style cybersecurity challenges requiring identification and submission of specific security flags. Participants must solve various security puzzles and vulnerabilities"
+        },
+        {
+          "Originality": "All solutions must be independently developed by team members. No sharing of flags, solutions, or collaborative problem-solving between different teams allowed"
+        },
+        {
+          "Submission": "All captured flags must be submitted in exact specified format: flag{example_text}. Incorrect formatting will result in non-acceptance of valid solutions"
+        },
+        {
+          "Intellectual Property": "Participants may use static software tools, official documentation, and online tutorials. Infrastructure and challenge designs remain property of event organizers"
+        },
+        {
+          "Code of Conduct": "Strictly prohibited: sharing flags/solutions between teams, attacking competition infrastructure, bribery, or any form of cheating. Event Head reserves final authority on all rulings and disqualifications"
+        }
+      ]
+
+      ,
     },
     {
       id: 'pt4',
@@ -98,7 +179,27 @@ export const prelimEvents = {
       venue: "Security Lab",
       participants: "120+",
       prize: "$6,000",
-      category: "Technical Event"
+      category: "Technical Event",
+      highlights: [
+        {
+          "Team Structure": "Individual or team participation (specific team size requirements would be listed in general competition rules)"
+        },
+        {
+          "Project Requirements": "CTF encompasses five primary categories: Web Exploitation (4-5 challenges), Cryptography (3-4 challenges), OSINT (2-3 challenges), plus additional categories. Web challenges include SQL Injection, XSS, SSRF, LFI/RFI, authentication flaws. Cryptography covers classical ciphers, modern attacks, RSA/AES weaknesses, steganography. OSINT focuses on social media investigation, metadata analysis, geolocation, and digital forensics"
+        },
+        {
+          "Originality": "Custom vulnerability injection for educational purposes. Realistic scenarios mimicking real-world applications with Dockerized web applications in isolated networks"
+        },
+        {
+          "Submission": "Flag submission format and scoring mechanism would follow standard CTF rules (typically instant points for correct flags)"
+        },
+        {
+          "Intellectual Property": "Use of authorized tools and resources for each category: web proxies, crypto analysis tools, OSINT frameworks as permitted by competition rules"
+        },
+        {
+          "Code of Conduct": "Standard CTF ethics: no brute-forcing, no DoS attacks, no sharing solutions between teams, adherence to responsible disclosure principles"
+        }
+      ]
     }
   ],
 
@@ -114,7 +215,28 @@ export const prelimEvents = {
       venue: "Art Studio",
       participants: "50+",
       prize: "$3,000",
-      category: "Non-Technical Event"
+      category: "Non-Technical Event",
+      highlights: [
+        {
+          "Team Structure": "Individual participants or teams of up to 3 members allowed. Collaborative teamwork encouraged within the specified team size limit"
+        },
+        {
+          "Project Requirements": "Redesign a provided mockup according to a revealed retro theme. Final submission must be a single image file showcasing the complete redesigned interface"
+        },
+        {
+          "Originality": "All design work must be original and created during the event timeframe. No pre-made templates or previous works allowed. Fresh creative interpretation of the retro theme required"
+        },
+        {
+          "Submission": "Single image file submission in specified format. Must clearly demonstrate the retro-themed redesign of the original mockup. All elements must be visible in the final image file"
+        },
+        {
+          "Intellectual Property": "Participants retain full rights to their original design creations. Open-source fonts and basic icons permitted with proper attribution. No third-party complex assets or templates allowed"
+        },
+        {
+          "Code of Conduct": "Strict prohibition of AI tools for any part of the design process. Content must be appropriate for general audiences. Participants must use their own design software. No complex pre-made assets permitted - only basic icons and open-source resources allowed"
+        }
+      ]
+
     },
     {
       id: 'pnt2',
@@ -127,7 +249,28 @@ export const prelimEvents = {
       venue: "AI Lab",
       participants: "150+",
       prize: "$7,000",
-      category: "Non-Technical Event"
+      category: "Non-Technical Event",
+      highlights: [
+        {
+          "Team Structure": "Human-AI collaboration where human provides strategic direction and AI generates content. Human operates under internet restrictions for certain tasks"
+        },
+        {
+          "Project Requirements": "Three competitive segments: Art (2D visual creation on assigned topics), Essay (200-700 words), and Poetry (40-120 words). Each segment has specific creative constraints and output requirements"
+        },
+        {
+          "Originality": "All AI-generated content must be created from single, unrepeated prompts. No copying, tracing, or plagiarism allowed. Human research permitted in Essay and Poetry segments but must result in original composition. Art must be completely original without referenced images"
+        },
+        {
+          "Submission": "Strict time limits enforced for each segment. Art submissions as digital image files, Essay and Poetry as text documents. All AI prompts limited to 300 characters maximum with no refinements or follow-up requests"
+        },
+        {
+          "Intellectual Property": "Participants retain rights to their final creations. Competition organizers may showcase winning entries with attribution. All prompt strategies and human-AI collaboration methods remain contestants' proprietary approaches"
+        },
+        {
+          "Code of Conduct": "No external human assistance permitted. Single AI model must be used throughout competition. No internet access during Art segment. AI limited to one prompt per task without modifications. Strict adherence to word counts and time limits enforced across all segments"
+        }
+      ]
+
     },
     {
       id: 'pnt3',
@@ -140,8 +283,63 @@ export const prelimEvents = {
       venue: "Innovation Lab",
       participants: "100+",
       prize: "$5,000",
-      category: "Non-Technical Event"
+      category: "Non-Technical Event",
+
+      highlights: [
+        {
+          "Team Structure": "Individual participation only - each competitor works independently throughout all competition rounds"
+        },
+        {
+          "Project Requirements": "Preliminary Round (Two Stages): Text & Image Generation tasks using single-hit prompts only (one prompt per attempt). Final Round: Create a complete website with frontend code using maximum of three prompts with no word limitations"
+        },
+        {
+          "Originality": "All generated content must be original work produced during the competition. No pre-written code, pre-generated images, or template-based solutions permitted. Each prompt submission must yield unique, competition-specific outputs"
+        },
+        {
+          "Submission": "Preliminary submissions evaluated based on prompt effectiveness and output quality. Final round requires complete website deployment with functional frontend code. All submissions must be made within designated time frames for each round"
+        },
+        {
+          "Intellectual Property": "All competition prompts and evaluation criteria remain proprietary. Participants retain ownership of their specific prompt strategies and generated outputs. Competition organizers reserve rights to showcase winning creations with proper attribution"
+        },
+        {
+          "Code of Conduct": "Strict adherence to single-prompt rule in preliminary rounds. Maximum three prompts allowed in final round without word count restrictions. No external resources, pre-trained models, or collaborative assistance permitted. All work must be generated exclusively through competition-approved AI tools during event timeframe"
+        }
+      ]
+    },
+    {
+      id: 'pnt4',
+      title: "Jack oh Hearts",
+      desc: "One Player is JOH and players must identify the JOH, the JOH must deceive players",
+      fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
+      color: "#C026D3",
+      image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
+      time: "11:00 AM - 1:00 PM",
+      venue: "HPTU Campus",
+      category: "Non-Technical Event",
+
+      highlights: [
+        {
+          "Team Structure": "Individual participation for 10-14 students. One player is secretly assigned the special role of 'Jack of Hearts' (JOH), creating a hidden adversarial dynamic."
+        },
+        {
+          "Project Requirements": "A social deduction game played in rounds. Each round has three phases: Setup (hidden symbol placement), Interaction (10-minute questioning period), and Judgment (symbol guessing). The core requirement is to deduce information while managing deception."
+        },
+        {
+          "Originality": "Strategies for deduction (for players) and deception (for the JOH) must be developed in real-time based on social interactions. No pre-planned strategies or external aids are permitted."
+        },
+        {
+          "Submission": "Two types of submissions: 1) A written guess of one's own symbol at the end of each round's Judgment phase. 2) A public accusation to identify the JOH, which serves as a final submission to end the game."
+        },
+        {
+          "Intellectual Property": "The game concept and rules are the intellectual property of the event organizers. The emergent social strategies and player interactions are the contributions of the participants."
+        },
+        {
+          "Code of Conduct": "The JOH is uniquely permitted to lie during interactions; all other players must tell the truth. Incorrect symbol guesses result in elimination. A false accusation of the JOH leads to the accuser's elimination, while a correct accusation ends the game with a win for the players."
+        }
+      ]
+
     }
+
   ],
 
   otherActivities: [
@@ -154,8 +352,7 @@ export const prelimEvents = {
       image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800",
       time: "10:00 AM - 8:00 PM",
       venue: "Gaming Arena",
-      participants: "500+",
-      prize: "$10,000",
+
       category: "Other Activity"
     },
     {
@@ -167,9 +364,29 @@ export const prelimEvents = {
       image: "https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800",
       time: "10:00 AM - 2:00 PM",
       venue: "Puzzle Hall",
-      participants: "100+",
-      prize: "$4,000",
-      category: "Other Activity"
+
+      category: "Other Activity",
+      highlights: [
+        {
+          "Team Structure": "Team-based participation with a maximum of 3 students per team. Inter-team collaboration is strictly prohibited."
+        },
+        {
+          "Project Requirements": "A multi-stage puzzle challenge comprising six sequential rounds (Rounds 1-5 and a Final Round 6). Teams must uncover a hidden clue in each of the initial five rounds. These individual clues must be logically combined to form a single access code, which grants entry to the Final Round, known as the 'Dark Room'."
+        },
+        {
+          "Originality": "All solutions and the final access code must be the original work of the team, derived solely from the provided puzzles. No sharing of answers, clues, or strategies between different teams is allowed."
+        },
+        {
+          "Submission": "Advancement is contingent upon successfully deciphering the hidden clues. Entry into the Final Round (Dark Room) is exclusively granted to the first teams that successfully form and submit the correct access code, synthesized from the clues gathered in Rounds 1-5."
+        },
+        {
+          "Intellectual Property": "The design, puzzles, and all challenge materials are the exclusive intellectual property of the event organizers. The logical methods and problem-solving paths developed by teams are their own."
+        },
+        {
+          "Code of Conduct": "The use of external electronic devices is strictly forbidden upon entry into the Dark Room (Final Round). Collaboration or communication between different teams is prohibited at all stages. The decisions made by the event organizers are absolute and final."
+        }
+      ]
+
     },
     {
       id: 'oa3',
@@ -178,11 +395,8 @@ export const prelimEvents = {
       fullDesc: "Experience the cultural side of the fest — dance, music, art, and more! A celebration of creativity and expression.",
       color: "#06B6D4",
       image: "https://images.unsplash.com/photo-1515169067865-5387ec356754?w=800",
-      time: "6:00 PM - 9:00 PM",
-      venue: "Main Auditorium",
-      participants: "1000+",
-      prize: "Exciting Goodies",
-      category: "Other Activity"
+      category: "Other Activity",
+      highlights: ["Coming Soon..."]
     },
     {
       id: 'oa4',
@@ -192,10 +406,8 @@ export const prelimEvents = {
       color: "#22C55E",
       image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800",
       time: "10:00 AM - 5:00 PM",
-      venue: "Expo Center",
-      participants: "Open for all",
-      prize: "Certificates",
-      category: "Other Activity"
+      category: "Other Activity",
+      highlights: ["Coming Soon..."]
     },
     {
       id: 'oa5',
@@ -207,8 +419,8 @@ export const prelimEvents = {
       time: "8:00 PM - 10:00 PM",
       venue: "Open-Air Theatre",
       participants: "Open to all",
-      prize: "Exciting Goodies",
-      category: "Other Activity"
+      category: "Other Activity",
+      highlights: ["Coming Soon..."]
     }
   ]
 };

@@ -2,8 +2,20 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
+
+@font-face {
+  font-family: "price-down";
+  src: url("/pricedown.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.price-font {
+  font-family: "price-down", sans-serif;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: price-font,sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -56,16 +68,6 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-@font-face {
-  font-family: "price-down";
-  src: url("/pricedown.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-}
-
-.price-font {
-  font-family: "price-down", sans-serif;
 }
 
 .trade-font {

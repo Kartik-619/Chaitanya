@@ -39,11 +39,7 @@ export default function EventSection() {
       </div>
 
       {/* ✅ CHAITANYA title */}
-      <div className="event-section-title">
-        <h1 className="chaitanya-title">
-          CHAITANYA
-        </h1>
-      </div>
+     
 
       {/* ✅ Main Content */}
       <div className="event-section-content">
@@ -144,7 +140,7 @@ export default function EventSection() {
         />
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .event-section-container {
           position: relative;
           width: 100vw;

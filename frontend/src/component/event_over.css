@@ -7,15 +7,16 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  font-family: price-font,sans-serif;
 }
 
 .carousel-description {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 1.4rem;
+  font-family: price-font,sans-serif;
+  font-size: 4rem;
   color: var(--secondary-brown);
   text-align: center;
   margin-bottom: 2rem;
-  font-style: italic;
+  
 }
 
 .carousel-wrapper {
@@ -32,10 +33,10 @@
   background: rgba(255, 255, 255, 0.95);
   border: 2px solid var(--border-gold);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  height: 300px;
+  height: 250px;
   display: flex;
   flex-direction: column;
 }
@@ -47,9 +48,10 @@
 
 .event-image {
   width: 100%;
-  height: 160px;
-  overflow:hidden;
-
+  height: 100%;
+  
+overflow-y: visible;
+overflow-x: hidden;
   position: relative;
 }
 
@@ -73,22 +75,15 @@
 }
 
 .event-title {
-  font-family: "Cinzel", serif;
-  font-size: 1 rem;
-  color: rgba(0, 47, 255, 0.729);
+  font-family: "price-font",sans-serif;
+  font-size: 4 rem;
+  color: rgba(0, 0, 0, 0.729);
   margin-bottom: 0.5rem;
   text-align: center;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-.event-description {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 0.8 rem;
-  color: var(--secondary-brown);
-  text-align: center;
-  line-height: 1.4;
-  margin: 0;
-}
+
 
 /* Slick Carousel Customization */
 .slick-prev, .slick-next {
@@ -172,7 +167,7 @@
 
 @media (max-width: 480px) {
   .event-card {
-    height: 220px;
+    height: 20vh;
   }
   
   .event-image {

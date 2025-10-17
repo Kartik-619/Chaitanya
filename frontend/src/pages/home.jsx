@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import Hero from '../component/hero';
 import About from '../component/aboutUs'; // Fixed import name
-import EOverview from '../component/eventOverview';
 import './home.css';
 
 import { gsap } from 'gsap';
@@ -17,7 +16,7 @@ export default function Home() {
     const sections = gsap.utils.toArray('.h-section');
 
     const scrollTween = gsap.to(sections, {
-      xPercent: -100 * (sections.length - 1),
+      xPercent: -150 * (sections.length - 1),
       ease: 'none',
       scrollTrigger: {
         trigger: horizontalRef.current,
