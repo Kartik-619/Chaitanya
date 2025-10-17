@@ -1,11 +1,29 @@
-﻿const { google } = require('googleapis');
+﻿/**
+ * 📊 GOOGLE SHEETS SERVICE
+ * 
+ * This service handles all Google Sheets integration:
+ * - Registration data storage and retrieval
+ * - Event participation tracking
+ * - Attendance marking and management
+ * - Batch processing for high volume
+ * 
+ * 🔄 DATA FLOW:
+ * - Registrations → Main Registrations Sheet
+ * - Event Participation → Events Participation Sheet  
+ * - Attendance → Events Participation Sheet (timestamp updates)
+ */
+
+const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
 const { SHEETS_CONFIG } = require('../config/constants');
 const { getEventPrice } = require('../config/eventPricing');
+const BackupService = require('./backupService');
 
 class GoogleSheetsService {
   constructor() {
+    this.failedRegistrationsFile = path.join(__dirname, '../backups/failed-registrations.json');
+
     // Google Sheets configuration from environment
     this.spreadsheetId = SHEETS_CONFIG.SPREADSHEET_ID;
     this.range = SHEETS_CONFIG.RANGE; // Main registrations sheet range (Columns A-S)
@@ -19,7 +37,9 @@ class GoogleSheetsService {
     this.BATCH_SIZE = 5; // Process 5 registrations per API call to avoid limits
   }
 
-  // Initialize Google Sheets API connection
+  /**
+   * Initialize Google Sheets API connection with service account
+   */
   async initialize() {
     try {
       console.log('🔄 [DEBUG] Initializing Google Sheets Service...');
@@ -59,7 +79,9 @@ class GoogleSheetsService {
     }
   }
 
-  // Ensure Sheets API is initialized before operations
+  /**
+   * Ensure Sheets API is initialized before operations
+   */
   async ensureInitialized() {
     if (!this.initialized) {
       return await this.initialize();
@@ -69,7 +91,9 @@ class GoogleSheetsService {
 
   // ==================== BATCH QUEUE SYSTEM ====================
 
-  // Add registration to queue for batch processing
+  /**
+   * Add registration to queue for batch processing
+   */
   async queueRegistration(registrationData) {
     // Add registration to the processing queue
     this.writeQueue.push(registrationData);
@@ -89,7 +113,9 @@ class GoogleSheetsService {
     };
   }
 
-  // Process the queue in batches to avoid API rate limits
+  /**
+   * Process the queue in batches to avoid API rate limits
+   */
   async processQueue() {
     // Prevent multiple concurrent queue processing
     if (this.isProcessingQueue || this.writeQueue.length === 0) return;
@@ -114,13 +140,13 @@ class GoogleSheetsService {
               reg.personalDetails.name,              // B: Name
               reg.personalDetails.email,             // C: Email
               reg.personalDetails.phone,             // D: Phone
-              reg.personalDetails.college,           // E: College
+              reg.personalDetails.college,           // E: College (NEW - from dropdown)
               'Individual',                          // F: Main Event (Individual)
               1,                                     // G: Team Size
               reg.totalAmount,                       // H: Amount
               'completed',                           // I: Payment Status
               new Date().toISOString(),              // J: Registration Date
-              JSON.stringify(reg.prelimEvents || []),      // K: Prelim Events (JSON string)
+              JSON.stringify(reg.prelimEvents || []), // K: Prelim Events (JSON string)
               reg.personalDetails.name,              // L: Team Leader Name
               reg.personalDetails.email,             // M: Team Leader Email
               'Individual',                          // N: Team ID
@@ -128,7 +154,9 @@ class GoogleSheetsService {
               reg.paymentDetails?.method,            // P: Payment Method
               reg.paymentDetails?.paymentId,         // Q: Transaction ID
               reg.paymentDetails?.transactionDate,   // R: Payment Date
-              JSON.stringify(reg.qrData || {})             // S: QR Data (JSON string)
+              JSON.stringify(reg.qrData || {}),      // S: QR Data (JSON string)
+              reg.isPremium ? 'Yes' : 'No',          // T: Premium Status (NEW)
+              reg.needsAccommodation ? 'Yes' : 'No'  // U: Accommodation (NEW)
             ]);
           } else {
             // Team registration - multiple rows (leader + members)
@@ -139,9 +167,9 @@ class GoogleSheetsService {
               reg.teamLeader.name,                   // B: Name
               reg.teamLeader.email,                  // C: Email
               reg.teamLeader.phone,                  // D: Phone
-              reg.teamLeader.college,                // E: College
+              reg.teamLeader.college,                // E: College (NEW - from dropdown)
               reg.mainEvent,                         // F: Main Event
-              reg.teamSize,                          // G: Team Size
+              reg.teamSize,                          // G: Team Size (NEW - actual team size)
               reg.totalAmount,                       // H: Amount
               'completed',                           // I: Payment Status
               new Date().toISOString(),              // J: Registration Date
@@ -153,7 +181,10 @@ class GoogleSheetsService {
               reg.paymentDetails?.method,            // P: Payment Method
               reg.paymentDetails?.paymentId,         // Q: Transaction ID
               reg.paymentDetails?.transactionDate,   // R: Payment Date
-              JSON.stringify(reg.qrData || {})             // S: QR Data
+              JSON.stringify(reg.qrData || {}),      // S: QR Data
+              reg.isPremium ? 'Yes' : 'No',                                  // T: Premium Status (team leader doesn't have premium)
+              reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+              reg.esportsGame || 'N/A'               // V: E-sports Game (NEW)
             ]);
             
             // Team Members rows (each member gets their own row)
@@ -165,7 +196,7 @@ class GoogleSheetsService {
                 member.name,                         // B: Name
                 member.email,                        // C: Email
                 member.phone,                        // D: Phone
-                member.college,                      // E: College
+                member.college,                      // E: College (NEW - from dropdown)
                 reg.mainEvent,                       // F: Main Event
                 reg.teamSize,                        // G: Team Size
                 0,                                   // H: Amount (free for members)
@@ -179,7 +210,10 @@ class GoogleSheetsService {
                 reg.paymentDetails?.method,          // P: Payment Method
                 reg.paymentDetails?.paymentId,       // Q: Transaction ID
                 reg.paymentDetails?.transactionDate, // R: Payment Date
-                JSON.stringify(reg.qrData || {})           // S: QR Data
+                JSON.stringify(reg.qrData || {}),    // S: QR Data
+                reg.isPremium ? 'Yes' : 'No',                                // T: Premium Status
+                reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+                reg.esportsGame || 'N/A'             // V: E-sports Game
               ]);
             });
           }
@@ -219,7 +253,9 @@ class GoogleSheetsService {
 
   // ==================== DATA RETRIEVAL ====================
 
-  // Get all registrations from Google Sheets for admin dashboard
+  /**
+   * Get all registrations from Google Sheets for admin dashboard
+   */
   async getAllRegistrations() {
     try {
       console.log('🔄 [SHEETS] Getting all registrations...');
@@ -256,8 +292,8 @@ class GoogleSheetsService {
           let personalDetails = {};
           let teamData = null;
 
-          // Detect individual registrations by ID prefix
-          if (row[0] && row[0].includes('IND')) {
+          // Detect individual registrations by ID prefix or team size
+          if (row[0] && (row[0].includes('IND') || row[6] === '1')) {
             registrationType = 'individual';
             personalDetails = {
               name: row[1] || '',
@@ -288,7 +324,9 @@ class GoogleSheetsService {
             teamData = {
               teamName: row[14] || '', // Column O
               mainEvent: row[5] || '',
-              teamMembers: teamMembers
+              teamMembers: teamMembers,
+              teamSize: parseInt(row[6]) || 1,
+              esportsGame: row[21] || null // Column V
             };
           }
 
@@ -303,7 +341,7 @@ class GoogleSheetsService {
             }
           }
 
-          // Build registration object
+          // Build registration object with new fields
           const registration = {
             registrationType: registrationType,
             registrationId: row[0] || `REG-${index + 1}`,
@@ -319,7 +357,10 @@ class GoogleSheetsService {
             transactionId: row[16] || '',
             paymentDate: row[17] || '',
             registrationDate: row[9] || new Date().toISOString(),
-            qrData: row[18] ? JSON.parse(row[18]) : null
+            qrData: row[18] ? JSON.parse(row[18]) : null,
+            isPremium: row[19] === 'Yes', // Column T
+            needsAccommodation: row[20] === 'Yes', // Column U
+            esportsGame: row[21] || null // Column V
           };
 
           console.log(`📝 Processed ${registrationType} registration ${index + 1}:`, personalDetails.name);
@@ -349,31 +390,30 @@ class GoogleSheetsService {
     }
   }
 
-  // Legacy method - maintain compatibility with existing code
+  /**
+   * Save registration data to Google Sheets with backup fallback
+   */
   async saveRegistration(registrationData) {
   try {
     console.log('💾 [SHEETS DEBUG] Starting saveRegistration for:', registrationData.registrationId);
-    console.log('💾 [SHEETS DEBUG] Registration data:', {
-      id: registrationData.registrationId,
-      type: registrationData.registrationType,
-      amount: registrationData.totalAmount,
-      name: registrationData.personalDetails?.name || registrationData.teamLeader?.name,
-      teamMembers: registrationData.teamMembers?.length || 0
-    });
     
     const initialized = await this.ensureInitialized();
     if (!initialized) {
-      console.log('❌ [SHEETS DEBUG] Google Sheets not initialized');
+      console.log('❌ Sheets not available, saving to backup');
+      // Save to backup if Sheets unavailable
+      const BackupService = require('./backupService');
+      await BackupService.saveFailedRegistration(registrationData, 'sheets_unavailable');
       return { 
-        success: false, 
-        message: 'Google Sheets not available',
+        success: true, 
+        message: 'Saved to backup - Sheets unavailable',
+        backup: true,
         registrationId: registrationData.registrationId
       };
     }
 
     console.log('✅ [SHEETS DEBUG] Sheets API initialized, preparing data...');
 
-    // Prepare the row data
+    // Prepare the row data with new fields
     let values = [];
     
     if (registrationData.registrationType === 'individual') {
@@ -382,7 +422,7 @@ class GoogleSheetsService {
         registrationData.personalDetails.name,
         registrationData.personalDetails.email,
         registrationData.personalDetails.phone,
-        registrationData.personalDetails.college,
+        registrationData.personalDetails.college, // College from dropdown
         'Individual',
         1,
         registrationData.totalAmount || 0,
@@ -396,7 +436,9 @@ class GoogleSheetsService {
         registrationData.paymentDetails?.method || 'razorpay',
         registrationData.paymentDetails?.paymentId || '',
         registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-        JSON.stringify(registrationData.qrData || {})
+        JSON.stringify(registrationData.qrData || {}),
+        registrationData.isPremium ? 'Yes' : 'No', // Premium status
+        registrationData.needsAccommodation ? 'Yes' : 'No' // Accommodation
       ]);
     } else {
       // Team registration
@@ -405,9 +447,9 @@ class GoogleSheetsService {
         registrationData.teamLeader.name,
         registrationData.teamLeader.email,
         registrationData.teamLeader.phone,
-        registrationData.teamLeader.college,
+        registrationData.teamLeader.college, // College from dropdown
         registrationData.mainEvent,
-        registrationData.teamSize,
+        registrationData.teamSize, // Actual team size
         registrationData.totalAmount || 0,
         'completed',
         new Date().toISOString(),
@@ -419,7 +461,10 @@ class GoogleSheetsService {
         registrationData.paymentDetails?.method || 'razorpay',
         registrationData.paymentDetails?.paymentId || '',
         registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-        JSON.stringify(registrationData.qrData || {})
+        JSON.stringify(registrationData.qrData || {}),
+        registrationData.isPremium ? 'Yes' : 'No', // Team leader doesn't have premium
+        registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
+        registrationData.esportsGame || 'N/A' // E-sports game
       ]);
 
       if (registrationData.teamMembers && registrationData.teamMembers.length > 0) {
@@ -430,7 +475,7 @@ class GoogleSheetsService {
               member.name,
               member.email,
               member.phone,
-              member.college,
+              member.college, // College from dropdown
               registrationData.mainEvent,
               registrationData.teamSize,
               0, // Amount (free for members)
@@ -444,7 +489,10 @@ class GoogleSheetsService {
               registrationData.paymentDetails?.method || 'razorpay',
               registrationData.paymentDetails?.paymentId || '',
               registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-              JSON.stringify(registrationData.qrData || {})
+              JSON.stringify(registrationData.qrData || {}),
+              registrationData.isPremium ? 'Yes' : 'No', // Members don't have premium
+              registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
+              registrationData.esportsGame || 'N/A' // E-sports game
             ]);
           });
         }
@@ -476,9 +524,14 @@ class GoogleSheetsService {
     console.error('❌ [SHEETS DEBUG] Error saving to Google Sheets:', error);
     console.error('❌ [SHEETS DEBUG] Error details:', error.message);
     
+     // Save to backup when Sheets fails
+    const BackupService = require('./backupService');
+    await BackupService.saveFailedRegistration(registrationData, 'sheets_error');
+
     return {
-      success: false,
-      message: 'Google Sheets save failed: ' + error.message,
+      success: true,
+      message: 'Saved to backup - will retry later',
+      backup:true,
       registrationId: registrationData.registrationId,
       error: error.message
     };
@@ -487,10 +540,10 @@ class GoogleSheetsService {
 
   // ==================== EVENTS PARTICIPATION TRACKING ====================
 
-  // Save event participation data to separate sheet for attendance tracking
-  // ==================== EVENTS PARTICIPATION TRACKING ====================
-
-    async saveToEventsSheet(registrationData) {
+  /**
+   * Save event participation data to separate sheet for attendance tracking
+   */
+  async saveToEventsSheet(registrationData) {
       try {
         console.log('🎯 [EVENTS SHEET] Saving events data for:', registrationData.registrationId);
         console.log('🎯 [EVENTS SHEET DEBUG] Registration data:', {
@@ -499,7 +552,9 @@ class GoogleSheetsService {
           teamLeader: registrationData.teamLeader?.name,
           teamMembers: registrationData.teamMembers?.length || 0,
           leaderPrelimEvents: registrationData.teamLeader?.prelimEvents || [],
-          mainEvent: registrationData.mainEvent
+          mainEvent: registrationData.mainEvent,
+          isPremium: registrationData.isPremium,
+          esportsGame: registrationData.esportsGame
         });
         
         const initialized = await this.ensureInitialized();
@@ -525,7 +580,9 @@ class GoogleSheetsService {
               eventPrice,                      // G: Event Price
               '',                              // H: Day 1 Timestamp (empty initially)
               '',                              // I: Day 2 Timestamp (empty initially)
-              ''                               // J: Day 3 Timestamp (empty initially)
+              '',                              // J: Day 3 Timestamp (empty initially)
+              registrationData.isPremium ? 'Yes' : 'No', // K: Premium Status (NEW)
+              registrationData.esportsGame || 'N/A'
             ]);
             console.log(`✅ Added prelim event for individual: ${event}`);
           });
@@ -543,14 +600,16 @@ class GoogleSheetsService {
             registrationData.teamLeader.email,  // D: Email
             'Main',                             // E: Event Type
             registrationData.mainEvent,         // F: Event Name
-            2500,                               // G: Event Price (leader pays)
+            registrationData.totalAmount,       // G: Event Price (team total)
             '',                                 // H: Day 1 Timestamp
             '',                                 // I: Day 2 Timestamp
-            ''                                  // J: Day 3 Timestamp
+            '',                                 // J: Day 3 Timestamp
+            registrationData.isPremium ? 'Yes' : 'No' ,                              // K: Premium Status
+            registrationData.esportsGame || 'N/A'
           ]);
           console.log(`✅ Added MAIN event for leader: ${registrationData.mainEvent}`);
           
-          // Team Leader - Prelim Events (THIS WAS MISSING!)
+          // Team Leader - Prelim Events
           (registrationData.teamLeader.prelimEvents || []).forEach(event => {
             eventValues.push([
               registrationData.registrationId,    // A: Registration ID (leader uses main ID)
@@ -562,7 +621,9 @@ class GoogleSheetsService {
               0,                                  // G: Event Price (free for team leader prelims)
               '',                                 // H: Day 1 Timestamp
               '',                                 // I: Day 2 Timestamp
-              ''                                  // J: Day 3 Timestamp
+              '',                                 // J: Day 3 Timestamp
+              registrationData.isPremium ? 'Yes' : 'No', // ✅ K: Premium Status - USE ACTUAL VALUE            
+              registrationData.esportsGame || 'N/A'
             ]);
             console.log(`✅ Added PRELIM event for leader: ${event}`);
           });
@@ -586,7 +647,9 @@ class GoogleSheetsService {
                 0,                                // G: Event Price (free for members)
                 '',                               // H: Day 1 Timestamp
                 '',                               // I: Day 2 Timestamp
-                ''                                // J: Day 3 Timestamp
+                '',                               // J: Day 3 Timestamp
+                registrationData.isPremium ? 'Yes' : 'No', // ✅ K: Premium Status - USE ACTUAL VALUE              
+                registrationData.esportsGame || 'N/A'   
               ]);
               console.log(`✅ Added MAIN event for member ${member.name}: ${registrationData.mainEvent}`);
 
@@ -602,7 +665,9 @@ class GoogleSheetsService {
                   0,                              // G: Event Price (free for team members)
                   '',                             // H: Day 1 Timestamp
                   '',                             // I: Day 2 Timestamp
-                  ''                              // J: Day 3 Timestamp
+                  '',                             // J: Day 3 Timestamp
+                  registrationData.isPremium ? 'Yes' : 'No' ,                           // K: Premium Status
+                  registrationData.esportsGame || 'N/A'
                 ]);
                 console.log(`✅ Added PRELIM event for member ${member.name}: ${event}`);
               });
@@ -630,6 +695,7 @@ class GoogleSheetsService {
           console.log(`   - Team Members: ${memberEvents.length} events`);
           console.log(`   - Main Events: ${eventValues.filter(ev => ev[4] === 'Main').length}`);
           console.log(`   - Prelim Events: ${eventValues.filter(ev => ev[4] === 'Prelim').length}`);
+          console.log(`   - E-sports Game: ${registrationData.esportsGame || 'N/A'}`);
         } else {
           console.log('⚠️ No events to save for this registration');
         }
@@ -642,7 +708,9 @@ class GoogleSheetsService {
 
   // ==================== ATTENDANCE MARKING ====================
 
-  // Update attendance when QR code is scanned
+  /**
+   * Update attendance when QR code is scanned
+   */
   async updateAttendance(registrationId, eventName, day, timestamp) {
     try {
       const initialized = await this.ensureInitialized();
@@ -704,4 +772,5 @@ class GoogleSheetsService {
   }
 }
 
+// Export service instance
 module.exports = new GoogleSheetsService();

@@ -27,6 +27,14 @@ export default function EventSection() {
     setSelectedEvent(null);
   };
 
+  const handleRegister = () => {
+    console.log('Registering for event:', selectedEvent?.title);
+    closeEvent();
+    setTimeout(() => {
+      window.location.href = "http://localhost:3000";
+    }, 350);
+  };
+
   return (
     <div className="event-section-container">
       {/* ✅ Background */}
@@ -137,6 +145,7 @@ export default function EventSection() {
           onBack={onBackFromModal}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          onRegister={handleRegister}
         />
       )}
 

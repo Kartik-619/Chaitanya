@@ -2,12 +2,30 @@
 import React, { useEffect } from 'react';
 import { X, ArrowLeft, Calendar, Clock, MapPin, Users, Trophy } from 'lucide-react';
 
-export default function EventModal({ event, onClose, onBack, activeTab, setActiveTab }) {
+export default function EventModal({ event, onClose, onBack, activeTab, setActiveTab, onRegister }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const handleRegisterClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Register clicked for event:', event?.title);
+    
+    if (onRegister) {
+      // Use the parent component's register handler
+      onRegister();
+    } else {
+      // Fallback: close modal and navigate
+      if (onClose) onClose();
+      setTimeout(() => {
+        window.location.href = "http://localhost:3000";
+      }, 100);
+    }
+  };
 
   if (!event) return null;
 
@@ -90,8 +108,9 @@ export default function EventModal({ event, onClose, onBack, activeTab, setActiv
                 ))}
               </div>
               <button 
-                className="event-register-btn"
+                className="event-register-btn w-full"
                 style={{ background: event.color }}
+                onClick={handleRegisterClick}
               >
                 Register Now
               </button>
@@ -152,6 +171,7 @@ export default function EventModal({ event, onClose, onBack, activeTab, setActiv
               <button 
                 className="event-interest-btn"
                 style={{ background: event.color }}
+                onClick={handleRegisterClick}
               >
                 Register Interest
               </button>

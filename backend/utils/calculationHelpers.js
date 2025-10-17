@@ -1,67 +1,127 @@
-﻿const { calculateIndividualTotal, calculateTeamTotal } = require('../config/eventPricing');
+﻿/**
+ * 🧮 CALCULATION HELPERS
+ * 
+ * This file contains all calculation and statistics functions:
+ * - Calculate registration amounts for individuals and teams
+ * - Generate statistics for admin dashboard
+ * - Count events, colleges, payments, and revenue
+ * 
+ * 📊 WHAT IT DOES:
+ * - Money calculations for registrations
+ * - Statistical analysis of registration data
+ * - Dashboard reporting functions
+ */
 
-// Calculate individual amount based on selected prelim events
-const calculateIndividualAmount = (prelimEvents) => {
-  console.log('🧮 Calculating individual amount for events:', prelimEvents);
+const { EVENT_PRICES, calculateTeamTotal } = require('../config/eventPricing');
+const { EVENT_CONFIG } = require('../config/constants');
+
+/**
+ * Calculate individual registration amount with premium and accommodation
+ * @param {Array} prelimEvents - List of events selected by individual
+ * @param {boolean} isPremium - Whether premium package is selected
+ * @param {boolean} needsAccommodation - Whether accommodation is needed
+ * @returns {number} Total amount to pay
+ */
+const calculateIndividualAmount = (prelimEvents, isPremium = false, needsAccommodation = false) => {
+  console.log('🧮 Calculating individual amount with premium:', isPremium, 'accommodation:', needsAccommodation);
   
-  // ✅ FIX: Call the correct function from eventPricing
-  const amount = calculateIndividualTotal(prelimEvents);
-  console.log('💰 Calculated amount:', amount);
+  // Get base event amount
+  const baseAmount = calculateIndividualTotal(prelimEvents);
   
-  return amount;
+  let total = baseAmount;
+  
+  // Add premium fee if selected
+  if (isPremium) {
+    total += EVENT_CONFIG.PREMIUM_FEE;
+    console.log('💰 Added premium fee:', EVENT_CONFIG.PREMIUM_FEE);
+  }
+  
+  // Add accommodation fee if needed
+  if (needsAccommodation) {
+    total += EVENT_CONFIG.ACCOMMODATION_FEE;
+    console.log('💰 Added accommodation fee:', EVENT_CONFIG.ACCOMMODATION_FEE);
+  }
+  
+  console.log('💰 Final individual amount:', total);
+  return total;
 };
 
-// Calculate team amount (fixed ₹2500)
-const calculateTeamAmount = (mainEvent) => {
-  console.log('🧮 Calculating team amount for:', mainEvent);
-  return calculateTeamTotal(); // Fixed ₹2500
+/**
+ * Calculate team registration amount with accommodation AND PREMIUM
+ */
+const calculateTeamAmount = (mainEvent, teamSize, needsAccommodation = false, esportsGame = null, isPremium = false) => {
+  console.log('🧮 Calculating team amount:', { 
+    mainEvent, 
+    teamSize, 
+    needsAccommodation, 
+    esportsGame, 
+    isPremium 
+  });
+  
+  // Get base team amount (event cost only)
+  const baseAmount = calculateTeamTotal(mainEvent, teamSize, esportsGame);
+  
+  let total = baseAmount;
+  
+  // ✅ FIX: Always add accommodation (compulsory)
+  const accommodationTotal = 600 * teamSize; // ₹600 per person
+  total += accommodationTotal;
+  console.log('💰 Added accommodation for', teamSize, 'members:', accommodationTotal);
+  
+  // ✅ FIX: Add premium fee if selected
+  if (isPremium) {
+    total += 200; // ₹200 premium fee
+    console.log('💰 Added premium fee: 200');
+  }
+  
+  console.log('💰 Final team amount breakdown:', {
+    baseEventAmount: baseAmount,
+    accommodation: accommodationTotal,
+    premium: isPremium ? 200 : 0,
+    total: total
+  });
+  
+  return total;
 };
 
-// ... rest of your file remains exactly the same ...
+/**
+ * Calculate individual total from event pricing config
+ * @param {Array} prelimEvents - List of events
+ * @returns {number} Total event amount
+ */
+const calculateIndividualTotal = (prelimEvents) => {
+  console.log('🧮 Calculating individual total for events:', prelimEvents);
+  
+  if (!prelimEvents || !Array.isArray(prelimEvents)) {
+    console.log('❌ Invalid events array');
+    return 0;
+  }
+  
+  const total = prelimEvents.reduce((sum, event) => {
+    const price = EVENT_PRICES[event] || 0;
+    console.log(`   - ${event}: ₹${price}`);
+    return sum + price;
+  }, 0);
+  
+  console.log('💰 Individual events total:', total);
+  return total;
+};
+
+// Existing functions (keep for backward compatibility)
 const calculateEventStats = (registrations) => {
   const eventCount = {};
   
   registrations.forEach(reg => {
-    // Handle Individual registrations
-    if (reg.registrationType === 'individual') {
-      // Count prelim events for individuals
-      if (reg.prelimEvents && Array.isArray(reg.prelimEvents)) {
-        reg.prelimEvents.forEach(event => {
-          if (event && event.trim() !== '') {
-            eventCount[event] = (eventCount[event] || 0) + 1;
-          }
-        });
-      }
+    if (reg.registrationType === 'individual' && reg.prelimEvents) {
+      reg.prelimEvents.forEach(event => {
+        if (event && event.trim() !== '') {
+          eventCount[event] = (eventCount[event] || 0) + 1;
+        }
+      });
     }
     
-    // Handle Team registrations
-    if (reg.registrationType === 'team') {
-      // Count main events for teams
-      if (reg.mainEvent) {
-        eventCount[reg.mainEvent] = (eventCount[reg.mainEvent] || 0) + 1;
-      }
-      
-      // Count prelim events from team members
-      if (reg.teamMembers && Array.isArray(reg.teamMembers)) {
-        reg.teamMembers.forEach(member => {
-          if (member.prelimEvents && Array.isArray(member.prelimEvents)) {
-            member.prelimEvents.forEach(event => {
-              if (event && event.trim() !== '') {
-                eventCount[event] = (eventCount[event] || 0) + 1;
-              }
-            });
-          }
-        });
-      }
-      
-      // Count prelim events for team leader
-      if (reg.teamLeader && reg.teamLeader.prelimEvents && Array.isArray(reg.teamLeader.prelimEvents)) {
-        reg.teamLeader.prelimEvents.forEach(event => {
-          if (event && event.trim() !== '') {
-            eventCount[event] = (eventCount[event] || 0) + 1;
-          }
-        });
-      }
+    if (reg.registrationType === 'team' && reg.mainEvent) {
+      eventCount[reg.mainEvent] = (eventCount[reg.mainEvent] || 0) + 1;
     }
   });
   
@@ -111,7 +171,6 @@ const calculateDailyStats = (registrations) => {
   return dailyCount;
 };
 
-// New: Calculate revenue by registration type
 const calculateRevenueStats = (registrations) => {
   const revenue = {
     individual: 0,
@@ -135,9 +194,11 @@ const calculateRevenueStats = (registrations) => {
   return revenue;
 };
 
+// Export all calculation functions
 module.exports = {
   calculateIndividualAmount,
   calculateTeamAmount,
+  calculateIndividualTotal,
   calculateEventStats,
   calculateCollegeStats,
   calculatePaymentStats,

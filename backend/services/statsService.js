@@ -1,6 +1,26 @@
-﻿const GoogleSheetsService = require('./googleSheetsService');
+﻿/**
+ * 📊 STATS SERVICE
+ * 
+ * This service handles all statistics and analytics operations:
+ * - Registration statistics and dashboard data
+ * - Data filtering and reporting
+ * - Financial data export and analysis
+ * - College and event participation analytics
+ * 
+ * 📈 ANALYTICS FEATURES:
+ * - Real-time registration statistics
+ * - Revenue tracking and reporting
+ * - Event participation metrics
+ * - College-wise participation data
+ * - Payment status analytics
+ */
+
+const GoogleSheetsService = require('./googleSheetsService');
 
 class StatsService {
+  /**
+   * Get comprehensive registration statistics for admin dashboard
+   */
   async getRegistrationStats() {
     try {
       console.log('🔄 [STATS] Getting registration stats...');
@@ -30,7 +50,7 @@ class StatsService {
         };
       }
 
-      // ✅ FIXED: Calculate statistics properly
+      //Calculate statistics properly
       let totalRevenue = 0;
       let individualCount = 0;
       let teamCount = 0;
@@ -40,21 +60,21 @@ class StatsService {
       const paymentStatus = { completed: 0, pending: 0, failed: 0 };
 
       registrations.forEach(reg => {
-        // ✅ FIXED: Use correct amount field
+        //  Use correct amount field
         const amount = parseFloat(reg.amount) || parseFloat(reg.totalAmount) || 0;
         totalRevenue += amount;
 
-        // ✅ FIXED: Count registration types properly
+        //  Count registration types properly
         if (reg.registrationType === 'individual' || reg.registrationId?.includes('IND')) {
           individualCount++;
           totalParticipants++;
         } else {
           teamCount++;
-          // ✅ FIXED: Count team members properly
+          //  Count team members properly
           totalParticipants += parseInt(reg.teamSize) || 1;
         }
 
-        // ✅ FIXED: Track events properly
+        //  Track events properly
         if (reg.registrationType === 'individual' && reg.prelimEvents) {
           reg.prelimEvents.forEach(event => {
             events[event] = (events[event] || 0) + 1;
@@ -63,11 +83,11 @@ class StatsService {
           events[reg.mainEvent] = (events[reg.mainEvent] || 0) + 1;
         }
 
-        // ✅ FIXED: Track colleges properly
+        //  Track colleges properly
         const college = reg.personalDetails?.college || reg.teamHeadCollege || 'Unknown College';
         colleges[college] = (colleges[college] || 0) + 1;
 
-        // ✅ FIXED: Track payment status properly
+        //  Track payment status properly
         const status = (reg.paymentStatus || 'completed').toLowerCase();
         if (status === 'completed') paymentStatus.completed++;
         else if (status === 'pending') paymentStatus.pending++;
@@ -104,6 +124,9 @@ class StatsService {
     }
   }
 
+  /**
+   * Get filtered registrations based on college, event, or payment status
+   */
   async getFilteredRegistrations(filters = {}) {
     try {
       console.log('🔄 [STATS] Getting filtered registrations...');
@@ -162,6 +185,9 @@ class StatsService {
     }
   }
 
+  /**
+   * Export financial data for accounting and reporting purposes
+   */
   async exportFinanceData() {
     try {
       console.log('🔄 [STATS] Exporting finance data...');
@@ -212,4 +238,5 @@ class StatsService {
   }
 }
 
+// Export service instance
 module.exports = new StatsService();

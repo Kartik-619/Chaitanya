@@ -1,7 +1,23 @@
+/**
+ * 📝 REGISTRATION SERVICE
+ * 
+ * This service handles the complete registration lifecycle:
+ * - Session management and OTP verification
+ * - Individual and team registration flows
+ * - Payment processing and verification
+ * - Data validation and security
+ * 
+ * 🔒 SECURITY FEATURES:
+ * - OTP rate limiting and expiry
+ * - Payment lock system to prevent race conditions
+ * - Session cleanup and memory management
+ * - Data validation and sanitization
+ */
+
 const { v4: uuidv4 } = require('uuid');
 const { calculateIndividualAmount, calculateTeamAmount } = require('../utils/calculationHelpers');
 const { VALIDATION_CONFIG } = require('../config/validationConfig');
-const { EVENT_PRICES } = require('../config/eventPricing');
+const { TEAM_SIZE_RULES, E_SPORTS_GAMES, EVENT_CONFIG } = require('../config/constants');
 const crypto = require('crypto');
 
 class RegistrationService {
@@ -9,8 +25,20 @@ class RegistrationService {
     this.registrationSessions = new Map();
     this.completedRegistrations = new Map();
     this.otpStorage = new Map();
-    
-    // ✅ KEEP: Essential payment integration but SECURE
+    this.MAX_SESSION_AGE = 30 * 60 * 1000;
+    this.OTP_EXPIRY = 10 * 60 * 1000;
+    this.otpAttempts = new Map();
+    this.MAX_OTP_ATTEMPTS = 3;
+
+    // Payment lock system
+    this.paymentLocks = new Map();
+
+    this.pdfDeliveryTracker = new Map();
+
+    // Memory cleanup every hour
+    setInterval(() => this.cleanupMemory(), 60 * 60 * 1000);
+
+    // Essential payment integration but SECURE
     this.paymentService = {
       processIndividualPayment: async (amount, sessionId, customerInfo) => {
         console.log('💰 Processing individual payment:', amount);
@@ -37,7 +65,7 @@ class RegistrationService {
       verifyPayment: async (orderId, paymentId, signature) => {
         console.log('💰 Verifying payment');
         
-        // ✅ SECURE: Add validation
+        // Add validation
         if (!orderId || !paymentId) {
           return {
             success: false,
@@ -53,72 +81,138 @@ class RegistrationService {
         };
       }
     };
-    
-    this.MAX_SESSION_AGE = 30 * 60 * 1000;
-    this.OTP_EXPIRY = 10 * 60 * 1000;
-    this.otpAttempts = new Map();
-    this.MAX_OTP_ATTEMPTS = 3;
   }
 
+  /**
+   * Get registration session by session ID
+   */
   getRegistrationSession(sessionId) {
     return this.registrationSessions.get(sessionId);
   }
 
-  // In RegistrationService.js - FIX THIS METHOD
-createRegistrationSession(personalDetails, registrationType, otp) {
-  try {
-    console.log('🔍 Creating session with data:', { personalDetails, registrationType });
-    
-    // ✅ FIX: Handle both nested teamHead and flat structure
-    let actualPersonalDetails;
-    
-    if (personalDetails.teamHead) {
-      // Data comes from SecurityMiddleware (nested teamHead)
-      actualPersonalDetails = personalDetails.teamHead;
-      console.log('📦 Using nested teamHead data');
-    } else {
-      // Data comes directly (flat structure)
-      actualPersonalDetails = personalDetails;
-      console.log('📦 Using flat personal details');
+  /**
+   * Acquire payment lock to prevent race conditions
+   */
+  acquirePaymentLock(sessionId) {
+    if (this.paymentLocks.has(sessionId)) {
+      console.log('🔒 Payment already processing for session:', sessionId);
+      return false;
     }
-
-    // ✅ Validate we have the required fields
-    if (!actualPersonalDetails || !actualPersonalDetails.email || !actualPersonalDetails.phone) {
-      console.log('❌ Missing required personal details:', actualPersonalDetails);
-      throw new Error('Invalid personal details - email and phone are required');
-    }
-
-    const sessionId = uuidv4();
-    const sessionData = {
-      personalDetails: actualPersonalDetails, // ✅ Use the correct personal details
-      registrationType,
-      otp,
-      otpVerified: false,
-      currentPhase: 'started',
-      totalAmount: 0,
-      prelimEvents: [],
-      teamData: null,
-      createdAt: new Date().toISOString(),
-      otpCreatedAt: Date.now(),
-      paymentStatus: 'pending'
-    };
-    
-    this.registrationSessions.set(sessionId, sessionData);
-    this.otpStorage.set(sessionId, { 
-      otp, 
-      createdAt: Date.now(),
-      attempts: 0 
-    });
-    
-    console.log(`✅ ${registrationType} session created: ${sessionId}`);
-    return sessionId;
-  } catch (error) {
-    console.error('❌ Session creation failed:', error);
-    throw error;
+    this.paymentLocks.set(sessionId, Date.now());
+    console.log('🔒 Payment lock acquired for session:', sessionId);
+    return true;
   }
-}
 
-  // ✅ KEEP: Your OTP verification with security enhancements
+  /**
+   * Release payment lock after processing
+   */
+  releasePaymentLock(sessionId) {
+    this.paymentLocks.delete(sessionId);
+    console.log('🔒 Payment lock released for session:', sessionId);
+  }
+
+  /**
+   * Clean up old sessions and payment locks
+   */
+  cleanupMemory() {
+    const now = Date.now();
+    let cleanedSessions = 0;
+    let cleanedLocks = 0;
+    let cleanedTrackers = 0;
+    
+    // Clean old sessions (> 2 hours)
+    for (const [sessionId, session] of this.registrationSessions.entries()) {
+      const sessionAge = now - new Date(session.createdAt).getTime();
+      if (sessionAge > 2 * 60 * 60 * 1000) {
+        this.registrationSessions.delete(sessionId);
+        this.otpStorage.delete(sessionId);
+        cleanedSessions++;
+      }
+    }
+    
+    // Clean old payment locks (> 5 minutes)
+    for (const [sessionId, lockTime] of this.paymentLocks.entries()) {
+      if (now - lockTime > 5 * 60 * 1000) {
+        this.paymentLocks.delete(sessionId);
+        cleanedLocks++;
+      }
+    }
+
+    // Clean old PDF delivery trackers (> 7 days)
+     for (const [registrationId, tracker] of this.pdfDeliveryTracker.entries()) {
+        if (tracker.delivered && now - new Date(tracker.deliveredAt).getTime() > 7 * 24 * 60 * 60 * 1000) {
+          this.pdfDeliveryTracker.delete(registrationId);
+          cleanedTrackers++;
+        }
+      }
+    
+    // Include cleanedTrackers
+    if (cleanedSessions > 0 || cleanedLocks > 0 || cleanedTrackers > 0) {
+      console.log(`🧹 Memory cleanup: ${cleanedSessions} sessions, ${cleanedLocks} locks, ${cleanedTrackers} trackers removed`);
+    }
+  }
+
+  /**
+   * Create new registration session with personal details
+   */
+  createRegistrationSession(personalDetails, registrationType, otp) {
+    try {
+      console.log('🔍 Creating session with data:', { personalDetails, registrationType });
+      
+      // Handle both nested teamHead and flat structure
+      let actualPersonalDetails;
+      
+      if (personalDetails.teamHead) {
+        // Data comes from SecurityMiddleware (nested teamHead)
+        actualPersonalDetails = personalDetails.teamHead;
+        console.log('📦 Using nested teamHead data');
+      } else {
+        // Data comes directly (flat structure)
+        actualPersonalDetails = personalDetails;
+        console.log('📦 Using flat personal details');
+      }
+
+      //  Validate we have the required fields
+      if (!actualPersonalDetails || !actualPersonalDetails.email || !actualPersonalDetails.phone) {
+        console.log('❌ Missing required personal details:', actualPersonalDetails);
+        throw new Error('Invalid personal details - email and phone are required');
+      }
+
+      const sessionId = uuidv4();
+      const sessionData = {
+        personalDetails: actualPersonalDetails, //  Use the correct personal details
+        registrationType,
+        otp,
+        otpVerified: false,
+        currentPhase: 'started',
+        totalAmount: 0,
+        prelimEvents: [],
+        teamData: null,
+        createdAt: new Date().toISOString(),
+        otpCreatedAt: Date.now(),
+        paymentStatus: 'pending',
+        isPremium: false,
+        needsAccommodation: false
+      };
+      
+      this.registrationSessions.set(sessionId, sessionData);
+      this.otpStorage.set(sessionId, { 
+        otp, 
+        createdAt: Date.now(),
+        attempts: 0 
+      });
+      
+      console.log(`✅ ${registrationType} session created: ${sessionId}`);
+      return sessionId;
+    } catch (error) {
+      console.error('❌ Session creation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verify OTP with security enhancements and rate limiting
+   */
   verifyOTP(sessionId, enteredOTP) {
     const session = this.registrationSessions.get(sessionId);
     const storedOTP = this.otpStorage.get(sessionId);
@@ -127,7 +221,7 @@ createRegistrationSession(personalDetails, registrationType, otp) {
       return { success: false, message: 'Session not found or OTP expired' };
     }
 
-    // ✅ ADDED: Rate limiting
+    //  Rate limiting
     if (storedOTP.attempts >= this.MAX_OTP_ATTEMPTS) {
       this.otpStorage.delete(sessionId);
       this.registrationSessions.delete(sessionId);
@@ -140,7 +234,7 @@ createRegistrationSession(personalDetails, registrationType, otp) {
       return { success: false, message: 'OTP has expired' };
     }
 
-    // ✅ SECURE: Constant-time comparison
+    //  Constant-time comparison
     let isValid = true;
     if (storedOTP.otp.length !== enteredOTP.length) {
       isValid = false;
@@ -168,63 +262,79 @@ createRegistrationSession(personalDetails, registrationType, otp) {
     return { success: true, message: 'OTP verified successfully' };
   }
 
-// In RegistrationService.js - FIX THE setupIndividualEvents METHOD
-setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
-  const session = this.registrationSessions.get(sessionId);
-  if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
-  if (session.registrationType !== 'individual') throw new Error('Invalid registration type');
+  /**
+   * Setup individual events and calculate amount with premium and accommodation
+   */
+  setupIndividualEvents(sessionId, prelimEvents, isPremium = false, needsAccommodation = false) {
+    const session = this.registrationSessions.get(sessionId);
+    if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
+    if (session.registrationType !== 'individual') throw new Error('Invalid registration type');
 
-  // Validate prelim events
-  if (!prelimEvents || !Array.isArray(prelimEvents)) {
-    throw new Error('Prelim events array is required');
+    // Validate prelim events
+    if (!prelimEvents || !Array.isArray(prelimEvents)) {
+      throw new Error('Prelim events array is required');
+    }
+
+    // Calculate amount with premium and accommodation
+    const totalAmount = calculateIndividualAmount(prelimEvents, isPremium, needsAccommodation);
+    
+    console.log('💰 DEBUG - Individual Events:', prelimEvents);
+    console.log('💰 DEBUG - Premium:', isPremium);
+    console.log('💰 DEBUG - Accommodation:', needsAccommodation);
+    console.log('💰 DEBUG - Final Amount:', totalAmount);
+
+    session.prelimEvents = prelimEvents;
+    session.totalAmount = totalAmount;
+    session.isPremium = isPremium;
+    session.needsAccommodation = needsAccommodation;
+    session.currentPhase = 'individual_setup';
+    
+    this.registrationSessions.set(sessionId, session);
+
+    return {
+      personalDetails: session.personalDetails,
+      prelimEvents: session.prelimEvents,
+      totalAmount: session.totalAmount,
+      isPremium: session.isPremium,
+      needsAccommodation: session.needsAccommodation
+    };
   }
 
-  // ✅ FIXED: Use the imported helper function directly
-  const calculatedAmount = calculateIndividualAmount(prelimEvents);
-
-  console.log('💰 DEBUG - Individual Events:', prelimEvents);
-  console.log('💰 DEBUG - Calculated Amount:', calculatedAmount);
-  console.log('💰 DEBUG - Provided Amount:', totalAmount);
-
-  // ✅ FIXED: Use the calculated amount
-  const finalAmount = calculatedAmount; // Always use calculated amount
-  
-  console.log('💰 DEBUG - Final Amount Being Stored:', finalAmount);
-
-  session.prelimEvents = prelimEvents;
-  session.totalAmount = finalAmount; // ✅ THIS WAS MISSING - Store the amount in session
-  session.currentPhase = 'individual_setup';
-  
-  this.registrationSessions.set(sessionId, session);
-
-  return {
-    personalDetails: session.personalDetails,
-    prelimEvents: session.prelimEvents,
-    totalAmount: session.totalAmount // Return correct amount
-  };
-}
-
-  // ✅ KEEP: Your original team setup with validation
-  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = []) {
+  /**
+   * Setup team details with validation and member management
+   */
+  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false) {
     const session = this.registrationSessions.get(sessionId);
     if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
     if (session.registrationType !== 'team') throw new Error('Invalid registration type');
+    
     console.log('🔍 [TEAM SETUP DEBUG] Received data:', {
       teamName,
       mainEvent,
       teamMembersCount: teamMembers?.length,
-      leaderPrelimEvents: leaderPrelimEvents
+      teamSize,
+      leaderPrelimEvents: leaderPrelimEvents,
+      esportsGame,
+      needsAccommodation,
+      isPremium
     });
 
     // Validate main event
-    if (!['Hackathon', 'Accurate Predictions'].includes(mainEvent)) {
-      throw new Error('Please select one main event (Hackathon or Accurate Predictions)');
+    if (!TEAM_SIZE_RULES[mainEvent]) {
+      throw new Error('Please select a valid team event');
     }
 
-    // Validate team size (2-4 members including team leader)
+    // Validate team size rules
+    const teamRules = TEAM_SIZE_RULES[mainEvent];
     const totalTeamSize = teamMembers.length + 1;
-    if (totalTeamSize < 2 || totalTeamSize > 4) {
-      throw new Error('Team size must be between 2 and 4 members');
+    
+    if (totalTeamSize < teamRules.min || totalTeamSize > teamRules.max) {
+      throw new Error(`${mainEvent} requires ${teamRules.min}-${teamRules.max} members (including team leader). You have ${totalTeamSize} members.`);
+    }
+
+    // Validate E-sports game selection
+    if (mainEvent === 'E-sports' && !E_SPORTS_GAMES.includes(esportsGame)) {
+      throw new Error('Please select a valid E-sports game');
     }
 
     // Check for duplicate emails/phones
@@ -238,26 +348,30 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
       throw new Error('Duplicate phone number found in team');
     }
 
-    // ✅ ADDED: Validate team member data
+    // Validate team member data
     for (const member of teamMembers) {
       if (!member.name || !member.email || !member.phone) {
         throw new Error('All team members must have name, email, and phone');
       }
     }
 
-    // Calculate team amount (fixed ₹2500)
-    const totalAmount = calculateTeamAmount(mainEvent);
+    // Calculate team amount with accommodation
+    const totalAmount = calculateTeamAmount(mainEvent, totalTeamSize, needsAccommodation, esportsGame, isPremium);
     
     session.teamData = {
-      teamName: teamName.trim().substring(0, 50), // ✅ ADDED: Sanitization
+      teamName: teamName.trim().substring(0, 50), 
       mainEvent,
       teamMembers,
       teamLeader: {
-      ...session.personalDetails,
-      prelimEvents: leaderPrelimEvents || [] 
-    }
+        ...session.personalDetails,
+        prelimEvents: leaderPrelimEvents || [] 
+      },
+      teamSize: totalTeamSize,
+      esportsGame: esportsGame
     };
     session.totalAmount = totalAmount;
+    session.needsAccommodation = needsAccommodation;
+    session.isPremium = isPremium; 
     session.currentPhase = 'team_setup';
     
     this.registrationSessions.set(sessionId, session);
@@ -267,12 +381,17 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
       teamName: session.teamData.teamName,
       mainEvent: session.teamData.mainEvent,
       teamMembers: session.teamData.teamMembers,
+      teamSize: totalTeamSize,
+      esportsGame: session.teamData.esportsGame,
       totalAmount: session.totalAmount,
-      teamSize: totalTeamSize
+      needsAccommodation: session.needsAccommodation,
+      isPremium: session.isPremium 
     };
   }
 
-  // ✅ KEEP: Your payment initialization but SECURE
+  /**
+   * Initialize payment process for registration
+   */
   async initializePayment(sessionId) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
@@ -321,7 +440,6 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
         orderDetails: paymentResult.orderDetails,
         amount: session.totalAmount,
         registrationType: session.registrationType
-        // ❌ REMOVED: keyId for security
       };
 
     } catch (error) {
@@ -330,19 +448,26 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
     }
   }
 
-  // ✅ KEEP: Your payment verification with security
+  /**
+   * Verify payment and complete registration with security locks
+   */
   async verifyAndCompleteRegistration(sessionId, paymentData) {
-    const session = this.registrationSessions.get(sessionId);
-    if (!session) throw new Error('Session not found');
-
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
-
-    // ✅ ADDED: Validation
-    if (!razorpay_order_id || !razorpay_payment_id) {
-      throw new Error('Missing payment verification data');
+    // Check for duplicate payment processing
+    if (!this.acquirePaymentLock(sessionId)) {
+      throw new Error('Payment is already being processed for this registration. Please wait a moment...');
     }
 
     try {
+      const session = this.registrationSessions.get(sessionId);
+      if (!session) throw new Error('Session not found');
+
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
+      
+      if (!razorpay_order_id || !razorpay_payment_id) {
+        throw new Error('Missing payment verification data');
+      }
+
+      // Your existing verification code continues here...
       const verificationResult = await this.paymentService.verifyPayment(
         razorpay_order_id,
         razorpay_payment_id,
@@ -355,7 +480,6 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
         throw new Error(verificationResult.message || 'Payment verification failed');
       }
 
-      // ✅ FIXED: Your original fix for transaction ID
       const properPaymentResult = {
         success: true,
         paymentId: razorpay_payment_id,
@@ -364,11 +488,7 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
         status: 'captured'
       };
 
-      const completionResult = this.completeRegistration(
-        sessionId, 
-        properPaymentResult,
-        'razorpay'
-      );
+      const completionResult = this.completeRegistration(sessionId, properPaymentResult, 'razorpay');
 
       session.paymentStatus = 'completed';
       session.currentPhase = 'completed';
@@ -376,15 +496,15 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
 
       return completionResult;
 
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      session.paymentStatus = 'failed';
-      this.registrationSessions.set(sessionId, session);
-      throw error;
+    } finally {
+      // Always release lock
+      this.releasePaymentLock(sessionId);
     }
   }
 
-  // ✅ KEEP: All your original methods
+  /**
+   * Get payment status for a session
+   */
   getPaymentStatus(sessionId) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
@@ -397,6 +517,9 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
     };
   }
 
+  /**
+   * Get registration review data before completion
+   */
   getRegistrationReview(sessionId) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
@@ -407,6 +530,8 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
         personalDetails: session.personalDetails,
         prelimEvents: session.prelimEvents,
         totalAmount: session.totalAmount,
+        isPremium: session.isPremium,
+        needsAccommodation: session.needsAccommodation,
         currentPhase: 'review',
         paymentStatus: session.paymentStatus
       };
@@ -417,138 +542,174 @@ setupIndividualEvents(sessionId, prelimEvents, totalAmount) {
         teamName: session.teamData.teamName,
         mainEvent: session.teamData.mainEvent,
         teamMembers: session.teamData.teamMembers,
+        teamSize: session.teamData.teamSize,
+        esportsGame: session.teamData.esportsGame,
         totalAmount: session.totalAmount,
-        teamSize: session.teamData.teamMembers.length + 1,
+        needsAccommodation: session.needsAccommodation,
         currentPhase: 'review',
         paymentStatus: session.paymentStatus
       };
     }
   }
 
-  // In RegistrationService.js - completeRegistration method
-completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
-  const session = this.registrationSessions.get(sessionId);
-  if (!session) throw new Error('Session not found');
-  console.log('🔍 [COMPLETE DEBUG] Session teamData:', {
-    teamLeaderName: session.teamData?.teamLeader?.name,
-    teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, // ✅ Check this!
-    hasPrelimEvents: !!session.teamData?.teamLeader?.prelimEvents,
-    prelimEventsType: typeof session.teamData?.teamLeader?.prelimEvents
-  });
-
-  const registrationId = this.generateRegistrationId(session.registrationType);
-  const teamId = session.registrationType === 'team' ? this.generateTeamId() : null;
-
-  let finalRegistration;
-
-  // ✅ EXTRACT: Get transaction ID from payment result
-  const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
-  const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
-  
-  console.log('💾 Storing payment data:', {
-    transactionId,
-    orderId,
-    amount: session.totalAmount
-  });
-
-  if (session.registrationType === 'individual') {
-    finalRegistration = {
-      registrationType: 'individual',
-      registrationId,
-      personalDetails: session.personalDetails,
-      prelimEvents: session.prelimEvents,
-      paymentDetails: {
-        transactionId: transactionId,
-        orderId: orderId,
-        paymentId: paymentResult.paymentId,
-        signature: paymentResult.signature,
-        amount: session.totalAmount,
-        method: paymentMethod,
-        status: paymentResult.status || 'captured',
-        transactionDate: new Date().toISOString(),
-        razorpayPaymentId: transactionId,
-        razorpayOrderId: orderId,
-        ...paymentResult.paymentDetails
-      },
-      totalAmount: session.totalAmount,
-      registeredAt: new Date().toISOString(),
-      qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
-    };
-  } else {
-     const teamLeaderData = {
-      ...session.teamData.teamLeader, // Copy all properties
-      prelimEvents: session.teamData.teamLeader.prelimEvents || [] // ✅ EXPLICITLY include prelimEvents
-    };
-    console.log('🔍 [FINAL TEAM LEADER DEBUG] Team leader data:', {
-      name: teamLeaderData.name,
-      prelimEvents: teamLeaderData.prelimEvents, // ✅ Should have the events now
-      email: teamLeaderData.email
+  /**
+   * Complete registration and store final data
+   */
+  completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
+    const session = this.registrationSessions.get(sessionId);
+    if (!session) throw new Error('Session not found');
+    
+    console.log('🔍 [COMPLETE DEBUG] Session data:', {
+      teamLeaderName: session.teamData?.teamLeader?.name,
+      teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, 
+      isPremium: session.isPremium,
+      needsAccommodation: session.needsAccommodation
     });
-    finalRegistration = {
-      registrationType: 'team',
-      teamId,
-      teamName: session.teamData.teamName,
+
+    const registrationId = this.generateRegistrationId(session.registrationType);
+    const teamId = session.registrationType === 'team' ? this.generateTeamId() : null;
+
+    let finalRegistration;
+
+    // Get transaction ID from payment result
+    const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
+    const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
+    
+    console.log('💾 Storing payment data:', {
+      transactionId,
+      orderId,
+      amount: session.totalAmount
+    });
+
+    // ✅ CRITICAL FIX: Extract premium and accommodation from session
+    const isPremium = session.isPremium || false;
+    const needsAccommodation = session.needsAccommodation || false;
+
+    if (session.registrationType === 'individual') {
+      finalRegistration = {
+        registrationType: 'individual',
+        registrationId,
+        personalDetails: session.personalDetails,
+        prelimEvents: session.prelimEvents,
+        isPremium: isPremium, // ✅ FIXED: Use extracted value
+        needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
+        paymentDetails: {
+          transactionId: transactionId,
+          orderId: orderId,
+          paymentId: paymentResult.paymentId,
+          signature: paymentResult.signature,
+          amount: session.totalAmount,
+          method: paymentMethod,
+          status: paymentResult.status || 'captured',
+          transactionDate: new Date().toISOString(),
+          razorpayPaymentId: transactionId,
+          razorpayOrderId: orderId,
+          ...paymentResult.paymentDetails
+        },
+        totalAmount: session.totalAmount,
+        registeredAt: new Date().toISOString(),
+        qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
+      };
+    } else {
+       const teamLeaderData = {
+        ...session.teamData.teamLeader,
+        prelimEvents: session.teamData.teamLeader.prelimEvents || [] 
+      };
+      
+      console.log('🔍 [FINAL TEAM LEADER DEBUG] Team leader data:', {
+        name: teamLeaderData.name,
+        prelimEvents: teamLeaderData.prelimEvents, 
+        email: teamLeaderData.email
+      });
+      
+      finalRegistration = {
+        registrationType: 'team',
+        teamId,
+        teamName: session.teamData.teamName,
+        registrationId,
+        teamLeader: teamLeaderData,
+        mainEvent: session.teamData.mainEvent,
+        teamMembers: session.teamData.teamMembers,
+        teamSize: session.teamData.teamSize,
+        esportsGame: session.teamData.esportsGame,
+        isPremium: isPremium, // ✅ FIXED: Use extracted value
+        needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
+        paymentDetails: {
+          transactionId: transactionId,
+          orderId: orderId,
+          paymentId: paymentResult.paymentId,
+          signature: paymentResult.signature,
+          amount: session.totalAmount,
+          method: paymentMethod,
+          status: paymentResult.status || 'captured',
+          transactionDate: new Date().toISOString(),
+          razorpayPaymentId: transactionId,
+          razorpayOrderId: orderId,
+          ...paymentResult.paymentDetails
+        },
+        totalAmount: session.totalAmount,
+        registeredAt: new Date().toISOString(),
+        qrData: this.generateQRData('team', teamId, session.personalDetails, session.teamData)
+      };
+    }
+
+    console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
+      teamLeader: finalRegistration.teamLeader?.name,
+      prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
+      isPremium: finalRegistration.isPremium, // ✅ Now this should show correctly
+      needsAccommodation: finalRegistration.needsAccommodation // ✅ Now this should show correctly
+    });
+
+    // ✅ CRITICAL FIX: Save to Google Sheets
+    try {
+      const GoogleSheetsService = require('./googleSheetsService');
+      console.log('💾 Saving to Google Sheets...');
+      GoogleSheetsService.saveRegistration(finalRegistration);
+      console.log('✅ Google Sheets save initiated');
+    } catch (error) {
+      console.error('❌ Failed to save to Google Sheets:', error);
+    }
+
+    // Save to completed registrations
+    this.completedRegistrations.set(registrationId, finalRegistration);
+    
+    // Clean up session
+    this.registrationSessions.delete(sessionId);
+
+    console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
+    console.log(`💰 Transaction ID stored: ${transactionId}`);
+    console.log(`📊 Final registration data:`, finalRegistration);
+    
+    return {
       registrationId,
-      teamLeader: teamLeaderData,
-      mainEvent: session.teamData.mainEvent,
-      teamMembers: session.teamData.teamMembers,
-      paymentDetails: {
-        transactionId: transactionId,
-        orderId: orderId,
-        paymentId: paymentResult.paymentId,
-        signature: paymentResult.signature,
-        amount: session.totalAmount,
-        method: paymentMethod,
-        status: paymentResult.status || 'captured',
-        transactionDate: new Date().toISOString(),
-        razorpayPaymentId: transactionId,
-        razorpayOrderId: orderId,
-        ...paymentResult.paymentDetails
-      },
-      totalAmount: session.totalAmount,
-      teamSize: session.teamData.teamMembers.length + 1,
-      registeredAt: new Date().toISOString(),
-      qrData: this.generateQRData('team', teamId, session.personalDetails, session.teamData)
+      teamId,
+      finalRegistration,
+      transactionId: transactionId,
+      paymentDetails: finalRegistration.paymentDetails
     };
   }
 
-  console.log('✅ [FINAL REGISTRATION DEBUG] Final registration teamLeader:', {
-    name: finalRegistration.teamLeader?.name,
-    prelimEvents: finalRegistration.teamLeader?.prelimEvents, // ✅ Check if events are there!
-    hasPrelimEvents: !!finalRegistration.teamLeader?.prelimEvents
-  });
-
-  // Save to completed registrations
-  this.completedRegistrations.set(registrationId, finalRegistration);
-  
-  // Clean up session
-  this.registrationSessions.delete(sessionId);
-
-  console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
-  console.log(`💰 Transaction ID stored: ${transactionId}`);
-  console.log(`📊 Final registration data:`, finalRegistration);
-  
-  return {
-    registrationId,
-    teamId,
-    finalRegistration,
-    transactionId: transactionId,
-    paymentDetails: finalRegistration.paymentDetails
-  };
-}
-
+  /**
+   * Generate unique registration ID
+   */
   generateRegistrationId(registrationType) {
     const timestamp = Date.now();
-    const random = crypto.randomBytes(4).toString('hex'); // ✅ ADDED: Randomness
+    const random = crypto.randomBytes(4).toString('hex'); 
     const prefix = registrationType === 'individual' ? 'CH2025-IND' : 'CH2025-MEM';
     return `${prefix}-${timestamp}-${random}`;
   }
 
+  /**
+   * Generate unique team ID
+   */
   generateTeamId() {
-    const random = crypto.randomBytes(4).toString('hex'); // ✅ ADDED: Randomness
+    const random = crypto.randomBytes(4).toString('hex'); 
     return `CH2025-TEAM-${Date.now()}-${random}`;
   }
 
+  /**
+   * Generate QR code data for attendance
+   */
   generateQRData(type, id, personalDetails, additionalData) {
     if (type === 'individual') {
       return {
@@ -568,14 +729,23 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
     }
   }
 
+  /**
+   * Get session by session ID
+   */
   getSession(sessionId) {
     return this.registrationSessions.get(sessionId);
   }
 
+  /**
+   * Get all completed registrations
+   */
   getAllRegistrations() {
     return Array.from(this.completedRegistrations.values());
   }
 
+  /**
+   * Clean up old sessions and expired OTPs
+   */
   cleanupOldSessions() {
     const now = Date.now();
     let cleanedCount = 0;
@@ -601,10 +771,13 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
     }
   }
 
+  /**
+   * Validate personal details format and content
+   */
   validatePersonalDetails(personalDetails) {
-    const { name, email, phone } = personalDetails;
+    const { name, email, phone, college } = personalDetails;
     
-    if (!name || !email || !phone) {
+    if (!name || !email || !phone || !college) {
       return { valid: false, message: VALIDATION_CONFIG.ERROR_MESSAGES.REQUIRED_FIELDS };
     }
     
@@ -620,4 +793,5 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   }
 }
 
+// Export service instance
 module.exports = new RegistrationService();

@@ -1,8 +1,24 @@
+/**
+ * 📋 ATTENDANCE CONTROLLER
+ * 
+ * This file handles all attendance-related operations:
+ * - QR code scanning and attendance marking
+ * - Attendance reports and analytics
+ * - Duplicate attendance checking
+ * 
+ * 🎯 RESPONSIBILITIES:
+ * - Process QR scan data and mark attendance
+ * - Generate attendance reports for events
+ * - Prevent duplicate attendance entries
+ */
+
 const AttendanceService = require('../services/attendanceService');
 
 class AttendanceController {
   
-  // Scan QR code and mark attendance
+  /**
+   * Scan QR code and mark attendance for an event
+   */
   async scanAttendance(req, res) {
     try {
       const { qrData, eventDay = 'Day 1' } = req.body;
@@ -48,7 +64,9 @@ class AttendanceController {
     }
   }
 
-  // Get attendance report for an event
+  /**
+   * Get attendance report for a specific event
+   */
   async getAttendanceReport(req, res) {
     try {
       const { eventName, eventDay } = req.query;
@@ -86,7 +104,9 @@ class AttendanceController {
     }
   }
 
-  // Check duplicate attendance
+  /**
+   * Check if a participant has already attended an event
+   */
   async checkDuplicate(req, res) {
     try {
       const { registrationId, eventName, eventDay } = req.query;
@@ -116,4 +136,5 @@ class AttendanceController {
   }
 }
 
+// Export controller instance
 module.exports = new AttendanceController();

@@ -1,3 +1,19 @@
+/**
+ * 🎫 ATTENDANCE SERVICE
+ * 
+ * This service handles all attendance-related operations:
+ * - QR code scanning and attendance marking
+ * - Individual and team attendance tracking
+ * - Attendance reports and analytics
+ * - Duplicate attendance checking
+ * 
+ * 🎯 RESPONSIBILITIES:
+ * - Process QR scan data and mark attendance
+ * - Handle both individual and team attendance flows
+ * - Generate attendance reports for events
+ * - Prevent duplicate attendance entries
+ */
+
 const GoogleSheetsService = require('./googleSheetsService');
 const QRCode = require('qrcode');
 
@@ -6,7 +22,9 @@ class AttendanceService {
     console.log('🎫 Attendance Service Ready');
   }
 
-  // Scan QR code and mark attendance
+  /**
+   * Scan QR code and mark attendance for individual or team
+   */
   async scanAndMarkAttendance(qrData, eventDay = 'Day 1') {
     try {
       console.log('🔍 Scanning QR for attendance:', qrData);
@@ -28,7 +46,9 @@ class AttendanceService {
     }
   }
 
-  // Mark attendance for individual
+  /**
+   * Mark attendance for individual participant
+   */
   async markIndividualAttendance(registrationId, events, eventDay, timestamp) {
     try {
       let markedCount = 0;
@@ -52,7 +72,9 @@ class AttendanceService {
     }
   }
 
-  // Mark attendance for entire team
+  /**
+   * Mark attendance for entire team
+   */
   async markTeamAttendance(teamId, eventDay, timestamp) {
     try {
       // Get all team members from registrations
@@ -94,7 +116,9 @@ class AttendanceService {
     }
   }
 
-  // Get attendance report for an event
+  /**
+   * Get attendance report for a specific event
+   */
   async getEventAttendanceReport(eventName, eventDay = null) {
     try {
       const registrations = await GoogleSheetsService.getAllRegistrations();
@@ -121,7 +145,9 @@ class AttendanceService {
     }
   }
 
-  // Check if person has already attended an event on specific day
+  /**
+   * Check if participant has already attended an event
+   */
   async checkDuplicateAttendance(registrationId, eventName, eventDay) {
     try {
       const eventsData = []; // This would come from Events Participation sheet
@@ -143,4 +169,5 @@ class AttendanceService {
   }
 }
 
+// Export service instance
 module.exports = new AttendanceService();

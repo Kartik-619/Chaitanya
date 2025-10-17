@@ -1,3 +1,18 @@
+/**
+ * 🔐 OTP SERVICE
+ * 
+ * This service handles OTP (One-Time Password) generation and delivery:
+ * - OTP generation and validation
+ * - Email and SMS delivery systems
+ * - OTP expiry management
+ * - Security verification for user authentication
+ * 
+ * 📧 DELIVERY METHODS:
+ * - Email OTP with professional templates
+ * - SMS OTP (placeholder for SMS service integration)
+ * - Multi-channel verification for enhanced security
+ */
+
 const nodemailer = require('nodemailer');
 const { SESSION_CONFIG } = require('../config/constants');
 
@@ -12,12 +27,16 @@ class OTPService {
     });
   }
 
-  // Generate random 6-digit OTP
+  /**
+   * Generate random 6-digit OTP
+   */
   generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // Send OTP via email
+  /**
+   * Send OTP via email with professional template
+   */
   async sendOTPEmail(email, otp) {
     try {
       const mailOptions = {
@@ -36,7 +55,9 @@ class OTPService {
     }
   }
 
-  // Send OTP via SMS (placeholder - integrate with SMS service like Twilio)
+  /**
+   * Send OTP via SMS (placeholder for SMS service integration)
+   */
   async sendOTPSMS(phone, otp) {
     try {
       // Placeholder for SMS integration
@@ -49,7 +70,9 @@ class OTPService {
     }
   }
 
-  // Generate and send OTP via both email and SMS
+  /**
+   * Generate and send OTP via both email and SMS
+   */
   async generateAndSendOTP(email, phone) {
     try {
       const otp = this.generateOTP();
@@ -83,7 +106,9 @@ class OTPService {
     }
   }
 
-  // Generate OTP email HTML template
+  /**
+   * Generate professional OTP email HTML template
+   */
   generateOTPEmailHTML(otp) {
     return `
 <!DOCTYPE html>
@@ -116,7 +141,7 @@ class OTPService {
         </div>
 
         <div class="warning">
-            <strong>⚠️ Security Notice:</strong> Do not share this OTP with anyone. Chaitanya team will never ask for your OTP.
+            <strong>⚠️ Security Notice:</strong> Do not share this OTP with anyone.
         </div>
 
         <p>If you didn't request this OTP, please ignore this email.</p>
@@ -133,7 +158,9 @@ class OTPService {
 `;
   }
 
-  // Verify OTP (to be used by RegistrationService)
+  /**
+   * Verify OTP validity and expiry
+   */
   verifyOTP(storedOTP, enteredOTP, otpCreatedAt) {
     const now = Date.now();
     
@@ -151,4 +178,5 @@ class OTPService {
   }
 }
 
+// Export service instance
 module.exports = new OTPService();

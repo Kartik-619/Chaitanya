@@ -1,350 +1,218 @@
-/* ========================================================== */
-/* UNIVERSAL RESET & GLOBAL STYLES */
-/* ========================================================== */
-
+/* Universal Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* -------------------------------------------------------------------------------------------------- */
+/* Body and Base Layout */
+/* -------------------------------------------------------------------------------------------------- */
+
 body {
   position: relative;
-  width: 100%;
   min-height: 100vh;
+  width: 100vw;
   overflow-x: hidden;
-  font-family: "Poppins", sans-serif;
-  background-color: #000;
-  color: #fff;
+  font-family: sans-serif;
 }
 
-/* Fixed Sky Background */
+/* Hero container - DESKTOP BASE (Applies when no media query matches) */
+.hero {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  /* Ensure text and icons are centered vertically and horizontally */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Sky background */
 .bg {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
-  background: url("/images/background.png") center/cover no-repeat;
+  height: 100%;
+  background: url('/images/background.png') center/cover no-repeat;
   z-index: -2;
 }
 
-/* ========================================================== */
-/* ULTRA-WIDE DESKTOP STYLES (>= 2087px) */
-/* ========================================================== */
+/* -------------------------------------------------------------------------------------------------- */
+/* Hero Content Elements - DESKTOP BASE */
+/* -------------------------------------------------------------------------------------------------- */
 
-@media (min-width: 2087px) {
-  .hero.desktop-layout {
-    position: relative;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+/* Castle foreground */
+.castle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  max-width: 100%;
+  height: 90vh; /* Large height for desktop view */
+  z-index: 5;
+}
+
+/* Text Container (Centers the two titles) */
+.text-container {
+  position: relative;
+  text-align: center;
+  bottom: 20%;
+  color: white; /* Default color for text */
+  z-index: 7; /* Above all clouds/castle */
+}
+
+/* Welcome Text */
+.welcome {
+  font-size: 6vh; /* Smaller title */
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Readable text over complex background */
+}
+
+/* Name/Title (Chaitanya 1.0) */
+.name {
+  font-size: 10vh; /* Very large font for desktop */
+  margin-top: 0; /* Already centered with flex on .hero */
+  text-shadow: 3px 3px 7px rgba(0, 0, 0, 0.7);
+}
+
+/* Scroll Indicator */
+.scroll {
+  position: absolute;
+  bottom: 5vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 7;
+  cursor: pointer;
+  /* Basic animation for the scroll icon */
+  animation: bounce 2s infinite; 
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+      transform: translateY(0);
+  }
+  40% {
+      transform: translateY(-10px);
+  }
+  60% {
+      transform: translateY(-5px);
+  }
+}
+
+
+/* -------------------------------------------------------------------------------------------------- */
+/* Cloud Layers - DESKTOP BASE (Current code for > 1024px) */
+/* -------------------------------------------------------------------------------------------------- */
+
+/* Cloud Layer 1 (Mid-foreground) */
+.cloudLeft {
+  position: absolute;
+  bottom: 0%;
+  left: 0%;
+  width: 60%;
+  height: 65%;
+  z-index: 6; 
+}
+.cloudRight {
+  position: absolute;
+  bottom: 0%;
+  right: 0%;
+  width: 60%;
+  height: 65%;
+  z-index: 6;
+}
+
+/* Cloud Layer 2 (Background, closer to the castle) */
+.cloud1 {
+  position: absolute;
+  bottom: 0%;
+  right: 0%;
+  width: 60%;
+  height: 50%;
+  z-index: 3;
+}
+.cloud2{
+  position: absolute;
+  bottom: 0%;
+  left:0%;
+  width: 60%;
+  height: 60%;
+  z-index: 1;
+}
+
+/* -------------------------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------------------------------- */
+
+/**
+* --------------------------------------------------------------------------------
+* MEDIA QUERIES FOR TABLETS (Max Width 1024px)
+* --------------------------------------------------------------------------------
+*/
+@media screen and (max-width: 1024px) {
+  /* Castle */
+  .castle {
+      height: 80vh; /* Slightly reduce height */
+  }
+
+  /* Text */
+  .welcome {
+      font-size: 3.5vh;
+  }
+  .name {
+      font-size: 10vh; /* Reduce font size */
+  }
+
+  /* Clouds (General scaling) */
+ 
+
+  /* Scroll Indicator */
+  .scroll {
+      bottom: 3vh; /* Move it slightly higher */
+  }
+}
+
+/* -------------------------------------------------------------------------------------------------- */
+
+/**
+* --------------------------------------------------------------------------------
+* MEDIA QUERIES FOR MOBILE DEVICES (Max Width 768px)
+* --------------------------------------------------------------------------------
+* Note: The JSX conditionally hides clouds and scroll indicator on "mobile" (<= 768px)
+* so we mainly focus on castle and text.
+*/
+@media screen and (max-width: 768px) {
+  /* Hero */
+  .hero {
+      /* Ensure the full height view is preserved */
   }
 
   /* Castle */
-  .hero.desktop-layout .castle {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100vw;
-    height: 90vh;
-    z-index: 5;
+  .castle {
+      height: 60vh; /* Significant reduction for mobile screens */
   }
-
-  /* Clouds */
-  .hero.desktop-layout .cloudLeft,
-  .hero.desktop-layout .cloudRight,
-  .hero.desktop-layout .cloud1,
-  .hero.desktop-layout .cloud2 {
-    position: absolute;
-    bottom: 0;
-    width: 70%;
-    height: 65%;
-    object-fit: contain;
-  }
-
-  .hero.desktop-layout .cloudLeft { left: 0; z-index: 6; }
-  .hero.desktop-layout .cloud1 { left: 0; z-index: 3; }
-  .hero.desktop-layout .cloud2 { right: 0; z-index: 1; }
-  .hero.desktop-layout .cloudRight { right: 0; z-index: 6; }
 
   /* Text */
-  .hero.desktop-layout .text-container {
-    position: fixed;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1rem;
-    z-index: 10;
+  .welcome {
+      font-size: 3vh;
+      margin-bottom: 0.25rem;
+  }
+  .name {
+      font-size: 6vh; /* Smallest font size for primary title */
   }
 
-  .hero.desktop-layout .welcome { font-size: 4vh; font-weight: 500; }
-  .hero.desktop-layout .name { font-size: 13vh; margin-top: 1rem; font-weight: 700; }
-
-  /* UI */
-  .hero.desktop-layout .sidebar-component-wrapper { position: fixed; top: 0; left: 0; z-index: 50; }
-  .hero.desktop-layout .scroll {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    text-align: center;
-    z-index: 30;
+  /* If the JSX were changed to show clouds/scroll, these would apply: */
+  /* .cloudLeft, .cloudRight, .cloud1, .cloud2 {
+      width: 100%;
+      height: 35%;
   }
-  .hero.desktop-layout .social { position: fixed; bottom: 2rem; right: 2rem; z-index: 30; }
-}
-
-/* ========================================================== */
-/* LARGE LAPTOP / TABLET (1367px – 2086px) */
-/* ========================================================== */
-
-@media (min-width: 1367px) and (max-width: 2086px) {
-  .hero.tablet-layout {
-    position: relative;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex-direction: column;
-  }
-
-  .hero.tablet-layout .castle {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100vw;
-    height: 80vh;
-    object-fit: contain;
-    z-index: 5;
-  }
-
-  .hero.tablet-layout .cloudLeft,
-  .hero.tablet-layout .cloudRight,
-  .hero.tablet-layout .cloud1,
-  .hero.tablet-layout .cloud2 {
-    position: absolute;
-    bottom: 0;
-    object-fit: contain;
-  }
-
-  .hero.tablet-layout .cloudLeft, .hero.tablet-layout .cloud1 { left: 0; }
-  .hero.tablet-layout .cloudRight, .hero.tablet-layout .cloud2 { right: 0; }
-
-  .hero.tablet-layout .cloudLeft, .hero.tablet-layout .cloudRight { width: 65%; height: 50%; }
-  .hero.tablet-layout .cloud1, .hero.tablet-layout .cloud2 { width: 70%; height: 65%; }
-
-  .hero.tablet-layout .text-container {
-    position: absolute;
-    top: 38%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 10;
-    width: 100%;
-    padding: 0 2rem;
-  }
-
-  .hero.tablet-layout .welcome {
-    font-size: 2.8rem;
-    font-weight: 600;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  }
-
-  .hero.tablet-layout .name {
-    font-size: 5rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.6);
-  }
-
-  .hero.tablet-layout .sidebar-component-wrapper { position: fixed; top: 1.5rem; left: 1.5rem; z-index: 50; }
-  .hero.tablet-layout .scroll { bottom: 3rem; left: 50%; transform: translateX(-50%); z-index: 30; }
-  .hero.tablet-layout .social { bottom: 3rem; right: 2rem; z-index: 30; }
-}
-
-/* ========================================================== */
-/* SMALL LAPTOP / LARGE TABLET (1025px – 1366px) */
-/* ========================================================== */
-
-@media (min-width: 1025px) and (max-width: 1366px) {
-  .hero.tablet-layout {
-    position: relative;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-  }
-
-  .hero.tablet-layout .castle {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    transform: translateX(-50%);
-    width: 130vw;
-    height: 75vh;
-    z-index: 5;
-  }
-.hero.tablet-layout .cloudLeft{
-  z-index: 7;
-  height: 60vh;
-  width:40vw;
-  position: absolute;
-  object-fit: contain;
-  left: 0;
-  bottom: 0;
-}
- .hero.tablet-layout .cloudRight{
-  z-index: 7;
-  height: 60vh;
-  width:50vw;
-  position: absolute;
-  object-fit: contain;
-  right: 0;
-  bottom: 0;
-}
-.hero.tablet-layout .cloud1{
-  z-index: 3;
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  object-fit: contain;
-  height: 40vh;
-  width: 40vw;
-} 
-.hero.tablet-layout .cloud2{
-  z-index: 3;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-  object-fit: contain;
-  height: 40vh;
-  width: 40vw;
-} 
-
-  .hero.tablet-layout .text-container {
-    position: absolute;
-    top: 35%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 10;
-    padding: 0 2rem;
-  }
-
-  .hero.tablet-layout .welcome { font-size: 2.5rem; }
-  .hero.tablet-layout .name { font-size: 4.5rem; margin-top: 0.5rem; }
-}
-
-/* ========================================================== */
-/* SMALL TABLET / LARGE MOBILE (651px – 1024px) */
-/* ========================================================== */
-
-@media (min-width: 651px) and (max-width: 1024px) {
-  .hero.mobile-layout {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    overflow: hidden;
-    position: relative;
-    padding-bottom: 2rem;
-  }
-
-  .hero.mobile-layout .castle {
-    position: absolute;
-    width: 100vw;
-    height: 50vh;
-    bottom: 0;
-    z-index: 5;
-  }
-
-  .hero.mobile-layout .text-container {
-    position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 10;
-    padding: 0 1rem;
-    width: 100%;
-  }
-
-  .hero.mobile-layout .welcome { font-size: 3rem; margin-bottom: 0.5rem; }
-  .hero.mobile-layout .name { font-size: 3.6rem; }
-
-  .hero.mobile-layout .cloudLeft, .hero.mobile-layout .cloudRight,
-  .hero.mobile-layout .cloud1, .hero.mobile-layout .cloud2 {
-    position: absolute;
-    bottom: 0;
-    width: 55vw;
-    height: 45vh;
-    object-fit: contain;
-  }
-
-  .hero.mobile-layout .cloudLeft, .hero.mobile-layout .cloud1 { left: 0; }
-  .hero.mobile-layout .cloudRight, .hero.mobile-layout .cloud2 { right: 0; }
-
-  .hero.mobile-layout .social { position: absolute; bottom: 2rem; right: 1rem; z-index: 30; }
-  .hero.mobile-layout .sidebar-component-wrapper { position: absolute; top: 1rem; left: 1rem; z-index: 50; }
-}
-
-/* ========================================================== */
-/* SMALL MOBILE (<= 650px) */
-/* ========================================================== */
-
-@media (max-width: 650px) {
-  .hero.mobile-layout .castle {
-    position: relative;
-    width: 100vw;
-    height: 65vh;
-    bottom: 0;
-    z-index: 5;
-  }
-
-  .hero.mobile-layout .text-container {
-    top: 25%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0 1rem;
-  }
-
-  .hero.mobile-layout .welcome { font-size: 1.8rem; }
-  .hero.mobile-layout .name { font-size: 2.8rem; margin-top: 0.5rem; }
-}
-
-/* ========================================================== */
-/* FOLDABLE OPTIMIZATION (853px – 1024px, HEIGHT <= 1280px) */
-/* ========================================================== */
-
-@media (min-width: 853px) and (max-width: 1024px) and (max-height: 1280px) {
-  .hero.tablet-layout {
-    justify-content: center;
-  }
-
-  .hero.tablet-layout .castle {
-    height: 60vh;
-    width: 100vw;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .hero.tablet-layout .text-container { top: 30%; }
-  .hero.tablet-layout .welcome { font-size: 3rem; }
-  .hero.tablet-layout .name { font-size: 4.2rem; }
-
-  .hero.tablet-layout .social { bottom: 5rem; right: 1.5rem; }
-  .hero.tablet-layout .scroll { bottom: 2rem; }
+  .scroll {
+      display: none; // Already handled by JSX: {deviceType !== "mobile" && ...}
+  } */
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { toast } from 'react-hot-toast';
 
 const Success = ({ data }) => {
-  // ✅ IMPROVED: Comprehensive data extraction with proper fallbacks
+  // Comprehensive data extraction with proper fallbacks
   const paymentResult = data.paymentResult || {};
   const finalRegistration = paymentResult.finalRegistration || data.finalRegistration;
   
@@ -38,13 +38,43 @@ const Success = ({ data }) => {
   const isIndividual = data.registrationType === 'individual';
   const registrationType = isIndividual ? 'Individual' : 'Team';
 
+  // Get events information
+  const getEventsInfo = () => {
+    if (isIndividual) {
+      const individualData = data.individualData || finalRegistration;
+      if (individualData?.isPremium) {
+        return {
+          type: 'Premium Package',
+          events: ['All Individual Events Included'],
+          description: 'Access to all 8 individual events'
+        };
+      } else {
+        return {
+          type: 'Individual Events',
+          events: individualData?.prelimEvents || [],
+          description: `${individualData?.prelimEvents?.length || 0} events selected`
+        };
+      }
+    } else {
+      const teamData = data.teamData || finalRegistration;
+      return {
+        type: 'Team Event',
+        events: [teamData?.mainEvent || 'Main Team Event'],
+        description: teamData?.esportsGame ? `${teamData.mainEvent} - ${teamData.esportsGame}` : teamData?.mainEvent,
+        teamSize: teamData?.teamSize
+      };
+    }
+  };
+
+  const eventsInfo = getEventsInfo();
+
   const handleDownloadTicket = () => {
     // In a real app, this would download the PDF ticket
     toast.success('Ticket download started! Check your email for the ID card.');
   };
 
-  const handleNewRegistration = () => {
-    window.location.reload(); // Reset the flow
+  const handleBackToHome = () => {
+    window.location.href = "http://localhost:5173"; // Home frontend
   };
 
   const handleCopyRegistrationId = () => {
@@ -58,6 +88,11 @@ const Success = ({ data }) => {
       toast.success('Transaction ID copied to clipboard!');
     }
   };
+
+  // Check if accommodation was selected
+  const hasAccommodation = data.individualData?.needsAccommodation || 
+                          data.teamData?.needsAccommodation ||
+                          finalRegistration?.needsAccommodation;
 
   return (
     <div className="glass-card p-8 animate-fade-in text-center">
@@ -203,23 +238,61 @@ const Success = ({ data }) => {
         <h3 className="text-lg font-semibold text-white mb-4 text-center border-b border-white/10 pb-2">
           Event Information
         </h3>
-        <div className="space-y-3 text-sm text-left">
-          <div className="flex justify-between">
-            <span className="text-gray-300">Event:</span>
-            <span className="text-white font-semibold">Chaitanya 2025</span>
+        <div className="space-y-4 text-left">
+          {/* Events Summary */}
+          <div>
+            <span className="text-gray-300 block mb-2">Event Type:</span>
+            <div className="bg-white/5 rounded-lg p-3">
+              <div className="text-white font-semibold">{eventsInfo.type}</div>
+              <div className="text-gray-300 text-sm mt-1">{eventsInfo.description}</div>
+              {eventsInfo.teamSize && (
+                <div className="text-blue-400 text-xs mt-1">Team Size: {eventsInfo.teamSize} members</div>
+              )}
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Venue:</span>
-            <span className="text-white">HPTU Campus</span>
+
+          {/* Events List */}
+          <div>
+            <span className="text-gray-300 block mb-2">
+              {isIndividual && data.individualData?.isPremium ? 'All Included Events:' : 'Selected Events:'}
+            </span>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {eventsInfo.events.map((event, index) => (
+                <div key={index} className="flex items-center text-sm bg-white/5 rounded px-3 py-2">
+                  <svg className="w-3 h-3 text-green-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-white text-sm">{event}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Date:</span>
-            <span className="text-white">March 15-16, 2025</span>
-          </div>
-          <div className="text-center mt-3 pt-3 border-t border-white/10">
-            <p className="text-yellow-400 text-xs">
-              🎉 Welcome to the biggest technical festival of Himachal Pradesh!
-            </p>
+
+          {/* Accommodation Info */}
+          {hasAccommodation && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+              <div className="flex items-center">
+                <svg className="w-4 h-4 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="text-blue-400 font-semibold">Accommodation Booked</span>
+              </div>
+              <div className="text-blue-300 text-xs mt-1">
+                ✅ 3-day stay confirmed • ✅ Food included • ✅ Secure accommodation
+              </div>
+            </div>
+          )}
+
+          {/* Event Venue & Date */}
+          <div className="border-t border-white/10 pt-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-300">Venue:</span>
+              <span className="text-white">HPTU Campus</span>
+            </div>
+            <div className="flex justify-between text-sm mt-1">
+              <span className="text-gray-300">Date:</span>
+              <span className="text-white">November 6-8, 2025</span>
+            </div>
           </div>
         </div>
       </div>
@@ -274,6 +347,19 @@ const Success = ({ data }) => {
               <p className="text-sm">Watch your email for event schedules and updates</p>
             </div>
           </div>
+
+          {/* Premium Package Notice */}
+          {isIndividual && data.individualData?.isPremium && (
+            <div className="flex items-start space-x-3 bg-yellow-500/10 p-3 rounded-lg">
+              <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-xs">🌟</span>
+              </div>
+              <div>
+                <span className="font-medium text-yellow-400">Premium Benefits:</span>
+                <p className="text-sm text-yellow-300">You have access to ALL individual events. No additional selections needed!</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -302,13 +388,13 @@ const Success = ({ data }) => {
         </button>
         
         <button
-          onClick={handleNewRegistration}
+          onClick={handleBackToHome}
           className="glass-input px-8 py-3 font-semibold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2 border border-white/20 hover:border-white/40"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          <span>New Registration</span>
+          <span>Back To Home</span>
         </button>
       </div>
 

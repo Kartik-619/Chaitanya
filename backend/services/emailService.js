@@ -1,49 +1,198 @@
+/**
+ * 📧 EMAIL SERVICE
+ * 
+ * This service handles all email and ID card operations:
+ * - Registration confirmation emails
+ * - PDF ID card generation and delivery
+ * - Queue management for high-volume email sending
+ * - Fallback systems for delivery guarantees
+ * 
+ * 🎫 ID CARD FEATURES:
+ * - Individual, Team Leader, and Team Member ID cards
+ * - QR code integration for attendance tracking
+ * - Professional design with university branding
+ * - Batch processing to avoid email limits
+ * - Short IDs (CH25-I0001, CH25-T001, CH25-T001-M1)
+ * - Portrait orientation (300x450px) with large QR codes
+ */
+
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
-const { EMAIL_CONFIG } = require('../config/emailConfig');
+const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 
 class EmailService {
   constructor() {
+    // Initialize email transporter with connection pooling and rate limiting
     this.transporter = nodemailer.createTransport({
       service: EMAIL_CONFIG.SERVICE,
       auth: {
         user: EMAIL_CONFIG.FROM_EMAIL,
         pass: process.env.UNIVERSITY_EMAIL_PASSWORD
       },
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-      rateDelta: 1000,
-      rateLimit: 5
+      pool: true,           // Use connection pooling
+      maxConnections: 5,    // Maximum simultaneous connections
+      maxMessages: 100,     // Messages per connection
+      rateDelta: 1000,      // Time window for rate limiting
+      rateLimit: 5          // Emails per second
     });
 
-    this.pdfQueue = [];
-    this.isProcessingPDF = false;
-    this.dailyEmailCount = 0;
-    this.MAX_EMAILS_PER_DAY = 450;
-    this.pdfDeliveryTracker = new Map();
+    // PDF generation queue system
+    this.pdfQueue = [];                    // Queue for pending PDF generations
+    this.isProcessingPDF = false;          // Flag to prevent concurrent processing
+    this.dailyEmailCount = 0;              // Track emails sent today
     
-    this.eventPrices = {
-      "Code Forge": 200,
-      "Robo Rampage": 200,
-      "Integration Bee": 150,
-      "Encryption/Decryption": 150,
-      "Reverse Engineering": 200,
-      "Bug Bounty / CTF": 300,
-      "Data Analysis Challenge": 250,
-      "Stock Prediction": 200,
-      "Sports Analytics": 150
+    // Reset daily counter every 24 hours
+    setInterval(() => {
+      this.dailyEmailCount = 0;
+      console.log('📧 Daily email counter reset to 0');
+    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+
+    this.MAX_EMAILS_PER_DAY = 450;         // Gmail daily sending limit
+    this.pdfDeliveryTracker = new Map();   // Track PDF delivery status
+    
+    // Sequence numbers for ID generation (in production, use database)
+    this.sequenceNumbers = {
+      individual: 1,
+      team: 1
     };
+    
+    // Event pricing for amount calculations
+    this.eventPrices = {
+      // Individual Events
+      "Integration Bee": 299,
+      "Human vs AI": 299,
+      "Retro Theming": 199,
+      "Prompt Engineering": 199,
+      "Reverse Engineering": 199,
+      "Jack of Hearts": 399,
+      "Singing": 99,
+      "Dancing": 99,
+
+      // Team Events
+      "Singing Team": 99,
+      "Dance Team": 99,
+      "Hackathon Team": 999,
+      "Accurate Prediction Team": 999,
+      "E-sports Team": 999,
+      "Polymath Team": 499,
+      "Reverse Engineering Team": 199,
+      "Retro Theming Team": 199,
+      "Debate Team": 199,
+      "Two Minute Manager Team": 149
+    };
+    
+    // Update premium and accommodation fees
+    this.PREMIUM_FEE = 200;
+    this.ACCOMMODATION_FEE = 600;
 
     console.log('📧 University Email Service Initialized with Enhanced PDF System');
   }
 
+  /**
+   * Main registration handler with short IDs and portrait ID cards
+   */
+  async handleRegistration(registrationData, registrationType) {
+    try {
+      const { individualSeq, teamSeq } = await this.getNextSequenceNumbers();
+      
+      if (registrationType === 'individual') {
+        // Generate short individual ID
+        const registrationId = this.generateShortID('individual', individualSeq);
+        
+        const individualData = {
+          ...registrationData,
+          registrationType: 'individual',
+          registrationId: registrationId
+        };
+        
+        const result = await this.sendIndividualConfirmation(individualData);
+        return {
+          success: true,
+          registrationId: registrationId,
+          confirmation: result
+        };
+        
+      } else if (registrationType === 'team') {
+        // Generate short team ID
+        const teamId = this.generateShortID('team', teamSeq);
+        const teamLeaderId = teamId;
+        
+        const teamData = {
+          ...registrationData,
+          registrationType: 'team',
+          registrationId: teamLeaderId,
+          teamId: teamId,
+          teamSize: registrationData.teamMembers.length + 1
+        };
+        
+        const result = await this.sendTeamConfirmation(teamData);
+        return {
+          success: true,
+          teamId: teamId,
+          teamLeaderId: teamLeaderId,
+          memberIds: registrationData.teamMembers.map((_, index) => 
+            this.generateTeamMemberID(teamId, index + 1)
+          ),
+          confirmation: result
+        };
+      } else {
+        throw new Error('Invalid registration type');
+      }
+      
+    } catch (error) {
+      console.error('❌ Registration handling failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get next sequence numbers for ID generation
+   */
+  async getNextSequenceNumbers() {
+    // In production, replace with database queries
+    // This ensures thread-safe sequence generation
+    const sequences = {
+      individualSeq: this.sequenceNumbers.individual++,
+      teamSeq: this.sequenceNumbers.team++
+    };
+    
+    console.log('🔢 Sequence numbers:', sequences);
+    return sequences;
+  }
+
+  /**
+   * Generate short, readable IDs for individuals and teams
+   */
+  generateShortID(registrationType, sequenceNumber) {
+    const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
+    
+    if (registrationType === 'individual') {
+      const paddedNumber = sequenceNumber.toString().padStart(4, '0');
+      return `${INDIVIDUAL_PREFIX}${paddedNumber}`; // CH25-I0001
+    } else {
+      const paddedNumber = sequenceNumber.toString().padStart(3, '0');
+      return `${TEAM_PREFIX}${paddedNumber}`; // CH25-T001
+    }
+  }
+
+  /**
+   * Generate team member IDs (CH25-T001-M1, CH25-T001-M2, etc.)
+   */
+  generateTeamMemberID(teamId, memberIndex) {
+    return `${teamId}-M${memberIndex}`;
+  }
+
+  /**
+   * Validate and clean registration data for PDF generation
+   */
   validateRegistrationData(registrationData) {
     console.log('🛠️ Validating registration data for PDF generation');
     
+    // Create deep copy to avoid modifying original data
     const validatedData = JSON.parse(JSON.stringify(registrationData));
     
+    // Validate different aspects of the data
     this._validateTotalAmount(validatedData);
     this._validatePaymentDetails(validatedData);
     this._validatePersonalDetails(validatedData);
@@ -60,16 +209,13 @@ class EmailService {
       if (data.paymentDetails && data.paymentDetails.amount && !isNaN(data.paymentDetails.amount)) {
         data.totalAmount = Number(data.paymentDetails.amount);
         console.log('💰 Using paymentDetails amount:', data.totalAmount);
-      } 
-      else if (data.registrationType === 'individual' && data.prelimEvents) {
+      } else if (data.registrationType === 'individual' && data.prelimEvents) {
         data.totalAmount = this._calculateIndividualAmount(data.prelimEvents);
         console.log('🧮 Calculated from prelim events:', data.totalAmount);
-      }
-      else if (data.registrationType === 'team') {
+      } else if (data.registrationType === 'team') {
         data.totalAmount = 2500;
         console.log('👥 Using default team amount:', data.totalAmount);
-      }
-      else {
+      } else {
         data.totalAmount = 0;
         console.log('🔄 Using fallback amount: 0');
       }
@@ -150,6 +296,9 @@ class EmailService {
     }
   }
 
+  /**
+   * Send quick confirmation email without PDF attachment
+   */
   async sendQuickConfirmation(registrationData) {
     try {
       const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
@@ -207,58 +356,102 @@ Himachal Pradesh Technical University`;
     const teamInfo = registrationData.teamId ? 
       `<p><strong>Team ID:</strong> ${registrationData.teamId}</p>` : '';
 
+    // Premium info
+    const premiumInfo = registrationData.isPremium ? 
+      `<p><strong>Premium Package:</strong> ₹200 (Access to all individual events)</p>` : '';
+
+    // Accommodation info
+    let accommodationInfo = '';
+    if (registrationData.needsAccommodation) {
+      if (registrationData.registrationType === 'individual') {
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹600 (3 days stay)</p>`;
+      } else {
+        const accommodationTotal = 600 * (registrationData.teamSize || 1);
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹${accommodationTotal} (for ${registrationData.teamSize} members × ₹600 each)</p>`;
+      }
+    }
+
+    // Events info
+    let eventsInfo = '';
+    if (registrationData.registrationType === 'individual' && registrationData.prelimEvents) {
+      const eventsList = registrationData.prelimEvents.map(event => `• ${event}`).join('<br>');
+      eventsInfo = `<p><strong>Selected Events:</strong><br>${eventsList}</p>`;
+    } else if (registrationData.registrationType === 'team') {
+      eventsInfo = `<p><strong>Main Event:</strong> ${registrationData.mainEvent || 'N/A'}</p>`;
+      if (registrationData.esportsGame) {
+        eventsInfo += `<p><strong>E-sports Game:</strong> ${registrationData.esportsGame}</p>`;
+      }
+    }
+
+    // Total amount
+    const totalAmount = registrationData.totalAmount || registrationData.amount || 0;
+
     return `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
-        .header { background: linear-gradient(135deg, #8B0000, #B22222); color: white; padding: 25px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { padding: 25px; background: #f8f9fa; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; }
-        .success-badge { background: #28a745; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
-        .details { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #8B0000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .footer { margin-top: 25px; padding-top: 20px; border-top: 2px solid #dee2e6; color: #6c757d; font-size: 14px; text-align: center; }
-        .contact { background: #e7f3ff; padding: 15px; border-radius: 6px; margin: 15px 0; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1 style="margin: 0; font-size: 28px;">🎉 Registration Confirmed!</h1>
-        <p style="margin: 5px 0 0 0; opacity: 0.9;">Chaitanya 2025 - HPTU Technical Festival</p>
-    </div>
-    
-    <div class="content">
-        <div class="success-badge">✅ SUCCESSFULLY REGISTERED</div>
-        
-        <p>Dear <strong style="color: #8B0000;">${name}</strong>,</p>
-        
-        <p>We're excited to inform you that your registration for <strong>Chaitanya 2025</strong> has been successfully confirmed!</p>
-        
-        <div class="details">
-            <h3 style="color: #8B0000; margin-top: 0;">Registration Details</h3>
-            <p><strong>Registration ID:</strong> <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${registrationData.registrationId}</code></p>
-            ${teamInfo}
-            <p><strong>Registration Type:</strong> ${registrationData.registrationType === 'individual' ? 'Individual' : 'Team'}</p>
-        </div>
+  <html>
+  <head>
+      <style>
+          body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
+          .header { background: linear-gradient(135deg, #8B0000, #B22222); color: white; padding: 25px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { padding: 25px; background: #f8f9fa; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef; }
+          .success-badge { background: #28a745; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+          .details { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #8B0000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+          .footer { margin-top: 25px; padding-top: 20px; border-top: 2px solid #dee2e6; color: #6c757d; font-size: 14px; text-align: center; }
+          .contact { background: #e7f3ff; padding: 15px; border-radius: 6px; margin: 15px 0; }
+          .amount { background: #fff3cd; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #ffc107; }
+      </style>
+  </head>
+  <body>
+      <div class="header">
+          <h1 style="margin: 0; font-size: 28px;">🎉 Registration Confirmed!</h1>
+          <p style="margin: 5px 0 0 0; opacity: 0.9;">Chaitanya 2025 - HPTU Technical Festival</p>
+      </div>
+      
+      <div class="content">
+          <div class="success-badge">✅ SUCCESSFULLY REGISTERED</div>
+          
+          <p>Dear <strong style="color: #8B0000;">${name}</strong>,</p>
+          
+          <p>We're excited to inform you that your registration for <strong>Chaitanya 2025</strong> has been successfully confirmed!</p>
+          
+          <div class="details">
+              <h3 style="color: #8B0000; margin-top: 0;">Registration Details</h3>
+              <p><strong>Registration ID:</strong> <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${registrationData.registrationId}</code></p>
+              ${teamInfo}
+              <p><strong>Registration Type:</strong> ${registrationData.registrationType === 'individual' ? 'Individual' : 'Team'}</p>
+              ${registrationData.registrationType === 'team' && registrationData.teamSize ? `<p><strong>Team Size:</strong> ${registrationData.teamSize} members</p>` : ''}
+              ${eventsInfo}
+              ${premiumInfo}
+              ${accommodationInfo}
+          </div>
 
-        <div class="contact">
-            <h4 style="margin-top: 0; color: #0056b3;">📧 What's Next?</h4>
-            <p>Your official ID card is being generated and will be sent to this email address within the next few hours.</p>
-            <p><strong>Please check your spam folder</strong> if you don't see it in your inbox.</p>
-        </div>
+          <div class="amount">
+              <h4 style="margin-top: 0; color: #856404;">💰 Payment Summary</h4>
+              <p><strong>Total Amount Paid:</strong> ₹${totalAmount}</p>
+              <p style="font-size: 12px; margin: 5px 0 0 0; color: #666;">Payment Status: Completed ✅</p>
+          </div>
 
-        <div class="footer">
-            <p><strong>Need Help?</strong><br>
-            Email: <a href="mailto:chaitanyahptu@gmail.com" style="color: #8B0000;">chaitanyahptu@gmail.com</a></p>
-            
-            <p>Best regards,<br>
-            <strong>The Chaitanya 2025 Team</strong><br>
-            Himachal Pradesh Technical University</p>
-        </div>
-    </div>
-</body>
-</html>`;
+          <div class="contact">
+              <h4 style="margin-top: 0; color: #0056b3;">📧 What's Next?</h4>
+              <p>Your official ID card is being generated and will be sent to this email address within the next few hours.</p>
+              <p><strong>Please check your spam folder</strong> if you don't see it in your inbox.</p>
+          </div>
+
+          <div class="footer">
+              <p><strong>Need Help?</strong><br>
+              Email: <a href="mailto:chaitanyahptu@gmail.com" style="color: #8B0000;">chaitanyahptu@gmail.com</a></p>
+              
+              <p>Best regards,<br>
+              <strong>The Chaitanya 2025 Team</strong><br>
+              Himachal Pradesh Technical University</p>
+          </div>
+      </div>
+  </body>
+  </html>`;
   }
 
+  /**
+   * Start guaranteed PDF delivery process with tracking
+   */
   async guaranteePDFDelivery(registrationData) {
     try {
       const validatedData = this.validateRegistrationData(registrationData);
@@ -296,6 +489,9 @@ Himachal Pradesh Technical University`;
     }
   }
 
+  /**
+   * Add PDF generation to queue for batch processing
+   */
   async queuePDFGeneration(registrationData) {
     try {
       console.log('📋 Queueing PDF for:', registrationData.registrationId);
@@ -322,6 +518,9 @@ Himachal Pradesh Technical University`;
     }
   }
 
+  /**
+   * Process PDF queue with rate limiting and error handling
+   */
   async processPDFQueue() {
     if (this.isProcessingPDF) {
       console.log('⏸️ PDF processing already in progress');
@@ -369,6 +568,40 @@ Himachal Pradesh Technical University`;
     }
   }
 
+  /**
+   * Simple text-only fallback email when PDF generation fails
+   */
+  async sendSimpleConfirmation(registrationData) {
+    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+    
+    const mailOptions = {
+      from: `"${EMAIL_CONFIG.FROM_NAME}" <${EMAIL_CONFIG.FROM_EMAIL}>`,
+      to: email,
+      subject: `Chaitanya 2025 Registration Confirmed - ${registrationData.registrationId}`,
+      text: `Dear ${name},
+
+Your registration for Chaitanya 2025 has been confirmed!
+
+REGISTRATION DETAILS:
+Registration ID: ${registrationData.registrationId}
+${registrationData.teamId ? `Team ID: ${registrationData.teamId}` : ''}
+
+Please bring this Registration ID and college ID to the event venue.
+
+If you have any questions, contact: chaitanyahptu@gmail.com
+
+Best regards,
+Chaitanya 2025 Team
+Himachal Pradesh Technical University`
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
+
+  /**
+   * Process single PDF generation and email delivery
+   */
   async _processSinglePDF(data) {
     const tracker = this.pdfDeliveryTracker.get(data.registrationId);
     const attempt = tracker?.attempts || 1;
@@ -422,6 +655,9 @@ Himachal Pradesh Technical University`;
     }
   }
 
+  /**
+   * Send PDF email with attachment
+   */
   async _sendPDFEmail(email, name, data, pdfBuffer, filename) {
     const mailOptions = {
       from: `"${EMAIL_CONFIG.FROM_NAME}" <${EMAIL_CONFIG.FROM_EMAIL}>`,
@@ -523,489 +759,493 @@ Himachal Pradesh Technical University`;
 </html>`;
   }
 
-  // FIXED: Individual ID Card without amount
-  async generateIndividualIDCard(data) {
-    return new Promise(async (resolve, reject) => {
+// ==================== INDIVIDUAL ID CARD ====================
+
+async generateIndividualIDCard(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log('🎨 Generating portrait individual ID card for:', data.registrationId);
+
+      const validatedData = this.validateRegistrationData(data);
+      
+      const doc = new PDFDocument({ 
+        size: [300, 450], 
+        margin: 0
+      });
+      
+      const buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
+
+      // ==== BACKGROUND ==== (Updated gradient: Sky Blue to Light Green)
+      const gradient = doc.linearGradient(0, 0, 300, 450);
+      gradient.stop(0, '#87CEEB').stop(1, '#90EE90');
+      doc.rect(0, 0, 300, 450).fill(gradient);
+
+      // Navy border
+      doc.lineWidth(3).strokeColor('#1E3A5F').rect(8, 8, 284, 434).stroke();
+
+      // ==== HEADER ====
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica-Bold')
+        .fontSize(14)
+        .text('CHAITANYA 2025', 0, 20, { align: 'center' });
+
+      doc.fontSize(8)
+        .fillColor('#1E3A5F')
+        .text('HPTU TECHNICAL FESTIVAL', 0, 37, { align: 'center' });
+
+      doc.strokeColor('#1E3A5F').lineWidth(1)
+        .moveTo(20, 50).lineTo(280, 50).stroke();
+
+      // ==== PROFILE SECTION ====
+      const centerX = 150;
+      const profileY = 65;
+      
+      doc.circle(centerX, profileY + 30, 35)
+        .fillColor('#FFFFFF')
+        .fill();
+
+      const initials = this._getInitials(validatedData.personalDetails.name);
+      doc.fillColor('#000000')
+        .font('Helvetica-Bold')
+        .fontSize(24)
+        .text(initials, centerX - doc.widthOfString(initials) / 2, profileY + 18);
+
+      const displayName = this._truncateText(validatedData.personalDetails.name, 18);
+      doc.fillColor('#000000')
+        .font('Helvetica-Bold')
+        .fontSize(11)
+        .text(displayName, 15, profileY + 72, { width: 270, align: 'center' });
+
+      // Badge
+      doc.roundedRect(centerX - 40, profileY + 88, 80, 16, 3)
+        .fillColor('#FFFFFF')
+        .fill();
+      doc.fillColor('#000000')
+        .font('Helvetica-Bold')
+        .fontSize(7)
+        .text('PARTICIPANT', centerX - doc.widthOfString('PARTICIPANT') / 2, profileY + 92);
+
+      // ==== DETAILS SECTION ====
+      const detailsY = profileY + 118;
+      const lineSpacing = 24;
+
+      // Reg ID
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica-Bold')
+        .fontSize(8)
+        .text('Reg ID:', 20, detailsY);
+
+      doc.fillColor('#000000')
+        .font('Helvetica')
+        .fontSize(8)
+        .text(validatedData.registrationId, 75, detailsY, { width: 200 });
+
+      // College
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica-Bold')
+        .fontSize(8)
+        .text('College:', 20, detailsY + lineSpacing);
+
+      const collegeText = validatedData.personalDetails.college || 'Not provided';
+      doc.fillColor('#000000')
+        .font('Helvetica')
+        .fontSize(7)
+        .text(collegeText, 75, detailsY + lineSpacing, { 
+          width: 200,
+          lineGap: 2
+        });
+
+      // Events
+      const collegeHeight = doc.heightOfString(collegeText, { width: 200, lineGap: 2 });
+      const eventsY = detailsY + lineSpacing + Math.max(collegeHeight, 10) + 14;
+      
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica-Bold')
+        .fontSize(8)
+        .text('Events:', 20, eventsY);
+
+      const eventsText = this._getEventsText(validatedData);
+      doc.fillColor('#000000')
+        .font('Helvetica')
+        .fontSize(7)
+        .text(eventsText, 75, eventsY, { 
+          width: 200,
+          lineGap: 2
+        });
+
+      // ==== QR CODE ====
+      const eventsHeight = doc.heightOfString(eventsText, { width: 200, lineGap: 2 });
+      const qrY = eventsY + Math.max(eventsHeight, 10) + 18;
+      const qrSize = 90;
+
+      doc.rect(centerX - qrSize/2 - 5, qrY - 5, qrSize + 10, qrSize + 10)
+        .fillColor('#FFFFFF')
+        .fill();
+
       try {
-        console.log('🎨 Generating individual ID card for:', data.registrationId);
-
-        const validatedData = this.validateRegistrationData(data);
-        const doc = new PDFDocument({ size: [400, 250], margin: 0 });
-        const buffers = [];
-        doc.on('data', buffers.push.bind(buffers));
-        doc.on('end', () => resolve(Buffer.concat(buffers)));
-        doc.on('error', reject);
-
-        // ==== Background ====
-        const gradient = doc.linearGradient(0, 0, 400, 250);
-        gradient.stop(0, '#7B1E1E').stop(1, '#420000');
-        doc.rect(0, 0, 400, 250).fill(gradient);
-
-        // Card border with gold line
-        doc.lineWidth(3).strokeColor('#FFD700').rect(5, 5, 390, 240).stroke();
-
-        // ==== Header ====
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(18)
-           .text('CHAITANYA 2025', 0, 15, { align: 'center' });
-
-        doc.fontSize(9)
-           .fillColor('#F8E9A1')
-           .text('HPTU TECHNICAL FESTIVAL', 0, 35, { align: 'center' });
-
-        // ==== Profile Section ====
-        const profileX = 20, profileY = 60;
-        
-        // Profile circle
-        doc.circle(profileX + 40, profileY + 40, 40)
-           .fillColor('#FFFFFF')
-           .fill();
-
-        // Initials
-        const initials = (validatedData.personalDetails.name || 'S')
-          .split(' ')
-          .map(w => w[0]?.toUpperCase() || '')
-          .join('')
-          .slice(0, 2);
-
-        doc.fillColor('#8B0000')
-           .font('Helvetica-Bold')
-           .fontSize(22)
-           .text(initials, profileX + 40 - doc.widthOfString(initials) / 2, profileY + 32);
-
-        // Name
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(11)
-           .text(validatedData.personalDetails.name, profileX, profileY + 90, { 
-             width: 80, 
-             align: 'center',
-             lineBreak: false
-           });
-
-        // Role badge
-        doc.roundedRect(profileX + 10, profileY + 110, 60, 16, 4)
-           .fillColor('#FFD700')
-           .fill();
-        doc.fillColor('#8B0000')
-           .font('Helvetica-Bold')
-           .fontSize(8)
-           .text('PARTICIPANT', profileX + 15, profileY + 113);
-
-        // ==== Details Section ====
-        const detailsX = 120;
-        let currentY = 60;
-        const lineHeight = 18;
-
-        // College
-        const collegeText = this._truncateText(validatedData.personalDetails.college, 25);
-        this._drawDetailLine(doc, 'College:', collegeText, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Reg. ID
-        this._drawDetailLine(doc, 'Reg. ID:', validatedData.registrationId, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Events - REMOVED: Amount line
-        const eventsText = this._getEventsText(validatedData);
-        if (eventsText) {
-          this._drawDetailLine(doc, 'Events:', eventsText, detailsX, currentY);
-          currentY += lineHeight;
-        }
-
-        // ==== QR Code Section ====
-        const qrX = 290, qrY = 140, qrSize = 65;
-
-        try {
-          const qrPayload = {
-            reg_id: validatedData.registrationId,
-            name: validatedData.personalDetails.name,
-            college: validatedData.personalDetails.college,
-            events: validatedData.prelimEvents,
-            main_event: validatedData.mainEvent
-          };
-          const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload));
-          doc.image(qrDataUrl, qrX, qrY, { width: qrSize, height: qrSize });
-        } catch (qrError) {
-          console.error('QR Code generation failed:', qrError);
-          doc.fillColor('#FFFFFF')
-             .font('Helvetica-Bold')
-             .fontSize(7)
-             .text('QR CODE\nUNAVAILABLE', qrX + 15, qrY + 25, { align: 'center' });
-        }
-
-        // Scan text
-        doc.fillColor('#FFD700')
-           .font('Helvetica-Bold')
-           .fontSize(7)
-           .text('SCAN TO VERIFY', qrX, qrY + qrSize + 3, { width: qrSize, align: 'center' });
-
-        // ==== Footer ====
-        doc.strokeColor('#FFD700').lineWidth(1)
-           .moveTo(15, 220).lineTo(385, 220).stroke();
-
-        doc.fillColor('#F8E9A1')
-           .font('Helvetica')
-           .fontSize(7)
-           .text('Official ID Card • Chaitanya 2025 • Himachal Pradesh Technical University', 0, 228, { align: 'center' });
-
-        doc.end();
-      } catch (err) {
-        console.error('❌ Individual ID card generation failed:', err);
-        reject(err);
-      }
-    });
-  }
-
-  // FIXED: Team Leader ID Card without amount
-  async generateTeamLeaderIDCard(data) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        console.log('🎨 Generating team leader ID card for:', data.registrationId);
-        
-        const validatedData = this.validateRegistrationData(data);
-        const doc = new PDFDocument({ size: [400, 250], margin: 0 });
-
-        const buffers = [];
-        doc.on('data', buffers.push.bind(buffers));
-        doc.on('end', () => resolve(Buffer.concat(buffers)));
-        doc.on('error', reject);
-
-        // ==== Background ====
-        const gradient = doc.linearGradient(0, 0, 400, 250);
-        gradient.stop(0, '#7B1E1E').stop(1, '#420000');
-        doc.rect(0, 0, 400, 250).fill(gradient);
-
-        // Card border with gold line
-        doc.lineWidth(3).strokeColor('#FFD700').rect(5, 5, 390, 240).stroke();
-
-        // ==== Header ====
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(18)
-           .text('CHAITANYA 2025', 0, 15, { align: 'center' });
-
-        doc.fontSize(9)
-           .fillColor('#F8E9A1')
-           .text('HPTU TECHNICAL FESTIVAL', 0, 35, { align: 'center' });
-
-        // ==== Profile Section ====
-        const profileX = 20, profileY = 60;
-        
-        doc.circle(profileX + 40, profileY + 40, 40)
-           .fillColor('#FFFFFF')
-           .fill();
-
-        const initials = (validatedData.teamLeader.name || 'TL')
-          .split(' ')
-          .map(w => w[0]?.toUpperCase() || '')
-          .join('')
-          .slice(0, 2);
-
-        doc.fillColor('#8B0000')
-           .font('Helvetica-Bold')
-           .fontSize(22)
-           .text(initials, profileX + 40 - doc.widthOfString(initials) / 2, profileY + 32);
-
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(11)
-           .text(validatedData.teamLeader.name, profileX, profileY + 90, { 
-             width: 80, 
-             align: 'center',
-             lineBreak: false
-           });
-
-        // Role badge - TEAM LEADER
-        doc.roundedRect(profileX + 5, profileY + 110, 70, 16, 4)
-           .fillColor('#FF6B35')
-           .fill();
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(8)
-           .text('TEAM LEADER', profileX + 8, profileY + 113);
-
-        // ==== Details Section ====
-        const detailsX = 120;
-        let currentY = 60;
-        const lineHeight = 18;
-
-        // College
-        const collegeText = this._truncateText(validatedData.teamLeader.college, 25);
-        this._drawDetailLine(doc, 'College:', collegeText, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Reg. ID
-        this._drawDetailLine(doc, 'Reg. ID:', validatedData.registrationId, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Team Name
-        const teamNameText = this._truncateText(validatedData.teamName, 20);
-        this._drawDetailLine(doc, 'Team:', teamNameText, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Team ID
-        this._drawDetailLine(doc, 'Team ID:', validatedData.teamId, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Events - REMOVED: Amount line
-        const eventsText = this._getEventsText(validatedData, 'team_leader');
-        if (eventsText) {
-          this._drawDetailLine(doc, 'Events:', eventsText, detailsX, currentY);
-        }
-
-        // ==== QR Code ====
-        const qrX = 290, qrY = 140, qrSize = 65;
-
-        try {
-          const qrPayload = {
-            team_id: validatedData.teamId,
-            team_name: validatedData.teamName,
-            type: 'team_leader',
-            registration_id: validatedData.registrationId,
-            name: validatedData.teamLeader.name,
-            main_event: validatedData.teamLeader.mainEvent
-          };
-          const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload));
-          doc.image(qrDataUrl, qrX, qrY, { width: qrSize, height: qrSize });
-        } catch (qrError) {
-          console.error('QR Code generation failed:', qrError);
-          doc.fillColor('#FFFFFF')
-             .font('Helvetica-Bold')
-             .fontSize(7)
-             .text('QR CODE\nUNAVAILABLE', qrX + 15, qrY + 25, { align: 'center' });
-        }
-
-        doc.fillColor('#FFD700')
-           .font('Helvetica-Bold')
-           .fontSize(7)
-           .text('SCAN TO VERIFY', qrX, qrY + qrSize + 3, { width: qrSize, align: 'center' });
-
-        // ==== Footer ====
-        doc.strokeColor('#FFD700').lineWidth(1)
-           .moveTo(15, 220).lineTo(385, 220).stroke();
-
-        doc.fillColor('#F8E9A1')
-           .font('Helvetica')
-           .fontSize(7)
-           .text('Official ID Card • Chaitanya 2025 • Himachal Pradesh Technical University', 0, 228, { align: 'center' });
-
-        doc.end();
-
-      } catch (error) {
-        console.error('❌ Team leader ID card generation failed:', error);
-        reject(error);
-      }
-    });
-  }
-
-  // FIXED: Team Member ID Card without amount
-  async generateTeamMemberIDCard(data) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        console.log('🎨 Generating team member ID card for:', data.registrationId);
-        
-        const validatedData = this.validateRegistrationData(data);
-        const doc = new PDFDocument({ size: [400, 250], margin: 0 });
-
-        const buffers = [];
-        doc.on('data', buffers.push.bind(buffers));
-        doc.on('end', () => resolve(Buffer.concat(buffers)));
-        doc.on('error', reject);
-
-        // ==== Background ====
-        const gradient = doc.linearGradient(0, 0, 400, 250);
-        gradient.stop(0, '#7B1E1E').stop(1, '#420000');
-        doc.rect(0, 0, 400, 250).fill(gradient);
-
-        // Card border with gold line
-        doc.lineWidth(3).strokeColor('#FFD700').rect(5, 5, 390, 240).stroke();
-
-        // ==== Header ====
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(18)
-           .text('CHAITANYA 2025', 0, 15, { align: 'center' });
-
-        doc.fontSize(9)
-           .fillColor('#F8E9A1')
-           .text('HPTU TECHNICAL FESTIVAL', 0, 35, { align: 'center' });
-
-        // ==== Profile Section ====
-        const profileX = 20, profileY = 60;
-        
-        doc.circle(profileX + 40, profileY + 40, 40)
-           .fillColor('#FFFFFF')
-           .fill();
-
-        const initials = (validatedData.personalDetails.name || 'TM')
-          .split(' ')
-          .map(w => w[0]?.toUpperCase() || '')
-          .join('')
-          .slice(0, 2);
-
-        doc.fillColor('#8B0000')
-           .font('Helvetica-Bold')
-           .fontSize(22)
-           .text(initials, profileX + 40 - doc.widthOfString(initials) / 2, profileY + 32);
-
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(11)
-           .text(validatedData.personalDetails.name, profileX, profileY + 90, { 
-             width: 80, 
-             align: 'center',
-             lineBreak: false
-           });
-
-        // Role badge - TEAM MEMBER
-        doc.roundedRect(profileX + 5, profileY + 110, 75, 16, 4)
-           .fillColor('#4ECDC4')
-           .fill();
+        const qrPayload = {
+          reg_id: validatedData.registrationId,
+          name: validatedData.personalDetails.name,
+          college: validatedData.personalDetails.college,
+          events: validatedData.prelimEvents,
+          main_event: validatedData.mainEvent
+        };
+        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+          width: qrSize * 4,
+          margin: 1,
+          color: { dark: '#000000', light: '#FFFFFF' }
+        });
+        doc.image(qrDataUrl, centerX - qrSize/2, qrY, { 
+          width: qrSize, 
+          height: qrSize 
+        });
+      } catch (qrError) {
+        console.error('QR Code generation failed:', qrError);
         doc.fillColor('#000000')
-           .font('Helvetica-Bold')
-           .fontSize(8)
-           .text('TEAM MEMBER', profileX + 8, profileY + 113);
-
-        // ==== Details Section ====
-        const detailsX = 120;
-        let currentY = 60;
-        const lineHeight = 18;
-
-        // College
-        const collegeText = this._truncateText(validatedData.personalDetails.college, 25);
-        this._drawDetailLine(doc, 'College:', collegeText, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Reg. ID
-        this._drawDetailLine(doc, 'Reg. ID:', validatedData.registrationId, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Team Name
-        const teamNameText = this._truncateText(validatedData.teamName, 20);
-        this._drawDetailLine(doc, 'Team:', teamNameText, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Team ID
-        this._drawDetailLine(doc, 'Team ID:', validatedData.teamId, detailsX, currentY);
-        currentY += lineHeight;
-        
-        // Events - REMOVED: Amount line
-        const eventsText = this._getEventsText(validatedData, 'team_member');
-        if (eventsText) {
-          this._drawDetailLine(doc, 'Events:', eventsText, detailsX, currentY);
-        }
-
-        // ==== QR Code ====
-        const qrX = 290, qrY = 140, qrSize = 65;
-
-        try {
-          const qrPayload = {
-            team_id: validatedData.teamId,
-            team_name: validatedData.teamName,
-            type: 'team_member',
-            registration_id: validatedData.registrationId,
-            name: validatedData.personalDetails.name,
-            member_index: validatedData.memberIndex,
-            main_event: validatedData.personalDetails.mainEvent
-          };
-          const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload));
-          doc.image(qrDataUrl, qrX, qrY, { width: qrSize, height: qrSize });
-        } catch (qrError) {
-          console.error('QR Code generation failed:', qrError);
-          doc.fillColor('#FFFFFF')
-             .font('Helvetica-Bold')
-             .fontSize(7)
-             .text('QR CODE\nUNAVAILABLE', qrX + 15, qrY + 25, { align: 'center' });
-        }
-
-        doc.fillColor('#FFD700')
-           .font('Helvetica-Bold')
-           .fontSize(7)
-           .text('SCAN TO VERIFY', qrX, qrY + qrSize + 3, { width: qrSize, align: 'center' });
-
-        // ==== Footer ====
-        doc.strokeColor('#FFD700').lineWidth(1)
-           .moveTo(15, 220).lineTo(385, 220).stroke();
-
-        doc.fillColor('#F8E9A1')
-           .font('Helvetica')
-           .fontSize(7)
-           .text('Official ID Card • Chaitanya 2025 • Himachal Pradesh Technical University', 0, 228, { align: 'center' });
-
-        doc.end();
-
-      } catch (error) {
-        console.error('❌ Team member ID card generation failed:', error);
-        reject(error);
+          .font('Helvetica-Bold')
+          .fontSize(9)
+          .text('QR CODE', centerX - 25, qrY + 35, { align: 'center' });
       }
-    });
-  }
 
-  // Helper method to draw detail lines
-  _drawDetailLine(doc, label, value, x, y, valueColor = '#FFFFFF') {
-    // Label in gold
-    doc.fillColor('#FFD700')
-       .font('Helvetica-Bold')
-       .fontSize(9)
-       .text(label, x, y);
-    
-    // Value in white (or specified color)
-    const valueX = x + 50;
-    doc.fillColor(valueColor)
-       .font('Helvetica')
-       .fontSize(9)
-       .text(value, valueX, y, {
-         width: 140,
-         align: 'left'
-       });
-  }
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica-Bold')
+        .fontSize(7)
+        .text('SCAN FOR DETAILS', 0, qrY + qrSize + 12, { align: 'center', width: 300 });
 
-  // Helper method to truncate long text
-  _truncateText(text, maxLength) {
-    if (!text) return '';
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + '...';
-  }
+      // ==== FOOTER ====
+      const footerY = 400;
+      
+      doc.strokeColor('#1E3A5F').lineWidth(1)
+        .moveTo(20, footerY).lineTo(280, footerY).stroke();
 
-  // Helper method to get events text (Main Event or Prelim Events)
-  _getEventsText(data, type = 'individual') {
-    let events = [];
-    let mainEvent = '';
+      doc.fillColor('#1E3A5F')
+        .font('Helvetica')
+        .fontSize(6)
+        .text('Official ID • Chaitanya 2025', 0, footerY + 8, { align: 'center' });
 
-    if (type === 'individual') {
-      events = data.prelimEvents || [];
-      mainEvent = data.mainEvent || '';
-    } else if (type === 'team_leader') {
-      events = data.teamLeader?.prelimEvents || [];
-      mainEvent = data.teamLeader?.mainEvent || '';
-    } else if (type === 'team_member') {
-      events = data.personalDetails?.prelimEvents || [];
-      mainEvent = data.personalDetails?.mainEvent || '';
+      doc.fontSize(5)
+        .text(`Issued: ${new Date().toLocaleDateString()}`, 0, footerY + 18, { align: 'center' });
+
+      doc.end();
+    } catch (err) {
+      console.error('❌ Individual ID card generation failed:', err);
+      reject(err);
     }
+  });
+}
 
-    // If main event exists, show only main event
-    if (mainEvent && mainEvent.trim() !== '') {
-      return mainEvent;
+// ==================== TEAM LEADER ID CARD ====================
+
+async generateTeamLeaderIDCard(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const validatedData = this.validateRegistrationData(data);
+      const doc = new PDFDocument({ size: [300, 450], margin: 0 });
+
+      const buffers = [];
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("error", reject);
+
+      // Background (Updated gradient: Sky Blue to Light Green)
+      const gradient = doc.linearGradient(0, 0, 300, 450);
+      gradient.stop(0, "#87CEEB").stop(1, "#90EE90");
+      doc.rect(0, 0, 300, 450).fill(gradient);
+
+      doc.lineWidth(3).strokeColor("#1E3A5F").rect(8, 8, 284, 434).stroke();
+
+      // Header
+      doc.fillColor("#1E3A5F")
+        .font("Helvetica-Bold")
+        .fontSize(14)
+        .text("CHAITANYA 2025", 0, 20, { align: "center" });
+      doc.fontSize(8)
+        .fillColor("#1E3A5F")
+        .text("HPTU TECHNICAL FESTIVAL", 0, 37, { align: "center" });
+      doc.strokeColor("#1E3A5F").lineWidth(1)
+        .moveTo(20, 50).lineTo(280, 50).stroke();
+
+      const centerX = 150;
+      const profileY = 65;
+
+      // Profile
+      doc.circle(centerX, profileY + 30, 35).fillColor("#FFFFFF").fill();
+
+      const initials = this._getInitials(validatedData.teamLeader.name);
+      doc.fillColor("#000000")
+        .font("Helvetica-Bold")
+        .fontSize(24)
+        .text(initials, centerX - doc.widthOfString(initials) / 2, profileY + 18);
+
+      const displayName = this._truncateText(validatedData.teamLeader.name, 18);
+      doc.fillColor("#000000")
+        .font("Helvetica-Bold")
+        .fontSize(11)
+        .text(displayName, 15, profileY + 72, { width: 270, align: "center" });
+
+      // Leader Badge
+      doc.roundedRect(centerX - 50, profileY + 88, 100, 16, 3)
+        .fillColor("#FF9500")
+        .fill();
+      doc.fillColor("#FFFFFF")
+        .font("Helvetica-Bold")
+        .fontSize(7)
+        .text("TEAM LEADER", centerX - doc.widthOfString("TEAM LEADER") / 2, profileY + 92);
+
+      // Details
+      let detailsY = profileY + 118;
+      const lineSpacing = 18;
+
+      const addField = (label, value, isMultiline = false) => {
+        doc.fillColor("#1E3A5F").font("Helvetica-Bold").fontSize(8).text(label, 20, detailsY);
+        const textValue = value || "Not provided";
+        doc.fillColor("#000000").font("Helvetica").fontSize(8).text(textValue, 75, detailsY, { width: 200, lineGap: 1 });
+        
+        if (isMultiline) {
+          const textHeight = doc.heightOfString(textValue, { width: 200, lineGap: 1 });
+          detailsY += Math.max(textHeight + 4, lineSpacing);
+        } else {
+          detailsY += lineSpacing;
+        }
+      };
+
+      addField("Reg ID:", validatedData.registrationId);
+      addField("College:", validatedData.teamLeader.college, true);
+      addField("Team ID:", validatedData.teamId);
+      addField("Team:", validatedData.teamName);
+      addField("Main Event:", validatedData.mainEvent);
+
+      // Premium Badge (Fixed spacing)
+      const hasPremium = this._hasPremiumPackage(validatedData);
+      if (hasPremium) {
+        detailsY += 5; // Add spacing before premium badge
+        doc.roundedRect(centerX - 45, detailsY, 90, 14, 3)
+          .fillColor("#FFD700")
+          .fill();
+        doc.fillColor("#000000")
+          .font("Helvetica-Bold")
+          .fontSize(7)
+          .text("PREMIUM ACCESS", centerX - doc.widthOfString("PREMIUM ACCESS") / 2, detailsY + 3);
+        detailsY += 22; // Add spacing after premium badge
+      } else {
+        detailsY += 5; // Consistent spacing when no premium badge
+      }
+
+      // QR Code Section (Dynamic Position with proper spacing)
+      const qrSize = 85;
+      const qrY = Math.min(detailsY + 6, 450 - (qrSize + 60));
+
+      doc.rect(centerX - qrSize / 2 - 5, qrY - 5, qrSize + 10, qrSize + 10)
+        .fillColor("#FFFFFF").fill();
+
+      try {
+        const qrPayload = {
+          team_id: validatedData.teamId,
+          team_name: validatedData.teamName,
+          type: "team_leader",
+          reg_id: validatedData.registrationId,
+          name: validatedData.teamLeader.name,
+          college: validatedData.teamLeader.college,
+          premium: hasPremium,
+        };
+        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+          width: qrSize * 4,
+          margin: 1,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        });
+        doc.image(qrDataUrl, centerX - qrSize / 2, qrY, { width: qrSize, height: qrSize });
+      } catch {
+        doc.fillColor("#000000").font("Helvetica-Bold").fontSize(8).text("QR CODE", centerX - 20, qrY + 25);
+      }
+
+      doc.fillColor("#1E3A5F")
+        .font("Helvetica-Bold")
+        .fontSize(7)
+        .text("SCAN FOR DETAILS", 0, qrY + qrSize + 10, { align: "center", width: 300 });
+
+      // Footer
+      const footerY = 420;
+      doc.strokeColor("#1E3A5F").lineWidth(1)
+        .moveTo(20, footerY).lineTo(280, footerY).stroke();
+      doc.fillColor("#1E3A5F").font("Helvetica").fontSize(6)
+        .text("Official ID • Chaitanya 2025", 0, footerY + 6, { align: "center" });
+      doc.fontSize(5)
+        .text(`Issued: ${new Date().toLocaleDateString()}`, 0, footerY + 15, { align: "center" });
+
+      doc.end();
+    } catch (e) {
+      reject(e);
     }
-    
-    // Otherwise show prelim events (truncated if too long)
-    if (events.length > 0) {
-      const eventsText = events.join(', ');
-      return this._truncateText(eventsText, 25);
+  });
+}
+
+// ==================== TEAM MEMBER ID CARD ====================
+
+async generateTeamMemberIDCard(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const validatedData = this.validateRegistrationData(data);
+      const doc = new PDFDocument({ size: [300, 450], margin: 0 });
+
+      const buffers = [];
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("error", reject);
+
+      // Background (Updated gradient: Sky Blue to Light Green)
+      const gradient = doc.linearGradient(0, 0, 300, 450);
+      gradient.stop(0, "#87CEEB").stop(1, "#90EE90");
+      doc.rect(0, 0, 300, 450).fill(gradient);
+
+      doc.lineWidth(3).strokeColor("#1E3A5F").rect(8, 8, 284, 434).stroke();
+
+      // Header
+      doc.fillColor("#1E3A5F")
+        .font("Helvetica-Bold")
+        .fontSize(14)
+        .text("CHAITANYA 2025", 0, 20, { align: "center" });
+      doc.fontSize(8)
+        .fillColor("#1E3A5F")
+        .text("HPTU TECHNICAL FESTIVAL", 0, 37, { align: "center" });
+      doc.strokeColor("#1E3A5F").lineWidth(1)
+        .moveTo(20, 50).lineTo(280, 50).stroke();
+
+      const centerX = 150;
+      const profileY = 65;
+
+      doc.circle(centerX, profileY + 30, 35).fillColor("#FFFFFF").fill();
+      const initials = this._getInitials(validatedData.personalDetails.name);
+      doc.fillColor("#000000").font("Helvetica-Bold").fontSize(24)
+        .text(initials, centerX - doc.widthOfString(initials) / 2, profileY + 18);
+
+      const displayName = this._truncateText(validatedData.personalDetails.name, 18);
+      doc.fillColor("#000000").font("Helvetica-Bold").fontSize(11)
+        .text(displayName, 15, profileY + 72, { width: 270, align: "center" });
+
+      // Member Badge
+      doc.roundedRect(centerX - 50, profileY + 88, 100, 16, 3)
+        .fillColor("#00BCD4").fill();
+      doc.fillColor("#000000").font("Helvetica-Bold").fontSize(7)
+        .text("TEAM MEMBER", centerX - doc.widthOfString("TEAM MEMBER") / 2, profileY + 92);
+
+      // Details
+      let detailsY = profileY + 118;
+      const lineSpacing = 18;
+      const addField = (label, value) => {
+        doc.fillColor("#1E3A5F").font("Helvetica-Bold").fontSize(8).text(label, 20, detailsY);
+        doc.fillColor("#000000").font("Helvetica").fontSize(8).text(value || "Not provided", 75, detailsY, { width: 200 });
+        detailsY += lineSpacing;
+      };
+
+      addField("Reg ID:", validatedData.registrationId);
+      addField("College:", validatedData.personalDetails.college);
+      addField("Team ID:", validatedData.teamId);
+      addField("Team:", validatedData.teamName);
+      addField("Main Event:", validatedData.mainEvent);
+
+      // Premium Badge (Fixed spacing)
+      const hasPremium = this._hasPremiumPackage(validatedData);
+      if (hasPremium) {
+        detailsY += 12; // Add proper spacing before premium badge
+        doc.roundedRect(centerX - 45, detailsY, 90, 14, 3)
+          .fillColor("#FFD700").fill();
+        doc.fillColor("#000000").font("Helvetica-Bold").fontSize(7)
+          .text("PREMIUM ACCESS", centerX - doc.widthOfString("PREMIUM ACCESS") / 2, detailsY + 3);
+        detailsY += 32; // Add proper spacing after premium badge
+      } else {
+        detailsY += 12; // Consistent spacing when no premium badge
+      }
+
+      // QR Code (Dynamic Position with proper spacing)
+      const qrSize = 85;
+      const qrY = Math.min(detailsY + 8, 450 - (qrSize + 60));
+
+      doc.rect(centerX - qrSize / 2 - 5, qrY - 5, qrSize + 10, qrSize + 10)
+        .fillColor("#FFFFFF").fill();
+
+      try {
+        const qrPayload = {
+          team_id: validatedData.teamId,
+          team_name: validatedData.teamName,
+          type: "team_member",
+          reg_id: validatedData.registrationId,
+          name: validatedData.personalDetails.name,
+          college: validatedData.personalDetails.college,
+          member_index: validatedData.memberIndex,
+          premium: hasPremium,
+        };
+        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+          width: qrSize * 4,
+          margin: 1,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        });
+        doc.image(qrDataUrl, centerX - qrSize / 2, qrY, { width: qrSize, height: qrSize });
+      } catch {
+        doc.fillColor("#000000").font("Helvetica-Bold").fontSize(8).text("QR CODE", centerX - 20, qrY + 25);
+      }
+
+      doc.fillColor("#1E3A5F").font("Helvetica-Bold").fontSize(7)
+        .text("SCAN FOR DETAILS", 0, qrY + qrSize + 10, { align: "center", width: 300 });
+
+      // Footer
+      const footerY = 420;
+      doc.strokeColor("#1E3A5F").lineWidth(1)
+        .moveTo(20, footerY).lineTo(280, footerY).stroke();
+      doc.fillColor("#1E3A5F").font("Helvetica").fontSize(6)
+        .text("Official ID • Chaitanya 2025", 0, footerY + 6, { align: "center" });
+      doc.fontSize(5)
+        .text(`Issued: ${new Date().toLocaleDateString()}`, 0, footerY + 15, { align: "center" });
+
+      doc.end();
+    } catch (e) {
+      reject(e);
     }
-    
-    return '';
+  });
+}
+
+// ==================== HELPER METHODS ====================
+
+_getInitials(name) {
+  if (!name) return 'U';
+  return name.split(' ').map(w => w[0]?.toUpperCase() || '').join('').slice(0, 2);
+}
+
+_truncateText(text, maxLength) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + '...';
+}
+
+_getEventsText(data, type = 'individual') {
+  let events = [];
+  
+  if (type === 'individual') {
+    events = data.prelimEvents || [];
+  } else if (type === 'team_leader') {
+    events = data.teamLeader?.prelimEvents || [];
+  } else if (type === 'team_member') {
+    events = data.personalDetails?.prelimEvents || [];
   }
+
+  if (events.length > 0) {
+    return events.join(', ');
+  }
+  
+  return 'Not specified';
+}
+
+_hasPremiumPackage(data) {
+  return data.isPremium === true || data.teamData?.isPremium === true;
+}
+
+  // ==================== PUBLIC INTERFACE METHODS ====================
 
   async sendIndividualConfirmation(registrationData) {
     try {
       console.log('📧 [EMAIL DEBUG] Starting individual confirmation for:', registrationData.personalDetails.email);
-      console.log('📧 [EMAIL DEBUG] Registration data:', {
-        id: registrationData.registrationId,
-        name: registrationData.personalDetails.name
-      });
       
       const quickResult = await this.sendQuickConfirmation(registrationData);
       console.log('✅ [EMAIL DEBUG] Quick confirmation result:', quickResult);
@@ -1024,10 +1264,23 @@ Himachal Pradesh Technical University`;
 
     } catch (error) {
       console.error('❌ [EMAIL DEBUG] Individual email failed:', error);
-      return {
-        success: false,
-        message: 'Failed to send confirmation: ' + error.message
-      };
+      
+      try {
+        console.log('🔄 Trying fallback text email...');
+        await this.sendSimpleConfirmation(registrationData);
+        return {
+          success: true,
+          message: 'Simple confirmation sent (PDF failed)',
+          fallback: true,
+          email: registrationData.personalDetails.email
+        };
+      } catch (fallbackError) {
+        console.error('❌ Fallback email also failed:', fallbackError);
+        return {
+          success: false,
+          message: 'All email methods failed: ' + fallbackError.message
+        };
+      }
     }
   }
 
@@ -1041,7 +1294,7 @@ Himachal Pradesh Technical University`;
       
       for (let i = 0; i < registrationData.teamMembers.length; i++) {
         const member = registrationData.teamMembers[i];
-        const memberRegistrationId = `${registrationData.teamId}-M${i + 1}`;
+        const memberRegistrationId = this.generateTeamMemberID(registrationData.teamId, i + 1);
         
         await this.guaranteePDFDelivery({
           ...registrationData,
@@ -1051,6 +1304,8 @@ Himachal Pradesh Technical University`;
           personalDetails: member,
           memberIndex: i + 1
         });
+        
+        console.log(`✅ Team member ${i + 1} ID card queued: ${memberRegistrationId}`);
       }
       
       return {
@@ -1070,6 +1325,68 @@ Himachal Pradesh Technical University`;
         message: 'Failed to send team confirmation: ' + error.message
       };
     }
+  }
+
+  /**
+   * Get all pending PDF deliveries for monitoring
+   */
+  getPendingDeliveries() {
+    const pending = [];
+    
+    for (const [registrationId, tracker] of this.pdfDeliveryTracker) {
+      if (!tracker.delivered && tracker.attempts < tracker.maxAttempts) {
+        pending.push({
+          registrationId,
+          email: tracker.email,
+          attempts: tracker.attempts,
+          lastAttempt: tracker.lastAttempt,
+          createdAt: tracker.createdAt
+        });
+      }
+    }
+    
+    return pending;
+  }
+
+  /**
+   * Clean up old delivery trackers (maintenance)
+   */
+  cleanupOldTrackers() {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    
+    let cleanedCount = 0;
+    
+    for (const [registrationId, tracker] of this.pdfDeliveryTracker) {
+      if (tracker.createdAt < sevenDaysAgo && 
+          (tracker.delivered || tracker.attempts >= tracker.maxAttempts)) {
+        this.pdfDeliveryTracker.delete(registrationId);
+        cleanedCount++;
+      }
+    }
+    
+    console.log(`🧹 Cleaned up ${cleanedCount} old delivery trackers`);
+    return cleanedCount;
+  }
+
+  /**
+   * Get detailed delivery analytics
+   */
+  getDeliveryAnalytics() {
+    const trackers = Array.from(this.pdfDeliveryTracker.values());
+    const total = trackers.length;
+    const delivered = trackers.filter(t => t.delivered).length;
+    const pending = trackers.filter(t => !t.delivered && t.attempts < t.maxAttempts).length;
+    const failed = trackers.filter(t => !t.delivered && t.attempts >= t.maxAttempts).length;
+    
+    return {
+      total,
+      delivered,
+      pending,
+      failed,
+      successRate: total > 0 ? ((delivered / total) * 100).toFixed(2) + '%' : '0%',
+      averageAttempts: total > 0 ? (trackers.reduce((sum, t) => sum + t.attempts, 0) / total).toFixed(2) : 0
+    };
   }
 
   getPDFDeliveryStatus(registrationId) {
@@ -1138,14 +1455,8 @@ Himachal Pradesh Technical University`;
         college: 'Himachal Pradesh Technical University'
       },
       prelimEvents: ['Code Forge', 'Robo Rampage'],
-      registrationId: 'CH2025-IND-TEST',
-      totalAmount: 400,
-      qrData: {
-        reg_id: 'CH2025-IND-TEST',
-        name: 'Test Student',
-        type: 'individual',
-        events: ['Code Forge', 'Robo Rampage']
-      }
+      registrationId: 'CH25-I0001',
+      totalAmount: 400
     };
 
     console.log('🧪 Testing email service with sample data...');
@@ -1162,14 +1473,8 @@ Himachal Pradesh Technical University`;
         college: 'Himachal Pradesh Technical University'
       },
       prelimEvents: ['Code Forge', 'Robo Rampage'],
-      registrationId: 'CH2025-IND-TEST',
-      totalAmount: 400,
-      qrData: {
-        reg_id: 'CH2025-IND-TEST',
-        name: 'Test Student',
-        type: 'individual',
-        events: ['Code Forge', 'Robo Rampage']
-      }
+      registrationId: 'CH25-I0001',
+      totalAmount: 400
     };
 
     console.log('🧪 Testing PDF generation...');
@@ -1185,7 +1490,6 @@ Himachal Pradesh Technical University`;
       return { success: true, size: pdfBuffer.length };
     } catch (error) {
       console.error('❌ PDF generation test failed:', error);
-      console.error('Stack trace:', error.stack);
       return { success: false, error: error.message };
     }
   }
@@ -1199,4 +1503,5 @@ Himachal Pradesh Technical University`;
   }
 }
 
+// Export service instance
 module.exports = new EmailService();

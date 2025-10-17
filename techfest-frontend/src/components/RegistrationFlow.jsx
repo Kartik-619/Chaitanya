@@ -21,12 +21,15 @@ const RegistrationFlow = () => {
   });
 
   const steps = [
-    { number: 1, title: 'Personal Details' },
-    { number: 2, title: 'OTP Verification' },
-    { number: 3, title: registrationData.registrationType === 'individual' ? 'Select Events' : 'Team Setup' },
-    { number: 4, title: 'Review' },
-    { number: 5, title: 'Payment' },
-    { number: 6, title: 'Complete' }
+    { number: 1, title: 'Personal Details', shortTitle: 'Personal' },
+    { number: 2, title: 'OTP Verification', shortTitle: 'OTP' },
+    { number: 3, 
+      title: registrationData.registrationType === 'individual' ? 'Events Selection' : 'Team Setup', 
+      shortTitle: registrationData.registrationType === 'individual' ? 'Events' : 'Team' 
+    },
+    { number: 4, title: 'Review', shortTitle: 'Review' },
+    { number: 5, title: 'Payment', shortTitle: 'Payment' },
+    { number: 6, title: 'Complete', shortTitle: 'Complete' }
   ];
 
   const updateRegistrationData = (newData) => {
@@ -97,39 +100,93 @@ const RegistrationFlow = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       {/* Progress Steps */}
-      <div className="glass-card p-6 mb-8 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between relative">
-          {steps.map((step, index) => (
-            <div key={step.number} className="flex flex-col items-center relative z-10 flex-1">
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                  currentStep >= step.number
-                    ? 'bg-red-600 border-red-600 text-white animate-glow'
-                    : 'border-gray-500 text-gray-500'
-                }`}
-              >
-                {step.number}
+      <div className="glass-card p-4 sm:p-6 mb-6 sm:mb-8 max-w-4xl mx-auto">
+        {/* Desktop Steps */}
+        <div className="hidden md:block">
+          <div className="flex items-center justify-between relative">
+            {steps.map((step, index) => (
+              <div key={step.number} className="flex flex-col items-center relative z-10 flex-1">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                    currentStep >= step.number
+                      ? 'bg-red-600 border-red-600 text-white animate-glow'
+                      : 'border-gray-500 text-gray-500'
+                  }`}
+                >
+                  {step.number}
+                </div>
+                <span
+                  className={`text-sm mt-2 text-center ${
+                    currentStep >= step.number ? 'text-white' : 'text-gray-500'
+                  }`}
+                >
+                  {step.title}
+                </span>
               </div>
-              <span
-                className={`text-sm mt-2 text-center ${
-                  currentStep >= step.number ? 'text-white' : 'text-gray-500'
-                }`}
-              >
-                {step.title}
-              </span>
+            ))}
+            
+            {/* Progress line */}
+            <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-600 -z-10">
+              <div
+                className="h-full bg-red-600 transition-all duration-500"
+                style={{
+                  width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`
+                }}
+              ></div>
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Mobile Steps */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between relative mb-4">
+            {steps.map((step, index) => (
+              <div key={step.number} className="flex flex-col items-center relative z-10 flex-1">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm transition-all duration-300 ${
+                    currentStep >= step.number
+                      ? 'bg-red-600 border-red-600 text-white'
+                      : 'border-gray-500 text-gray-500'
+                  }`}
+                >
+                  {step.number}
+                </div>
+                <span
+                  className={`text-xs mt-1 text-center ${
+                    currentStep >= step.number ? 'text-white' : 'text-gray-500'
+                  }`}
+                >
+                  {step.shortTitle}
+                </span>
+              </div>
+            ))}
+            
+            {/* Progress line */}
+            <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-600 -z-10">
+              <div
+                className="h-full bg-red-600 transition-all duration-500"
+                style={{
+                  width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`
+                }}
+              ></div>
+            </div>
+          </div>
           
-          {/* Progress line */}
-          <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-600 -z-10">
-            <div
-              className="h-full bg-red-600 transition-all duration-500"
-              style={{
-                width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`
-              }}
-            ></div>
+          {/* Current step description for mobile */}
+          <div className="text-center">
+            <span className="text-sm font-medium text-white">
+              {steps[currentStep - 1]?.title}
+            </span>
+            {currentStep === 3 && (
+              <span className="text-xs text-gray-300 block mt-1">
+                {registrationData.registrationType === 'individual' 
+                  ? 'Select preliminary events' 
+                  : 'Setup team and events'
+                }
+              </span>
+            )}
           </div>
         </div>
       </div>

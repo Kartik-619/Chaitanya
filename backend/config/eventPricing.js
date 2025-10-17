@@ -1,40 +1,62 @@
-const EVENT_PRICES = {
-  // Main Events - ₹2500 each (for teams)
-  "Hackathon": 2500,
-  "Accurate Predictions": 2500,
-  
-  // Prelim Events - Individual Prices (for individual participants)
-  "Code Forge": 200,
-  "Robo Rampage": 200,
-  "Integration Bee": 150,
-  "Encryption/Decryption": 150,
-  "Reverse Engineering": 200,
-  "Bug Bounty / CTF": 300,
-  "Data Analysis Challenge": 250,
-  "Stock Prediction": 200,
-  "Sports Analytics": 150,
+/**
+ * 💰 EVENT PRICING AND CALCULATIONS
+ * 
+ * This file handles all money-related calculations for events:
+ * - Prices for different events
+ * - Calculations for individual participants
+ * - Calculations for team registrations
+ */
 
-  // Prelim Events - Free (for team members)
-  "Code Forge_team": 0,
-  "Robo Rampage_team": 0,
-  "Integration Bee_team": 0,
-  "Encryption/Decryption_team": 0,
-  "Reverse Engineering_team": 0,
-  "Bug Bounty / CTF_team": 0,
-  "Data Analysis Challenge_team": 0,
-  "Stock Prediction_team": 0,
-  "Sports Analytics_team": 0
+// Prices for all events
+const EVENT_PRICES = {
+  // ==================== INDIVIDUAL EVENTS ====================
+  "Integration Bee": 299,
+  "Human vs AI": 299,
+  "Retro Theming": 199,
+  "Prompt Engineering": 199,
+  "Reverse Engineering": 199,
+  "Jack of Hearts": 399,
+  "Singing": 99,
+  "Dancing": 99,
+
+  // ==================== TEAM EVENTS ====================
+  // Per-person pricing
+  "Singing_team": 99,
+  "Dance_team": 99,
+  "Reverse Engineering_team": 199,
+  "Retro Theming_team": 199,
+  "Debate_team": 199,
+  "Two Minute Manager_team": 149,
+
+  // Base + additional pricing
+  "Hackathon_team": 999,
+  "Accurate Prediction_team": 999,
+  "Polymath_team": 499,
+  
+  // Fixed pricing
+  "E-sports_team": 999
 };
 
-// Helper function to get price based on registration type
+/**
+ * Get the price for an event based on registration type
+ * @param {string} eventName - Name of the event
+ * @param {boolean} isTeamMember - Whether the person is part of a team
+ * @returns {number} Price for the event
+ */
 function getEventPrice(eventName, isTeamMember = false) {
+  // If person is in a team, check for team price
   if (isTeamMember) {
     return EVENT_PRICES[`${eventName}_team`] || 0;
   }
+  // If person is individual, get normal price
   return EVENT_PRICES[eventName] || 0;
 }
 
-// ✅ FIXED: Function name matches what calculationHelpers expects
+/**
+ * Calculate total amount for individual participant
+ * @param {Array} prelimEvents - List of events the person selected
+ * @returns {number} Total amount to pay
+ */
 function calculateIndividualTotal(prelimEvents) {
   console.log('🔢 Calculating individual total for events:', prelimEvents);
   
@@ -53,14 +75,54 @@ function calculateIndividualTotal(prelimEvents) {
   return total;
 }
 
-// ✅ FIXED: Function name matches what calculationHelpers expects  
-function calculateTeamTotal() {
-  return 2500; // Fixed ₹2500 for team registration
+/**
+ * Calculate total amount for team registration
+ * @param {string} mainEvent - Main team event
+ * @param {number} teamSize - Number of team members
+ * @param {string} esportsGame - Selected game for E-sports
+ * @returns {number} Total team amount
+ */
+function calculateTeamTotal(mainEvent, teamSize, esportsGame = null) {
+  console.log('🔢 Calculating team total:', { mainEvent, teamSize, esportsGame });
+  
+  const basePrice = EVENT_PRICES[`${mainEvent}_team`] || 0;
+  let total = 0;
+
+  // Handle different pricing models
+  switch (mainEvent) {
+    case 'Hackathon':
+      // ₹999 for 3 people + ₹249 per additional person
+      total = basePrice + Math.max(0, (teamSize - 3) * 249);
+      break;
+      
+    case 'Accurate Prediction':
+      // ₹999 for 2 people + ₹249 per additional person
+      total = basePrice + Math.max(0, (teamSize - 2) * 249);
+      break;
+      
+    case 'Polymath':
+      // ₹499 for 2 people + ₹249 per additional person
+      total = basePrice + Math.max(0, (teamSize - 2) * 249);
+      break;
+      
+    case 'E-sports':
+      // Fixed ₹999 regardless of team size (4 members fixed)
+      total = basePrice;
+      break;
+      
+    default:
+      // Per-person pricing for other events
+      total = basePrice * teamSize;
+  }
+  
+  console.log('💰 Team total calculated:', total);
+  return total;
 }
 
+// Make these available to other files
 module.exports = { 
   EVENT_PRICES, 
   getEventPrice, 
-  calculateIndividualTotal,  // ✅ Correct name
-  calculateTeamTotal         // ✅ Correct name
+  calculateIndividualTotal,  
+  calculateTeamTotal         
 };

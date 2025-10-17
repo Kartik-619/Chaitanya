@@ -5,28 +5,25 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
   const [selectedEvents, setSelectedEvents] = useState([]);
 
   const prelimEvents = [
-    "Code Forge",
-    "Robo Rampage", 
     "Integration Bee",
-    "Encryption/Decryption",
+    "Human vs AI", 
+    "Retro Theming",
+    "Prompt Engineering", 
     "Reverse Engineering",
-    "Bug Bounty / CTF",
-    "Data Analysis Challenge",
-    "Stock Prediction",
-    "Sports Analytics"
+    "Jack of Hearts",
+    "Singing",
+    "Dancing"
   ];
 
-  // Event prices mapping
   const eventPrices = {
-    "Code Forge": 200,
-    "Robo Rampage": 200,
-    "Integration Bee": 150,
-    "Encryption/Decryption": 150,
-    "Reverse Engineering": 200,
-    "Bug Bounty / CTF": 300,
-    "Data Analysis Challenge": 250,
-    "Stock Prediction": 200,
-    "Sports Analytics": 150
+    "Integration Bee": 299,
+    "Human vs AI": 299,
+    "Retro Theming": 199,
+    "Prompt Engineering": 199,
+    "Reverse Engineering": 199,
+    "Jack of Hearts": 399,
+    "Singing": 99,
+    "Dancing": 99
   };
 
   const toggleEvent = (eventName) => {
@@ -34,7 +31,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
       if (prev.includes(eventName)) {
         return prev.filter(name => name !== eventName);
       } else {
-        return [...prev, eventName]; // NO LIMIT - user can select all events
+        return [...prev, eventName];
       }
     });
   };
@@ -44,13 +41,16 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     selectedEvents.forEach(eventName => {
       total += eventPrices[eventName] || 0;
     });
-    console.log('🔄 Calculating total for events:', selectedEvents, 'Total:', total);
+    
+    // COMPULSORY accommodation fee
+    total += 600;
+    
     return total;
   };
 
   const handleSubmit = async () => {
     if (selectedEvents.length === 0) {
-      toast.error('Please select at least one prelim event');
+      toast.error('Please select at least one event');
       return;
     }
 
@@ -65,7 +65,9 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
         body: JSON.stringify({
           sessionId: data.sessionId,
           prelimEvents: selectedEvents,
-          totalAmount: calculatedAmount // Send calculated amount explicitly
+          isPremium: false,
+          needsAccommodation: true, // Always true now
+          totalAmount: calculatedAmount
         }),
       });
 
@@ -75,7 +77,9 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
         updateData({
           individualData: {
             ...result.individualData,
-            totalAmount: calculatedAmount // Ensure correct amount is stored
+            totalAmount: calculatedAmount,
+            isPremium: false,
+            needsAccommodation: true // Always true
           }
         });
         nextStep();
@@ -91,64 +95,98 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     <div className="glass-card p-8 animate-fade-in">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-2">
-          Select Prelim Events
+          Select Events
         </h2>
-        <p className="text-gray-300">Select the preliminary events you want to participate in</p>
+        <p className="text-gray-300">Choose your individual events</p>
       </div>
 
       <div className="space-y-6">
-        {/* Events Grid */}
-        <div className="grid md:grid-cols-2 gap-4">
-          {prelimEvents.map((event) => (
-            <label
-              key={event}
-              className={`glass-card p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
-                selectedEvents.includes(event)
-                  ? 'border-red-500 bg-red-500/10'
-                  : 'border-transparent hover:border-red-500/50'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedEvents.includes(event)}
-                onChange={() => toggleEvent(event)}
-                className="hidden"
-              />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                    selectedEvents.includes(event)
-                      ? 'bg-red-500 border-red-500'
-                      : 'border-gray-500'
-                  }`}>
-                    {selectedEvents.includes(event) && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">{event}</div>
-                    <div className="text-sm text-gray-300">₹{eventPrices[event]}</div>
+        {/* EVENTS GRID */}
+        <div>
+          <h3 className="text-xl font-semibold text-white mb-4">Select Individual Events</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {prelimEvents.map((event) => (
+              <label
+                key={event}
+                className={`glass-card p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
+                  selectedEvents.includes(event)
+                    ? 'border-red-500 bg-red-500/10'
+                    : 'border-transparent hover:border-red-500/50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedEvents.includes(event)}
+                  onChange={() => toggleEvent(event)}
+                  className="hidden"
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                      selectedEvents.includes(event)
+                        ? 'bg-red-500 border-red-500'
+                        : 'border-gray-500'
+                    }`}>
+                      {selectedEvents.includes(event) && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">{event}</div>
+                      <div className="text-sm text-gray-300">₹{eventPrices[event]}</div>
+                    </div>
                   </div>
                 </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* COMPULSORY Accommodation */}
+        <div className="glass-card p-6 border-2 border-green-500/30 bg-green-500/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                <span className="text-green-400 text-lg">🏨</span>
               </div>
-            </label>
-          ))}
+              <div>
+                <div className="font-semibold text-white text-lg">Accommodation - ₹600</div>
+                <div className="text-sm text-gray-300">
+                  3 days comfortable stay at campus hostel (Compulsory)
+                </div>
+              </div>
+            </div>
+            <div className="text-green-400 font-bold text-lg">₹600</div>
+          </div>
         </div>
 
         {/* Selection Summary */}
-        <div className="glass-card p-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-gray-300">Selected Events: {selectedEvents.length}</div>
-              <div className="text-sm text-gray-400">
-                {selectedEvents.join(', ')}
+        <div className="glass-card p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
+          <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+          
+          <div className="space-y-3">
+            {/* Individual Events */}
+            {selectedEvents.map((event, index) => (
+              <div key={index} className="flex justify-between items-center text-sm">
+                <span className="text-gray-400 ml-2">• {event}</span>
+                <span className="text-white">₹{eventPrices[event]}</span>
               </div>
+            ))}
+            
+            {/* Compulsory Accommodation */}
+            <div className="flex justify-between items-center border-t border-white/20 pt-2">
+              <span className="text-gray-300">Accommodation (₹600)</span>
+              <span className="text-white font-medium">₹600</span>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-red-400">₹{calculateTotal()}</div>
-              <div className="text-sm text-gray-400">Total Amount</div>
+            
+            {/* Total */}
+            <div className="border-t border-white/20 pt-3 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-lg text-white font-semibold">Total Amount</span>
+                <span className="text-2xl text-red-400 font-bold">₹{calculateTotal()}</span>
+              </div>
             </div>
           </div>
         </div>

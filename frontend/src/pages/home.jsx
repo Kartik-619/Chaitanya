@@ -16,8 +16,10 @@ export default function Home() {
     const sections = gsap.utils.toArray('.h-section');
 
     const scrollTween = gsap.to(sections, {
-      xPercent: -150 * (sections.length - 1),
+      xPercent: 560 * (sections.length - 1),
       ease: 'none',
+      stagger:2,
+      delay:1,
       scrollTrigger: {
         trigger: horizontalRef.current,
         pin: true,

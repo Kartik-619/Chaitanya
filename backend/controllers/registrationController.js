@@ -1,12 +1,32 @@
+/**
+ * 📝 REGISTRATION CONTROLLER
+ * 
+ * This file handles the complete registration flow:
+ * - Multi-phase registration process (start → OTP → setup → review → complete)
+ * - Individual and team registration paths
+ * - OTP verification for user authentication
+ * - Registration data management and completion
+ * 
+ * 🔄 REGISTRATION PHASES:
+ * 1. Start → Basic info + OTP send
+ * 2. Verify OTP → Identity confirmation
+ * 3. Setup → Individual/Team event selection
+ * 4. Review → Final check before payment
+ * 5. Complete → Save data + send confirmations
+ */
+
 const RegistrationService = require('../services/registrationService');
 const GoogleSheetsService = require('../services/googleSheetsService');
 const EmailService = require('../services/emailService');
 const OTPService = require('../services/otpService');
 const PaymentService = require('../services/paymentService'); 
+const { TEAM_SIZE_RULES, E_SPORTS_GAMES } = require('../config/constants');
 
 class RegistrationController {
   
-  // Phase 1: Start registration with personal details
+  /**
+   * Phase 1: Start registration with personal details and send OTP
+   */
   async startRegistration(req, res) {
     try {
       const { name, email, phone, college, registrationType } = req.body;
@@ -66,7 +86,9 @@ class RegistrationController {
     }
   }
 
-  // Phase 1.5: OTP Verification
+  /**
+   * Phase 1.5: OTP Verification for user identity confirmation
+   */
   async verifyOTP(req, res) {
     try {
       const { sessionId, otp } = req.body;
@@ -104,10 +126,12 @@ class RegistrationController {
     }
   }
 
-  // Phase 2: Individual Path - Select prelim events
+  /**
+   * Phase 2: Individual Path - Select preliminary events with premium option
+   */
   async setupIndividual(req, res) {
     try {
-      const { sessionId, prelimEvents } = req.body; // ✅ REMOVE totalAmount from here
+      const { sessionId, prelimEvents, isPremium = false, needsAccommodation = false } = req.body; 
       
       if (!sessionId) {
         return res.status(400).json({ success: false, message: 'Session ID is required' });
@@ -120,8 +144,12 @@ class RegistrationController {
         });
       }
 
-      // ✅ FIXED: Don't pass totalAmount - let service calculate it
-      const individualData = RegistrationService.setupIndividualEvents(sessionId, prelimEvents);
+      const individualData = RegistrationService.setupIndividualEvents(
+        sessionId, 
+        prelimEvents, 
+        isPremium, 
+        needsAccommodation
+      );
 
       res.json({
         success: true,
@@ -131,7 +159,9 @@ class RegistrationController {
         individualData: {
           personalDetails: individualData.personalDetails,
           prelimEvents: individualData.prelimEvents,
-          totalAmount: individualData.totalAmount // ✅ This now has the correct amount
+          isPremium: individualData.isPremium,
+          needsAccommodation: individualData.needsAccommodation,
+          totalAmount: individualData.totalAmount 
         }
       });
 
@@ -141,31 +171,64 @@ class RegistrationController {
     }
   }
 
-  // Phase 2: Team Path - Setup team with members
+  /**
+   * Phase 2: Team Path - Setup team with members and events
+   */
   async setupTeam(req, res) {
     try {
-      const { sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents } = req.body;
+      const { 
+        sessionId, 
+        teamName, 
+        mainEvent, 
+        teamMembers, 
+        leaderPrelimEvents, 
+        teamSize,
+        esportsGame = null,
+        needsAccommodation = false,
+        isPremium = false // ✅ ADDED: Premium parameter
+      } = req.body;
       
       console.log('🔍 [ROUTE DEBUG] Team setup request:', {
         sessionId,
         teamName,
         mainEvent,
         teamMembersCount: teamMembers?.length,
-        leaderPrelimEvents // ✅ Check if this is received
+        teamSize,
+        leaderPrelimEvents,
+        esportsGame,
+        needsAccommodation,
+        isPremium // ✅ ADDED: Log premium status
       });
 
-      if (!sessionId || !teamName || !mainEvent) {
+      if (!sessionId || !teamName || !mainEvent || !teamSize) {
         return res.status(400).json({ 
           success: false, 
-          message: 'Session ID, team name, and main event are required' 
+          message: 'Session ID, team name, main event, and team size are required' 
         });
       }
 
       // Validate main event selection
-      if (!['Hackathon', 'Accurate Predictions'].includes(mainEvent)) {
+      if (!TEAM_SIZE_RULES[mainEvent]) {
         return res.status(400).json({
           success: false,
-          message: 'Please select one main event (Hackathon or Accurate Predictions)'
+          message: 'Please select a valid team event'
+        });
+      }
+
+      // Validate team size rules
+      const teamRules = TEAM_SIZE_RULES[mainEvent];
+      if (teamSize < teamRules.min || teamSize > teamRules.max) {
+        return res.status(400).json({
+          success: false,
+          message: `${mainEvent} requires ${teamRules.min}-${teamRules.max} members`
+        });
+      }
+
+      // Validate E-sports game selection
+      if (mainEvent === 'E-sports' && !E_SPORTS_GAMES.includes(esportsGame)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please select a valid E-sports game'
         });
       }
 
@@ -182,19 +245,27 @@ class RegistrationController {
         }
       }
 
-      // ✅ FIXED: Setup team with leader prelim events
+      // ✅ FIXED: Pass isPremium parameter to setupTeamDetails
       const teamData = RegistrationService.setupTeamDetails(
         sessionId, 
         teamName, 
         mainEvent, 
         teamMembers || [],
-        leaderPrelimEvents || [] // ✅ Pass leader prelim events
+        leaderPrelimEvents || [],
+        teamSize,
+        esportsGame,
+        needsAccommodation,
+        isPremium // ✅ ADDED: Pass premium flag
       );
 
       console.log('✅ [ROUTE DEBUG] Team setup completed:', {
         teamLeader: teamData.teamLeader.name,
         leaderPrelimEvents: teamData.teamLeader.prelimEvents,
-        teamMembers: teamData.teamMembers.length
+        teamMembers: teamData.teamMembers.length,
+        teamSize: teamData.teamSize,
+        esportsGame: teamData.esportsGame,
+        isPremium: teamData.isPremium, // ✅ ADDED: Log premium status
+        totalAmount: teamData.totalAmount
       });
 
       res.json({
@@ -207,8 +278,11 @@ class RegistrationController {
           teamName: teamData.teamName,
           mainEvent: teamData.mainEvent,
           teamMembers: teamData.teamMembers,
+          teamSize: teamData.teamSize,
+          esportsGame: teamData.esportsGame,
           totalAmount: teamData.totalAmount,
-          teamSize: teamData.teamSize
+          needsAccommodation: teamData.needsAccommodation,
+          isPremium: teamData.isPremium // ✅ ADDED: Return premium status
         }
       });
 
@@ -218,8 +292,9 @@ class RegistrationController {
     }
   }
 
-
-  // Phase 3: Review registration
+  /**
+   * Phase 3: Review registration details before final submission
+   */
   async reviewRegistration(req, res) {
     try {
       const { sessionId } = req.body;
@@ -244,87 +319,90 @@ class RegistrationController {
     }
   }
 
-  // Phase 4: Complete registration with payment
-async completeRegistration(req, res) {
-  try {
-    const { sessionId, paymentMethod = 'razorpay' } = req.body;
-    
-    if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session ID is required' });
-    }
-
-    const session = RegistrationService.getSession(sessionId);
-    if (!session) {
-      return res.status(404).json({ success: false, message: 'Session not found' });
-    }
-
-    console.log('🔍 DEBUG - Session before completion:', session);
-
-    // Complete registration first (this stores data locally)
-    console.log('💾 Starting registration completion...');
-    const registrationResult = RegistrationService.completeRegistration(sessionId, paymentResult, paymentMethod);
-    console.log('✅ Registration completion result:', registrationResult);
-    
-    // ✅ FIXED: Separate Google Sheets and Email into independent processes
-    let sheetsResult = { success: false, message: 'Not attempted' };
-    let emailResult = { success: false, message: 'Not attempted' };
-
-    // 1. Save to Google Sheets (don't block registration on this)
-    console.log('💾 Attempting to save to Google Sheets...');
+  /**
+   * Phase 4: Complete registration process and save data
+   */
+  async completeRegistration(req, res) {
     try {
-      sheetsResult = await GoogleSheetsService.saveRegistration(registrationResult.finalRegistration);
-      console.log('📊 Google Sheets save result:', sheetsResult);
-    } catch (sheetsError) {
-      console.error('❌ Google Sheets error:', sheetsError);
-      sheetsResult = { success: false, message: sheetsError.message };
-    }
-
-    // 2. Send confirmation email (don't block registration on this)
-    console.log('📧 Attempting to send confirmation email...');
-    try {
-      if (session.registrationType === 'individual') {
-        emailResult = await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
-      } else {
-        emailResult = await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
+      const { sessionId, paymentMethod = 'razorpay' } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ success: false, message: 'Session ID is required' });
       }
-      console.log('📧 Email sending result:', emailResult);
-    } catch (emailError) {
-      console.error('❌ Email sending error:', emailError);
-      emailResult = { success: false, message: emailError.message };
+
+      const session = RegistrationService.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ success: false, message: 'Session not found' });
+      }
+
+      console.log('🔍 DEBUG - Session before completion:', session);
+
+      // Complete registration first (this stores data locally)
+      console.log('💾 Starting registration completion...');
+      const registrationResult = RegistrationService.completeRegistration(sessionId, null , paymentMethod);
+      console.log('✅ Registration completion result:', registrationResult);
+      
+      // Separate Google Sheets and Email into independent processes
+      let sheetsResult = { success: false, message: 'Not attempted' };
+      let emailResult = { success: false, message: 'Not attempted' };
+
+      // 1. Save to Google Sheets (don't block registration on this)
+      console.log('💾 Attempting to save to Google Sheets...');
+      try {
+        sheetsResult = await GoogleSheetsService.saveRegistration(registrationResult.finalRegistration);
+        console.log('📊 Google Sheets save result:', sheetsResult);
+      } catch (sheetsError) {
+        console.error('❌ Google Sheets error:', sheetsError);
+        sheetsResult = { success: false, message: sheetsError.message };
+      }
+
+      // 2. Send confirmation email (don't block registration on this)
+      console.log('📧 Attempting to send confirmation email...');
+      try {
+        if (session.registrationType === 'individual') {
+          emailResult = await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
+        } else {
+          emailResult = await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
+        }
+        console.log('📧 Email sending result:', emailResult);
+      } catch (emailError) {
+        console.error('❌ Email sending error:', emailError);
+        emailResult = { success: false, message: emailError.message };
+      }
+
+      // SUCCESS: Registration is always successful even if sheets/email fail
+      res.json({
+        success: true,
+        message: `${session.registrationType.charAt(0).toUpperCase() + session.registrationType.slice(1)} registration completed successfully!`,
+        registrationId: registrationResult.registrationId,
+        teamId: registrationResult.teamId,
+        paymentStatus: 'completed',
+        amount: session.totalAmount,
+        registrationType: session.registrationType,
+        data: registrationResult.finalRegistration,
+        services: {
+          googleSheets: sheetsResult,
+          email: emailResult
+        },
+        // IMPORTANT: Tell frontend that registration is complete
+        registrationComplete: true
+      });
+
+    } catch (error) {
+      console.error('❌ Error in completeRegistration:', error);
+      console.error('🔍 Error details:', error.message);
+      console.error('📝 Stack trace:', error.stack);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error during registration completion',
+        error: error.message 
+      });
     }
-
-    // ✅ SUCCESS: Registration is always successful even if sheets/email fail
-    res.json({
-      success: true,
-      message: `${session.registrationType.charAt(0).toUpperCase() + session.registrationType.slice(1)} registration completed successfully!`,
-      registrationId: registrationResult.registrationId,
-      teamId: registrationResult.teamId,
-      paymentStatus: 'completed',
-      amount: session.totalAmount,
-      registrationType: session.registrationType,
-      data: registrationResult.finalRegistration,
-      // ✅ ADDED: Service status for debugging
-      services: {
-        googleSheets: sheetsResult,
-        email: emailResult
-      },
-      // ✅ IMPORTANT: Tell frontend that registration is complete
-      registrationComplete: true
-    });
-
-  } catch (error) {
-    console.error('❌ Error in completeRegistration:', error);
-    console.error('🔍 Error details:', error.message);
-    console.error('📝 Stack trace:', error.stack);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error during registration completion',
-      error: error.message 
-    });
   }
-}
 
-  // Get all registrations (admin function)
+  /**
+   * Get all registrations for admin purposes
+   */
   async getAllRegistrations(req, res) {
     try {
       const sheetsResult = await GoogleSheetsService.getAllRegistrations();
@@ -351,10 +429,13 @@ async completeRegistration(req, res) {
     }
   }
 
-  // Clean up old sessions to prevent memory leaks
+  /**
+   * Clean up old sessions to prevent memory leaks
+   */
   cleanupOldSessions() {
     RegistrationService.cleanupOldSessions();
   }
 }
 
+// Export controller instance
 module.exports = new RegistrationController();

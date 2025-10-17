@@ -1,36 +1,98 @@
+/**
+ * ⚙️ APP SETTINGS
+ * 
+ * This file contains all main settings for the application
+ * - What passwords and keys are needed
+ * - How long user sessions last
+ * - Where to store data in Google Sheets
+ * - What events are available
+ */
+
+// List of required passwords and keys
 const requiredEnvVars = [
-  'UNIVERSITY_EMAIL_PASSWORD',
-  'FRONTEND_URL',
-  'DEVELOPMENT_TOKEN',
-  'UNIVERSITY_EMAIL' // ✅ ADDED for OTP service
+  'UNIVERSITY_EMAIL_PASSWORD',  // Password for sending emails
+  'FRONTEND_URL',               // Website address
+  'DEVELOPMENT_TOKEN',          // Test token for development
+  'UNIVERSITY_EMAIL',           // Email address for sending OTPs
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET'
 ];
 
-// Session configuration
+// User session settings
 const SESSION_CONFIG = {
-  MAX_AGE: 30 * 60 * 1000, // 30 minutes
-  CLEANUP_INTERVAL: 10 * 60 * 1000, // 10 minutes
-  OTP_EXPIRY: 10 * 60 * 1000 // ✅ ADDED OTP expiry (10 minutes)
+  MAX_AGE: 30 * 60 * 1000,        // User stays logged in for 30 minutes
+  CLEANUP_INTERVAL: 10 * 60 * 1000, // Clean old sessions every 10 minutes
+  OTP_EXPIRY: 10 * 60 * 1000      // OTP codes expire after 10 minutes
 };
 
-// Google Sheets configuration
+// Google Sheets settings
 const SHEETS_CONFIG = {
+  // ID of the Google Sheet where data is stored
   SPREADSHEET_ID: process.env.SHEETS_SPREADSHEET_ID || '1wtmrbVRFW6pOj5bmEbQPFMiTpAlOpezFltS-yOfw7Zo',
-  RANGE: 'Registrations!A:S', // ✅ UPDATED columns for new data structure
-  EVENTS_RANGE: 'Events Participation!A:J' // ✅ ADDED events sheet
+  
+  // Where to save registration data (Columns A to S)
+  RANGE: 'Registrations!A:V',
+  
+  // Where to save event participation data
+  EVENTS_RANGE: 'Events Participation!A:L'
 };
 
-// Event configuration
+// Team size rules for each team event
+const TEAM_SIZE_RULES = {
+  "Singing": { min: 2, max: 4 },
+  "Dance": { min: 2, max: 6 },
+  "Hackathon": { min: 3, max: 6 },
+  "Accurate Prediction": { min: 2, max: 4 },
+  "E-sports": { min: 4, max: 4 }, // Fixed 4 members
+  "Polymath": { min: 2, max: 4 },
+  "Reverse Engineering": { min: 2, max: 3 },
+  "Retro Theming": { min: 2, max: 3 },
+  "Debate": { min: 2, max: 2 }, // Fixed 2 members
+  "Two Minute Manager": { min: 2, max: 2 } // Fixed 2 members
+};
+
+// E-sports games available
+const E_SPORTS_GAMES = ["BGMI", "FF Max", "Valorant"];
+
+// Event settings
 const EVENT_CONFIG = {
-  INDIVIDUAL_MIN_EVENTS: 1,
-  INDIVIDUAL_MAX_EVENTS: 5,
-  TEAM_MIN_SIZE: 2,
-  TEAM_MAX_SIZE: 4,
-  MAIN_EVENTS: ['Hackathon', 'Accurate Predictions']
+  // Individual events
+  INDIVIDUAL_EVENTS: [
+    "Integration Bee",
+    "Human vs AI", 
+    "Retro Theming",
+    "Prompt Engineering",
+    "Reverse Engineering",
+    "Jack of Hearts",
+    "Singing",
+    "Dancing"
+  ],
+  
+  // Team events
+  TEAM_EVENTS: [
+    "Singing",
+    "Dance", 
+    "Hackathon",
+    "Accurate Prediction",
+    "E-sports",
+    "Polymath",
+    "Reverse Engineering", 
+    "Retro Theming",
+    "Debate",
+    "Two Minute Manager"
+  ],
+  
+  // Premium settings
+  PREMIUM_FEE: 200,
+  ACCOMMODATION_FEE: 600
 };
 
+// Export all settings
 module.exports = {
   requiredEnvVars,
   SESSION_CONFIG,
   SHEETS_CONFIG,
-  EVENT_CONFIG // ✅ ADDED event configuration
+  TEAM_SIZE_RULES,
+  E_SPORTS_GAMES,
+  EVENT_CONFIG
 };

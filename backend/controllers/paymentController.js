@@ -1,8 +1,25 @@
+/**
+ * 💳 PAYMENT CONTROLLER
+ * 
+ * This file handles all payment-related operations:
+ * - Payment initialization and order creation
+ * - Payment verification and confirmation
+ * - Registration completion after successful payment
+ * 
+ * 🔄 PAYMENT FLOW:
+ * 1. Initialize Payment → Create Razorpay order
+ * 2. Verify Payment → Confirm payment success
+ * 3. Complete Registration → Save data and send emails
+ */
+
 const RegistrationService = require('../services/registrationService');
 const PaymentService = require('../services/paymentService');
-const GoogleSheetsService = require('../services/googleSheetsService'); // ✅ ADD THIS
-const EmailService = require('../services/emailService'); // ✅ ADD THIS
+const GoogleSheetsService = require('../services/googleSheetsService'); 
+const EmailService = require('../services/emailService'); 
 
+/**
+ * Initialize payment process by creating Razorpay order
+ */
 const initializePayment = async (req, res) => {
   try {
     const { sessionId } = req.body;
@@ -14,7 +31,7 @@ const initializePayment = async (req, res) => {
       });
     }
 
-    // Get registration data
+    // Get registration data from session
     const registrationData = RegistrationService.getRegistrationSession(sessionId);
     if (!registrationData) {
       return res.status(404).json({
@@ -29,9 +46,14 @@ const initializePayment = async (req, res) => {
     let customerInfo = registrationData.personalDetails || {};
     let registrationType = registrationData.registrationType || 'individual';
 
-    console.log('💰 DEBUG - Session Amount:', amount);
-    console.log('💰 DEBUG - Registration Type:', registrationType);
-    console.log('💰 DEBUG - Customer Info:', customerInfo);
+    // ✅ ADDED: Debug logging for premium verification
+    console.log('💰 DEBUG - Payment Amount Verification:', {
+      sessionId,
+      amountReceived: amount,
+      registrationType,
+      isPremium: registrationData.isPremium, // ✅ ADDED: Check premium status
+      expectedAmount: amount
+    });
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -47,7 +69,7 @@ const initializePayment = async (req, res) => {
       });
     }
 
-    // Initialize payment
+    // Initialize payment with Razorpay
     const paymentResult = await PaymentService.initializePayment(
       sessionId, 
       amount, 
@@ -70,6 +92,9 @@ const initializePayment = async (req, res) => {
   }
 };
 
+/**
+ * Verify payment completion and complete registration process
+ */
 const verifyPayment = async (req, res) => {
   try {
     const { 
@@ -86,7 +111,7 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    // Verify payment
+    // Verify payment with Razorpay
     const verificationResult = await PaymentService.verifyPayment(
       razorpay_order_id,
       razorpay_payment_id,
@@ -97,7 +122,7 @@ const verifyPayment = async (req, res) => {
       return res.status(400).json(verificationResult);
     }
 
-    // Complete registration
+    // Complete registration process
     const registrationResult = await RegistrationService.verifyAndCompleteRegistration(
       sessionId,
       { 
@@ -113,7 +138,6 @@ const verifyPayment = async (req, res) => {
 
     console.log('✅ Registration completed, now saving to Google Sheets and sending email...');
 
-    // ✅ FIXED: Use async/await instead of .then().catch() to ensure proper execution
     let sheetsResult = { success: false, message: 'Not attempted' };
     let eventsResult = { success: false, message: 'Not attempted' };
     let emailResult = { success: false, message: 'Not attempted' };
@@ -128,7 +152,7 @@ const verifyPayment = async (req, res) => {
       sheetsResult = { success: false, message: sheetsError.message };
     }
 
-    // 2. ✅ FIXED: Save to events sheet with AWAIT
+    // 2. Save to events sheet with AWAIT
     try {
       console.log('🎯 Saving to events sheet...');
       console.log('🔍 Events sheet data check:', {
@@ -159,7 +183,7 @@ const verifyPayment = async (req, res) => {
       emailResult = { success: false, message: emailError.message };
     }
 
-    // ✅ Return all results for debugging
+    //  Return all results for debugging
     res.json({
       success: true,
       registrationId: registrationResult.registrationId,
@@ -168,7 +192,7 @@ const verifyPayment = async (req, res) => {
       paymentResult: verificationResult,
       services: {
         mainSheet: sheetsResult,
-        eventsSheet: eventsResult, // ✅ This will show if events sheet saved successfully
+        eventsSheet: eventsResult, 
         email: emailResult
       },
       message: 'Payment verified and registration completed successfully'
@@ -183,6 +207,7 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+// Export payment controller functions
 module.exports = {
   initializePayment,
   verifyPayment

@@ -1,3 +1,19 @@
+/**
+ * 💳 PAYMENT SERVICE
+ * 
+ * This service handles all payment processing operations:
+ * - Razorpay payment gateway integration
+ * - Payment order creation and management
+ * - Payment verification and security
+ * - Individual and team payment processing
+ * 
+ * 🔒 SECURITY FEATURES:
+ * - Razorpay signature verification
+ * - Payment capture automation
+ * - Transaction details logging
+ * - Secure order creation
+ */
+
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { PAYMENT_CONFIG } = require('../config/paymentConfig');
@@ -11,16 +27,25 @@ class PaymentService {
     console.log('💰 Razorpay Payment Service Initialized');
   }
 
+  /**
+   * Process individual registration payment
+   */
   async processIndividualPayment(amount, sessionId, customerInfo = {}) {
     console.log('💳 Processing individual payment:', amount);
     return await this.processRegistrationPayment(amount, sessionId, customerInfo, 'individual');
   }
 
+  /**
+   * Process team registration payment
+   */
   async processTeamPayment(amount, sessionId, customerInfo = {}) {
     console.log('💳 Processing team payment:', amount);
     return await this.processRegistrationPayment(amount, sessionId, customerInfo, 'team');
   }
 
+  /**
+   * Process registration payment with Razorpay
+   */
   async processRegistrationPayment(amount, sessionId, customerInfo = {}, type = 'registration') {
     try {
       console.log('💰 Processing payment for:', type, 'Amount:', amount);
@@ -60,6 +85,9 @@ class PaymentService {
     }
   }
 
+  /**
+   * Create Razorpay payment order
+   */
   async createOrder(amount, receipt, notes = {}) {
     try {
       console.log('💳 Creating Razorpay order for: ₹', amount / 100);
@@ -95,8 +123,23 @@ class PaymentService {
     }
   }
 
+  /**
+   * Verify Razorpay payment signature and capture details
+   */
   async verifyPayment(orderId, paymentId, signature) {
     try {
+      //  ADD INPUT VALIDATION:
+      if (!orderId || !paymentId || !signature) {
+        console.error('❌ Missing payment verification parameters:', {
+          orderId: orderId ? 'provided' : 'missing',
+          paymentId: paymentId ? 'provided' : 'missing', 
+          signature: signature ? 'provided' : 'missing'
+        });
+        return {
+          success: false,
+          message: 'Missing payment verification data'
+        };
+      }
       console.log('🔍 Verifying Razorpay payment...');
       
       const body = orderId + "|" + paymentId;
@@ -110,7 +153,7 @@ class PaymentService {
       if (isAuthentic) {
         console.log('✅ Razorpay payment verification successful');
         
-        // ✅ ADDED: Fetch payment details to get complete transaction info
+        //  Fetch payment details to get complete transaction info
         try {
           const payment = await this.razorpay.payments.fetch(paymentId);
           console.log('💰 Payment details:', {
@@ -132,7 +175,6 @@ class PaymentService {
             orderId: orderId,
             signature: signature,
             status: 'captured',
-            // ✅ ADDED: Complete payment details for storage
             paymentDetails: {
               transactionId: paymentId, // This is the main transaction ID
               orderId: orderId,
@@ -182,6 +224,9 @@ class PaymentService {
     }
   }
 
+  /**
+   * Initialize payment process for registration
+   */
   async initializePayment(sessionId, amount, customerInfo = {}, registrationType = 'individual') {
     try {
       console.log('💰 Initializing payment for session:', sessionId);
@@ -222,4 +267,5 @@ class PaymentService {
   }
 }
 
+// Export service instance
 module.exports = new PaymentService();

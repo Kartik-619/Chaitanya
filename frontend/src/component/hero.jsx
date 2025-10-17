@@ -51,9 +51,18 @@ const setupDesktopAnimations = (heroRef, cloudRefs, scrollDuration) => {
   return tl;
 };
 
-const setupMobileView = () => {
+const setupStaticView = () => {
+  // Kill all ScrollTriggers and reset all elements to visible state
   ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-  gsap.set(".welcome, .name, .social, .scroll, .castle", { opacity: 1, y: 0, scale: 1, xPercent: 0 });
+  
+  // Ensure everything is visible and in default position
+  gsap.set([".welcome", ".name", ".social", ".scroll", ".castle"], { 
+    opacity: 1,
+    y: 0,
+    x: 0,
+    scale: 1,
+    clearProps: "all" 
+  });
 };
 
 export default function Hero() {
@@ -70,19 +79,28 @@ export default function Hero() {
   useEffect(() => {
     const checkDevice = () => {
       const width = window.innerWidth;
-      if (width <= 1024) setDeviceType("mobile");
-      else if (width > 1024 && width <= 1366) setDeviceType("tablet");
-      else setDeviceType("desktop");
+      // Only consider devices > 1024px as desktop for animations
+      if (width > 2085) {
+        setDeviceType("desktop");
+      } else {
+        // Everything else (tablets and mobiles) gets static view
+        setDeviceType("static");
+      }
       ScrollTrigger.refresh();
     };
+   
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   useGSAP(() => {
-    if (deviceType === "mobile") setupMobileView();
-    else setupDesktopAnimations(heroRef, cloudRefs, deviceType === "tablet" ? 500 : 800);
+    if (deviceType === "static") {
+      setupStaticView();
+    } else {
+      // Apply animations only for desktop
+      setupDesktopAnimations(heroRef, cloudRefs, 800);
+    }
   }, { scope: heroRef, dependencies: [deviceType] });
 
   return (
@@ -91,7 +109,8 @@ export default function Hero() {
 
       <img src="/images/castle.png" alt="Castle" className="castle" />
 
-      {deviceType !== "mobile" && (
+      {/* Show clouds only on desktop and tablet - hide on mobile */}
+      {deviceType !== "static" && (
         <>
           <img ref={cloudRefs.left1} src="/images/cloudLeft.png" alt="Cloud Left" className="cloudLeft" />
           <img ref={cloudRefs.left2} src="/images/cloud 1.png" alt="Cloud 1" className="cloud1" />
@@ -107,7 +126,8 @@ export default function Hero() {
 
       <Sidebar />
 
-      {deviceType !== "mobile" && (
+      {/* Show scroll indicator only on desktop */}
+      {deviceType === "desktop" && (
         <div className="scroll">
           <FontAwesomeIcon icon={faArrowDown} className="text-4xl text-white drop-shadow-lg" />
           <h4 className="text-white text-xl font-medium drop-shadow-md">scroll down</h4>

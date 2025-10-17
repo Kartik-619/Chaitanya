@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-    <title>Admin Dashboard - TechFest</title>
+    <title>Admin Dashboard - Chaitanya 2025</title>
     <style>
         body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
         .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -22,9 +22,14 @@
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }
         .badge-individual { background: #e3f2fd; color: #1976d2; }
         .badge-team { background: #f3e5f5; color: #7b1fa2; }
+        .badge-premium { background: #fff3cd; color: #856404; }
+        .badge-accommodation { background: #d1ecf1; color: #0c5460; }
         .type-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
         .type-toggle button { background: #6c757d; }
         .type-toggle button.active { background: #007bff; }
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+        .analytics-card { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; }
+        .event-tag { display: inline-block; padding: 2px 8px; background: #e9ecef; border-radius: 4px; margin: 2px; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -51,12 +56,31 @@
             <div>Team Registrations</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number" id="completedPayments">0</div>
-            <div>Completed Payments</div>
+            <div class="stat-number" id="premiumCount">0</div>
+            <div>Premium Packages</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number" id="teamMembersCount">0</div>
-            <div>Total Participants</div>
+            <div class="stat-number" id="accommodationCount">0</div>
+            <div>Accommodation Bookings</div>
+        </div>
+    </div>
+
+    <!-- New Analytics Section -->
+    <div class="section">
+        <h2>📈 Advanced Analytics</h2>
+        <div class="analytics-grid">
+            <div class="analytics-card">
+                <h3>💰 Premium Analytics</h3>
+                <div id="premiumAnalytics">Loading...</div>
+            </div>
+            <div class="analytics-card">
+                <h3>🏨 Accommodation Analytics</h3>
+                <div id="accommodationAnalytics">Loading...</div>
+            </div>
+            <div class="analytics-card">
+                <h3>🎯 Event Popularity</h3>
+                <div id="eventAnalytics">Loading...</div>
+            </div>
         </div>
     </div>
 
@@ -72,6 +96,7 @@
             <button id="showAllBtn" class="active">All Types</button>
             <button id="showIndividualBtn">Individual Only</button>
             <button id="showTeamBtn">Team Only</button>
+            <button id="showPremiumBtn">Premium Only</button>
         </div>
         <button id="loadRegistrationsBtn">Load Registrations</button>
         <div id="registrationsData"></div>
@@ -140,7 +165,7 @@
         }
     }
 
-    let currentRegistrationType = 'all'; // 'all', 'individual', 'team'
+    let currentRegistrationType = 'all'; // 'all', 'individual', 'team', 'premium'
     let allRegistrations = [];
 
     // Load and display statistics
@@ -167,15 +192,15 @@
             const revenueEl = document.getElementById('totalRevenue');
             const individualEl = document.getElementById('individualCount');
             const teamEl = document.getElementById('teamCount');
-            const completedEl = document.getElementById('completedPayments');
-            const teamMembersEl = document.getElementById('teamMembersCount');
+            const premiumEl = document.getElementById('premiumCount');
+            const accommodationEl = document.getElementById('accommodationCount');
             
             if (totalRegEl) totalRegEl.textContent = data.data.totalRegistrations;
             if (revenueEl) revenueEl.textContent = `₹${data.data.totalRevenue}`;
             if (individualEl) individualEl.textContent = data.data.registrationTypes?.individual || 0;
             if (teamEl) teamEl.textContent = data.data.registrationTypes?.team || 0;
-            if (completedEl) completedEl.textContent = data.data.paymentStatus.completed;
-            if (teamMembersEl) teamMembersEl.textContent = data.data.totalParticipants || data.data.totalRegistrations;
+            if (premiumEl) premiumEl.textContent = data.data.premiumCount || 0;
+            if (accommodationEl) accommodationEl.textContent = data.data.accommodationCount || 0;
             
             // Display detailed data
             if (statsDataDiv) {
@@ -187,11 +212,29 @@
                     `;
                 }
 
+                let premiumStats = '';
+                if (data.data.premiumCount > 0) {
+                    premiumStats = `
+                        <h3>🌟 Premium Packages:</h3>
+                        <pre>Total Premium: ${data.data.premiumCount} | Revenue: ₹${data.data.premiumCount * 200}</pre>
+                    `;
+                }
+
+                let accommodationStats = '';
+                if (data.data.accommodationCount > 0) {
+                    accommodationStats = `
+                        <h3>🏨 Accommodation Bookings:</h3>
+                        <pre>Total Bookings: ${data.data.accommodationCount} | Revenue: ₹${data.data.accommodationCount * 600}</pre>
+                    `;
+                }
+
                 statsDataDiv.innerHTML = `
                     <h3>📊 Registration Types:</h3>
                     <pre>Individual: ${data.data.registrationTypes?.individual || 0} | Team: ${data.data.registrationTypes?.team || 0}</pre>
                     
                     ${revenueStats}
+                    ${premiumStats}
+                    ${accommodationStats}
                     
                     <h3>🎯 Event-wise Registration:</h3>
                     <pre>${JSON.stringify(data.data.events, null, 2)}</pre>
@@ -213,7 +256,73 @@
         }
     }
 
-    // Load registrations with Individual/Team filtering
+    // Load premium analytics
+    async function loadPremiumAnalytics() {
+        console.log('🌟 Loading premium analytics...');
+        const analyticsDiv = document.getElementById('premiumAnalytics');
+        
+        const data = await makeAuthenticatedRequest('/api/admin/premium-analytics');
+        
+        if (data && data.success) {
+            analyticsDiv.innerHTML = `
+                <p><strong>Premium Packages:</strong> ${data.premiumCount}</p>
+                <p><strong>Premium Revenue:</strong> ₹${data.premiumRevenue}</p>
+                <p><strong>Percentage:</strong> ${data.premiumPercentage}</p>
+                <p><strong>Total Revenue:</strong> ₹${data.totalRevenue}</p>
+            `;
+        } else {
+            analyticsDiv.innerHTML = `<div class="error">Premium data unavailable</div>`;
+        }
+    }
+
+    // Load accommodation analytics
+    async function loadAccommodationAnalytics() {
+        console.log('🏨 Loading accommodation analytics...');
+        const analyticsDiv = document.getElementById('accommodationAnalytics');
+        
+        const data = await makeAuthenticatedRequest('/api/admin/accommodation-analytics');
+        
+        if (data && data.success) {
+            analyticsDiv.innerHTML = `
+                <p><strong>Bookings:</strong> ${data.accommodationCount}</p>
+                <p><strong>Participants:</strong> ${data.totalParticipants}</p>
+                <p><strong>Revenue:</strong> ₹${data.accommodationRevenue}</p>
+            `;
+        } else {
+            analyticsDiv.innerHTML = `<div class="error">Accommodation data unavailable</div>`;
+        }
+    }
+
+    // Load event analytics
+    async function loadEventAnalytics() {
+        console.log('🎯 Loading event analytics...');
+        const analyticsDiv = document.getElementById('eventAnalytics');
+        
+        // Get events data and calculate popularity
+        const data = await makeAuthenticatedRequest('/api/admin/events');
+        
+        if (data && data.success && data.data) {
+            const eventCounts = {};
+            data.data.forEach(event => {
+                const eventName = event.eventName;
+                eventCounts[eventName] = (eventCounts[eventName] || 0) + 1;
+            });
+            
+            let html = '';
+            Object.entries(eventCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .forEach(([eventName, count]) => {
+                    html += `<p><strong>${eventName}:</strong> ${count} participants</p>`;
+                });
+            
+            analyticsDiv.innerHTML = html || '<p>No event data yet</p>';
+        } else {
+            analyticsDiv.innerHTML = '<p>Loading event data...</p>';
+        }
+    }
+
+    // Load registrations with Individual/Team/Premium filtering
     async function loadRegistrations() {
         console.log('🔄 Loading registrations...');
         const registrationsDataDiv = document.getElementById('registrationsData');
@@ -246,44 +355,73 @@
         
         if (currentRegistrationType === 'individual') {
             filteredRegistrations = allRegistrations.filter(reg => 
-                reg.registrationType === 'individual' || reg.registrationId?.includes('IND')
+                reg.registrationType === 'individual'
             );
         } else if (currentRegistrationType === 'team') {
             filteredRegistrations = allRegistrations.filter(reg => 
-                reg.registrationType === 'team' || !reg.registrationId?.includes('IND')
+                reg.registrationType === 'team'
+            );
+        } else if (currentRegistrationType === 'premium') {
+            filteredRegistrations = allRegistrations.filter(reg => 
+                reg.isPremium === true
             );
         }
 
         let html = `<p><strong>Total: ${filteredRegistrations.length} registrations (${currentRegistrationType})</strong></p>`;
         
         if (filteredRegistrations.length > 0) {
-            html += '<table><tr><th>Type</th><th>Name</th><th>Email</th><th>College</th><th>Event</th><th>Amount</th><th>Status</th><th>ID</th></tr>';
+            html += '<table><tr><th>Type</th><th>Name</th><th>Email</th><th>College</th><th>Event</th><th>Amount</th><th>Status</th><th>ID</th><th>Tags</th></tr>';
             
             filteredRegistrations.forEach(reg => {
-                const isIndividual = reg.registrationType === 'individual' || reg.registrationId?.includes('IND');
+                const isIndividual = reg.registrationType === 'individual';
                 const typeBadge = isIndividual ? 
                     '<span class="badge badge-individual">Individual</span>' : 
                     '<span class="badge badge-team">Team</span>';
                 
-                const name = reg.personalDetails?.name || reg.teamHeadName || reg.name || 'N/A';
-                const email = reg.personalDetails?.email || reg.teamHeadEmail || reg.email || 'N/A';
-                const college = reg.personalDetails?.college || reg.teamHeadCollege || reg.college || 'N/A';
-                const event = isIndividual ? 
-                    (reg.prelimEvents?.join(', ') || 'Prelim Events') : 
-                    (reg.mainEvent || 'Team Event');
+                const name = reg.personalDetails?.name || reg.teamLeader?.name || 'N/A';
+                const email = reg.personalDetails?.email || reg.teamLeader?.email || 'N/A';
+                const college = reg.personalDetails?.college || reg.teamLeader?.college || 'N/A';
+                
+                // Event display
+                let eventDisplay = '';
+                if (isIndividual) {
+                    if (reg.isPremium) {
+                        eventDisplay = '<span class="event-tag">ALL EVENTS (Premium)</span>';
+                    } else {
+                        eventDisplay = (reg.prelimEvents || []).map(event => 
+                            `<span class="event-tag">${event}</span>`
+                        ).join('');
+                    }
+                } else {
+                    eventDisplay = `<span class="event-tag">${reg.mainEvent || 'Team Event'}</span>`;
+                    if (reg.esportsGame) {
+                        eventDisplay += `<span class="event-tag">${reg.esportsGame}</span>`;
+                    }
+                }
+                
                 const amount = reg.totalAmount || reg.amount || 0;
                 const status = reg.paymentStatus || 'completed';
                 const regId = reg.registrationId || 'N/A';
+
+                // Tags for premium and accommodation
+                let tags = '';
+                if (reg.isPremium) {
+                    tags += '<span class="badge badge-premium">Premium</span> ';
+                }
+                if (reg.needsAccommodation) {
+                    tags += '<span class="badge badge-accommodation">Accommodation</span>';
+                }
 
                 html += `<tr>
                     <td>${typeBadge}</td>
                     <td>${name}</td>
                     <td>${email}</td>
                     <td>${college}</td>
-                    <td>${event}</td>
+                    <td>${eventDisplay}</td>
                     <td>₹${amount}</td>
                     <td>${status}</td>
                     <td><small>${regId}</small></td>
+                    <td>${tags}</td>
                 </tr>`;
             });
             
@@ -322,7 +460,8 @@
                                 participants: 0,
                                 revenue: 0,
                                 individual: 0,
-                                team: 0
+                                team: 0,
+                                premium: 0
                             };
                         }
                         eventSummary[eventName].participants++;
@@ -332,11 +471,14 @@
                         } else {
                             eventSummary[eventName].team++;
                         }
+                        if (event.isPremium) {
+                            eventSummary[eventName].premium++;
+                        }
                     });
                     
                     if (eventsDataDiv) {
                         let html = `<p><strong>Event Participation Summary (${data.count} records from ${data.totalRegistrations} registrations)</strong></p>`;
-                        html += '<table><tr><th>Event Name</th><th>Type</th><th>Total</th><th>Individual</th><th>Team</th><th>Revenue</th></tr>';
+                        html += '<table><tr><th>Event Name</th><th>Type</th><th>Total</th><th>Individual</th><th>Team</th><th>Premium</th><th>Revenue</th></tr>';
                         
                         Object.values(eventSummary).forEach(event => {
                             html += `<tr>
@@ -345,6 +487,7 @@
                                 <td>${event.participants}</td>
                                 <td>${event.individual}</td>
                                 <td>${event.team}</td>
+                                <td>${event.premium}</td>
                                 <td>₹${event.revenue}</td>
                             </tr>`;
                         });
@@ -419,9 +562,10 @@
         const showAllBtn = document.getElementById('showAllBtn');
         const showIndividualBtn = document.getElementById('showIndividualBtn');
         const showTeamBtn = document.getElementById('showTeamBtn');
+        const showPremiumBtn = document.getElementById('showPremiumBtn');
         
         function setActiveButton(activeBtn) {
-            [showAllBtn, showIndividualBtn, showTeamBtn].forEach(btn => {
+            [showAllBtn, showIndividualBtn, showTeamBtn, showPremiumBtn].forEach(btn => {
                 btn.classList.remove('active');
             });
             activeBtn.classList.add('active');
@@ -444,6 +588,12 @@
             setActiveButton(this);
             displayFilteredRegistrations();
         });
+        
+        showPremiumBtn.addEventListener('click', function() {
+            currentRegistrationType = 'premium';
+            setActiveButton(this);
+            displayFilteredRegistrations();
+        });
     }
 
     // Logout function
@@ -460,6 +610,9 @@
         
         // Load initial data
         loadStats();
+        loadPremiumAnalytics();
+        loadAccommodationAnalytics();
+        loadEventAnalytics();
         
         // Setup button event listeners
         const refreshBtn = document.getElementById('refreshStatsBtn');
@@ -468,7 +621,12 @@
         const exportBtn = document.getElementById('exportDataBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         
-        if (refreshBtn) refreshBtn.addEventListener('click', loadStats);
+        if (refreshBtn) refreshBtn.addEventListener('click', () => {
+            loadStats();
+            loadPremiumAnalytics();
+            loadAccommodationAnalytics();
+            loadEventAnalytics();
+        });
         if (registrationsBtn) registrationsBtn.addEventListener('click', loadRegistrations);
         if (eventsBtn) eventsBtn.addEventListener('click', loadEventsData);
         if (exportBtn) exportBtn.addEventListener('click', exportFinanceData);
@@ -477,7 +635,7 @@
         // Setup filtering
         setupTypeFiltering();
         
-        console.log('✅ Dashboard fully initialized with Individual/Team support');
+        console.log('✅ Dashboard fully initialized with Premium & Accommodation support');
     }
 
     // Wait for DOM to be fully loaded
