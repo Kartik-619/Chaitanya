@@ -256,8 +256,8 @@
 /* Extra Large Desktops (1440px and above) */
 @media (min-width: 1440px) {
   .book-container {
-    width: min(70%, 1000px);
-    height: min(80vh, 600px);
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -276,8 +276,8 @@
 /* Large Desktops (1200px - 1439px) */
 @media (min-width: 1200px) and (max-width: 1439px) {
   .book-container {
-    width: min(80%, 900px);
-    height: min(75vh, 550px);
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -288,8 +288,8 @@
 /* Standard Desktops (1024px - 1199px) */
 @media (min-width: 1024px) and (max-width: 1199px) {
   .book-container {
-    width: min(85%, 850px);
-    height: min(72vh, 520px);
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -300,8 +300,8 @@
 /* Small Desktops/Laptops (992px - 1023px) */
 @media (min-width: 992px) and (max-width: 1023px) {
   .book-container {
-    width: min(90%, 800px);
-    height: min(68vh, 480px);
+    width:60vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -317,9 +317,8 @@
   }
   
   .book-container {
-    width: 75%;
-    height: min(55vh, 450px);
-    max-width: 600px;
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -355,8 +354,8 @@
   }
   
   .book-container {
-    width: 95%;
-    height: min(62vh, 420px);
+    width: 70%;
+    height: 60vh;
     max-width: 650px;
   }
   
@@ -410,7 +409,7 @@
   }
   
   .book-container {
-    width: 96%;
+    width: 76%;
     height: min(58vh, 380px);
   }
   
@@ -476,7 +475,7 @@
   }
   
   .book-container {
-    width: 97%;
+    width: 67%;
     height: min(55vh, 360px);
   }
   
@@ -532,7 +531,7 @@
   }
   
   .book-container {
-    width: 98%;
+    width: 68%;
     height: min(52vh, 340px);
   }
   
@@ -570,7 +569,7 @@
   }
   
   .book-container {
-    width: 99%;
+    width: 69%;
     height: min(50vh, 320px);
   }
   
@@ -634,7 +633,7 @@
   }
   
   .book-container {
-    width: 99%;
+    width: 69%;
     height: min(48vh, 300px);
   }
   
@@ -668,7 +667,8 @@
   }
   
   .book-container {
-    height: min(90vh, 350px);
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
@@ -697,7 +697,8 @@
 /* Small Mobile Landscape */
 @media (max-height: 500px) and (orientation: landscape) {
   .book-container {
-    height: min(95vh, 280px);
+    width:70vw;
+    height: 65vh;
   }
   
   .page-content {
