@@ -5,8 +5,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-import Sidebar from './navbar';
-import Social from './socials';
+
 import { getSimpleImageUrl } from '../utils/cloudinary'; // ADD THIS LINE
 
 gsap.registerPlugin(ScrollTrigger);
@@ -22,8 +21,7 @@ const setupDesktopAnimations = (heroRef, cloudRefs, scrollDuration) => {
       scrub: 1.5,
       pin: true,
       pinSpacing: false,
-      onEnterBack: () => gsap.to(".social", { opacity: 1 }),
-      onLeave: () => gsap.to(".social", { opacity: 0 }),
+    
     },
   });
 
@@ -47,7 +45,7 @@ const setupDesktopAnimations = (heroRef, cloudRefs, scrollDuration) => {
 
   tl.to(".castle", { scale: 1.05 }, "<");
   tl.to(".scroll", { opacity: 0 }, "-=0.5");
-  tl.to(".social", { opacity: 0 }, "-=0.5");
+ 
 
   return tl;
 };
@@ -57,7 +55,7 @@ const setupStaticView = () => {
   ScrollTrigger.getAll().forEach(trigger => trigger.kill());
   
   // Ensure everything is visible and in default position
-  gsap.set([".welcome", ".name", ".social", ".scroll", ".castle"], { 
+  gsap.set([".welcome", ".name", ".scroll", ".castle"], { 
     opacity: 1,
     y: 0,
     x: 0,
@@ -126,7 +124,7 @@ export default function Hero() {
         <h1 className='name'>Chaitanya 1.0</h1>
       </div>
 
-      <Sidebar />
+     
 
       {/* Show scroll indicator only on desktop */}
       {deviceType === "desktop" && (

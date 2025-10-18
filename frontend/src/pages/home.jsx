@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Social from '../component/socials';
+import Sidebar from '../component/navbar';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,6 +43,7 @@ export default function Home() {
       <div className="hero-section">
         <Hero />
       </div>
+      <Sidebar/>
       <Social/>
       {/* Horizontal scroll section */}
       <div ref={horizontalRef} className="horizontal-wrapper">
