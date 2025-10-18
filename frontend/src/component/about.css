@@ -30,7 +30,7 @@
   justify-content: center;
   background: 
     linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)),
-    url('/images/bg2.jpg') center/cover no-repeat;
+    url('https://res.cloudinary.com/dpe1pmwsv/image/upload/v1760811046/bg2_bxyhji.jpg') center/cover no-repeat;
   padding: 2rem;
   text-align: center;
   position: relative;
@@ -41,8 +41,8 @@
 /* ===== BOOK CONTAINER ===== */
 .book-container {
   position: relative;
-  width: min(90%, 800px);
-  height: min(70vh, 500px);
+  width: 65vw;
+  height: 65vh;
   transform-style: preserve-3d;
   filter: drop-shadow(0 15px 30px var(--shadow-dark));
 }
@@ -317,9 +317,9 @@
   }
   
   .book-container {
-    width: 92%;
-    height: min(65vh, 450px);
-    max-width: 700px;
+    width: 75%;
+    height: min(55vh, 450px);
+    max-width: 600px;
   }
   
   .page-content {
