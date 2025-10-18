@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
 import Sidebar from './navbar';
 import Social from './socials';
+import { getSimpleImageUrl } from '../utils/cloudinary'; // ADD THIS LINE
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -107,15 +108,16 @@ export default function Hero() {
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
 
-      <img src="/images/castle.png" alt="Castle" className="castle" />
+      {/* ONLY CHANGE IMAGE SOURCES - KEEP EVERYTHING ELSE */}
+      <img src={getSimpleImageUrl('fest/castle_rqfln4')} alt="Castle" className="castle" />
 
       {/* Show clouds only on desktop and tablet - hide on mobile */}
       {deviceType !== "static" && (
         <>
-          <img ref={cloudRefs.left1} src="/images/cloudLeft.png" alt="Cloud Left" className="cloudLeft" />
-          <img ref={cloudRefs.left2} src="/images/cloud 1.png" alt="Cloud 1" className="cloud1" />
-          <img ref={cloudRefs.right1} src="/images/cloud2.png" alt="Cloud 2" className="cloud2" />
-          <img ref={cloudRefs.right2} src="/images/cloud_right1.png" alt="Cloud Right" className="cloudRight" />
+          <img ref={cloudRefs.left1} src={getSimpleImageUrl('fest/cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
+          <img ref={cloudRefs.left2} src={getSimpleImageUrl('fest/cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
+          <img ref={cloudRefs.right1} src={getSimpleImageUrl('fest/cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
+          <img ref={cloudRefs.right2} src={getSimpleImageUrl('fest/cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
         </>
       )}
 
