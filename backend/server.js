@@ -116,10 +116,23 @@ app.use(helmet({
  * Allows requests from specified origins with credentials
  */
 app.use(cors({
-  origin: SERVER_CONFIG.SECURITY.CORS_ORIGIN,
+  origin: function (origin, callback) {
+    // Remove trailing slashes from origin
+    const cleanOrigin = origin ? origin.replace(/\/$/, '') : origin;
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://chaitanya-subdomain.vercel.app'
+    ].map(url => url.replace(/\/$/, ''));
+    
+    if (!origin || allowedOrigins.includes(cleanOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
-
 /**
  * JSON parsing with size limit to prevent DoS attacks
  */
