@@ -90,6 +90,9 @@ process.on('SIGINT', gracefulShutdown);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// 🚀 CRITICAL FIX: Trust proxy for Render deployment
+app.set('trust proxy', 1);
+
 /**
  * Validate environment variables before starting server
  * Exits process if required environment variables are missing
@@ -113,26 +116,18 @@ app.use(helmet({
 
 /**
  * CORS configuration for cross-origin requests
- * Allows requests from specified origins with credentials
+ * FIXED: Proper CORS configuration for frontend
  */
 app.use(cors({
-  origin: function (origin, callback) {
-    // Remove trailing slashes from origin
-    const cleanOrigin = origin ? origin.replace(/\/$/, '') : origin;
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://chaitanya-subdomain.vercel.app'
-    ].map(url => url.replace(/\/$/, ''));
-    
-    if (!origin || allowedOrigins.includes(cleanOrigin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'https://chaitanya-subdomain.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
 /**
  * JSON parsing with size limit to prevent DoS attacks
  */
@@ -172,7 +167,6 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
-
 
 // ==================== ROUTES SETUP ====================
 
@@ -394,6 +388,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
   console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
   console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
+  console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
   
   // Initialize Google Sheets service
   console.log('🔄 Initializing Google Sheets...');
@@ -425,6 +420,8 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log('👑 Admin Dashboard: ✅ Enabled');
   console.log('📝 Attendance System: ✅ Ready');
   console.log('💳 Payment System: ✅ Ready');
+  console.log('🔒 Trust Proxy: ✅ Enabled');
+  console.log('🌐 CORS: ✅ Configured');
   console.log('\n🎉 All systems operational! Waiting for requests...');
 });
 
