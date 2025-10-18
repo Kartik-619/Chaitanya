@@ -82,7 +82,7 @@ process.on('SIGINT', gracefulShutdown);
 // ==================== SERVER INITIALIZATION ====================
 
 const app = express();
-const PORT = SERVER_CONFIG.PORT;
+const PORT = process.env.PORT || 10000;
 
 /**
  * Validate environment variables before starting server
@@ -355,7 +355,7 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 /**
  * Start the server and initialize all required services
  */
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () =>  {
   console.log(`🚀 Chaitanya 2025 Server running on http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📧 Email service: ${process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'}`);
