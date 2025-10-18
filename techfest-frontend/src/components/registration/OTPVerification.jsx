@@ -52,8 +52,8 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/register/verify-otp', {
-        method: 'POST',
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/verify-otp', {
+      method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },

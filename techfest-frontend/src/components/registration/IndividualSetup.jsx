@@ -57,7 +57,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     const calculatedAmount = calculateTotal();
     
     try {
-      const response = await fetch('http://localhost:5000/api/register/setup-individual', {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-individual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

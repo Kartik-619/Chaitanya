@@ -74,7 +74,7 @@ const Success = ({ data }) => {
   };
 
   const handleBackToHome = () => {
-    window.location.href = "http://localhost:5173"; // Home frontend
+    window.location.href = "http://chaitanya-six.vercel.app/"; // Home frontend
   };
 
   const handleCopyRegistrationId = () => {

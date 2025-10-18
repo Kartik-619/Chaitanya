@@ -215,7 +215,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     });
 
     try {
-      const response = await fetch('http://localhost:5000/api/register/setup-team', {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

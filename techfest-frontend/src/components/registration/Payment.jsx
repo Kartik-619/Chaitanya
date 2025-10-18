@@ -185,7 +185,7 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
           : data.teamData?.isPremium
       });
 
-      const orderResponse = await fetch('http://localhost:5000/api/payment/initialize-payment', {
+      const orderResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/initialize-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -364,7 +364,7 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
       setProcessing(true);
       console.log('🔍 Verifying payment...', razorpayResponse);
 
-      const verifyResponse = await fetch('http://localhost:5000/api/payment/verify-payment', {
+      const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
