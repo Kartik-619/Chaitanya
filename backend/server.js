@@ -31,6 +31,9 @@ const RegistrationService = require('./services/registrationService');
 const paymentRoutes = require('./routes/paymentRoutes');
 const BackupService = require('./services/backupService');
 
+// ==================== GLOBAL VARIABLES ====================
+let sessionCleanupInterval;  // FIX: Added missing variable
+
 // ==================== CRASH PROTECTION SYSTEM ====================
 
 /**
@@ -54,7 +57,7 @@ setInterval(() => {
   const memoryUsage = process.memoryUsage();
   const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
   const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  console.log(`📊 Memory Usage: ${usedMB}MB / ${totalMB}MB`);
+  console.log( `Memory Usage: ${usedMB}MB / ${totalMB}MB`);
 }, 30000);
 
 // ==================== GRACEFUL SHUTDOWN HANDLERS ====================
@@ -65,10 +68,10 @@ setInterval(() => {
 function gracefulShutdown() {
   console.log('🛑 Received shutdown signal, shutting down gracefully...');
   
-  // Perform any cleanup operations here
-  // - Close database connections
-  // - Finish ongoing requests
-  // - Clear intervals
+  // Clear all intervals
+  if (retryInterval) clearInterval(retryInterval);
+  if (backupInterval) clearInterval(backupInterval);
+  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
   
   setTimeout(() => {
     console.log('✅ Server shutdown complete');
@@ -82,7 +85,7 @@ process.on('SIGINT', gracefulShutdown);
 // ==================== SERVER INITIALIZATION ====================
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10000;  // FIX: Use Render's dynamic port
 
 /**
  * Validate environment variables before starting server
@@ -337,7 +340,7 @@ console.log('💾 Session backup system started (every minute)');
  * Removes expired registration sessions at configured intervals
  */
 if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
-  const sessionCleanupInterval = setInterval(() => {
+  sessionCleanupInterval = setInterval(() => {  // FIX: Removed 'const'
     try {
       console.log('🧹 Running session cleanup...');
       RegistrationService.cleanupOldSessions();
@@ -355,8 +358,8 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 /**
  * Start the server and initialize all required services
  */
-app.listen(PORT, '0.0.0.0', async () =>  {
-  console.log(`🚀 Chaitanya 2025 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', async () => {  // FIX: Added '0.0.0.0'
+  console.log(`🚀 Chaitanya 2025 Server running on port ${PORT}`);  // FIX: Updated log message
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📧 Email service: ${process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'}`);
   
@@ -378,12 +381,12 @@ app.listen(PORT, '0.0.0.0', async () =>  {
       console.log('✅ Previous sessions restored from backup');
     }
   } catch (error) {
-    console.log('ℹ️ No previous sessions to restore');
+    console.log('ℹ No previous sessions to restore');
   }
   
   // System status report
   console.log('\n📋 SYSTEM STATUS:');
-  console.log('🛡️  Crash protection systems: ✅ Active');
+  console.log('🛡  Crash protection systems: ✅ Active');
   console.log('📊 Memory monitoring: ✅ Enabled');
   console.log('💾 Backup systems: ✅ Active');
   console.log('🧹 Session cleanup: ✅ Enabled');
