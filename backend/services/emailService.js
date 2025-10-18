@@ -165,17 +165,25 @@ class EmailService {
    * Generate short, readable IDs for individuals and teams
    */
   generateShortID(registrationType, sequenceNumber) {
-    const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
+  const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
+  
+  if (registrationType === 'individual') {
+    // CURRENT CODE (generates CH25-I0001):
+    const paddedNumber = sequenceNumber.toString().padStart(4, '0');
+    return `${INDIVIDUAL_PREFIX}${paddedNumber}`;
     
-    if (registrationType === 'individual') {
-      const paddedNumber = sequenceNumber.toString().padStart(4, '0');
-      return `${INDIVIDUAL_PREFIX}${paddedNumber}`; // CH25-I0001
-    } else {
-      const paddedNumber = sequenceNumber.toString().padStart(3, '0');
-      return `${TEAM_PREFIX}${paddedNumber}`; // CH25-T001
-    }
+    // CHANGE TO (generates CH25-I1):
+    return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;
+    
+  } else {
+    // CURRENT CODE (generates CH25-T001):
+    const paddedNumber = sequenceNumber.toString().padStart(3, '0');
+    return `${TEAM_PREFIX}${paddedNumber}`;
+    
+    // CHANGE TO (generates CH25-T1):
+    return `${TEAM_PREFIX}${sequenceNumber}`;
   }
-
+}
   /**
    * Generate team member IDs (CH25-T001-M1, CH25-T001-M2, etc.)
    */
