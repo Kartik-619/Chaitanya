@@ -22,7 +22,7 @@ export default function EventModal({ event, onClose, onBack, activeTab, setActiv
       // Fallback: close modal and navigate
       if (onClose) onClose();
       setTimeout(() => {
-        window.location.href = "http://localhost:3000";
+        window.location.href = "https://chaitanya-subdomain.vercel.app/";
       }, 100);
     }
   };

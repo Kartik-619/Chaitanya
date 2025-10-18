@@ -31,7 +31,7 @@ export default function EventSection() {
     console.log('Registering for event:', selectedEvent?.title);
     closeEvent();
     setTimeout(() => {
-      window.location.href = "http://localhost:3000";
+      window.location.href = "https://chaitanya-subdomain.vercel.app/";
     }, 350);
   };
 
