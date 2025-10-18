@@ -5,9 +5,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import InfoContent from "./infoContent";
 import AboutContent from "./aboutContent";
 import EventsCarousel from "./eventOverview";
-import Sidebar from "./navbar";
+
 import "./about.css";
-import Social from "./socials";
+
 
 gsap.registerPlugin(ScrollTrigger);
 
