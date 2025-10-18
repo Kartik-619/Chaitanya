@@ -5,63 +5,114 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-
-import { getSimpleImageUrl } from '../utils/cloudinary'; // ADD THIS LINE
+import { getSimpleImageUrl } from '../utils/cloudinary';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const setupDesktopAnimations = (heroRef, cloudRefs, scrollDuration) => {
-  ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+const setupDesktopAnimations = (heroRef, cloudRefs) => {
+  // Kill any existing animations
+  gsap.killTweensOf([
+    cloudRefs.left1.current, 
+    cloudRefs.left2.current, 
+    cloudRefs.right1.current, 
+    cloudRefs.right2.current,
+    ".welcome",
+    ".name", 
+    ".castle",
+    ".scroll"
+  ]);
 
   const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: heroRef.current,
-      start: "top top",
-      end: `+=${scrollDuration}`,
-      scrub: 1.5,
-      pin: true,
-      pinSpacing: false,
-    
-    },
+    defaults: { ease: "power2.inOut" }
   });
 
-  tl.to([cloudRefs.left1.current, cloudRefs.left2.current], {
-    xPercent: -100,
-    opacity: 0,
-    stagger: 0.4
-  }, 0);
+  // Initial setup - hide elements that will animate in
+  gsap.set([".welcome", ".name"], { opacity: 0, y: 50 });
+  gsap.set(".scroll", { opacity: 1 });
 
-  tl.to([cloudRefs.right1.current, cloudRefs.right2.current], {
-    xPercent: 100,
-    opacity: 0,
-    stagger: 0.4
-  }, 0);
-
-  tl.fromTo([".welcome", ".name"], 
-    { opacity: 0, y: 50 }, 
-    { opacity: 1, y: 0, stagger: 0.3 }, 
-    "<0.4"
-  );
-
-  tl.to(".castle", { scale: 1.05 }, "<");
-  tl.to(".scroll", { opacity: 0 }, "-=0.5");
- 
+  // Main animation sequence
+  tl.to(".scroll", { opacity: 0, duration: 0.5 }, 0)
+    .fromTo([".welcome", ".name"], 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1, stagger: 0.3 }, 
+      0.5
+    )
+    .to(".castle", { scale: 1.05, duration: 1.5 }, 0.5)
+    .to([cloudRefs.left1.current, cloudRefs.left2.current], {
+      xPercent: -100,
+      opacity: 0,
+      duration: 2,
+      stagger: 0.4
+    }, 1)
+    .to([cloudRefs.right1.current, cloudRefs.right2.current], {
+      xPercent: 100,
+      opacity: 0,
+      duration: 2,
+      stagger: 0.4
+    }, 1);
 
   return tl;
 };
 
-const setupStaticView = () => {
-  // Kill all ScrollTriggers and reset all elements to visible state
-  ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+const setupStaticView = (cloudRefs) => {
+  // Kill all animations and reset elements to visible state
+  gsap.killTweensOf([
+    ".welcome", ".name", ".scroll", ".castle",
+    cloudRefs.left1.current, cloudRefs.left2.current,
+    cloudRefs.right1.current, cloudRefs.right2.current
+  ]);
   
-  // Ensure everything is visible and in default position
+  // Reset everything to default state but keep clouds visible for animation
   gsap.set([".welcome", ".name", ".scroll", ".castle"], { 
     opacity: 1,
     y: 0,
     x: 0,
-    scale: 1,
-    clearProps: "all" 
+    scale: 1
   });
+
+  // Reset clouds to original position but keep them visible
+  gsap.set([cloudRefs.left1.current, cloudRefs.left2.current, cloudRefs.right1.current, cloudRefs.right2.current], {
+    opacity: 1,
+    xPercent: 0,
+    x: 0
+  });
+
+  // Create timeline for static devices too
+  const tl = gsap.timeline({
+    defaults: { ease: "power2.inOut" }
+  });
+
+  // Initial setup
+  gsap.set([".welcome", ".name"], { opacity: 0, y: 50 });
+  gsap.set(".scroll", { opacity: 1 });
+
+  // Same animation sequence for all devices
+  tl.to(".scroll", { opacity: 0, duration: 0.5 }, 0)
+    .fromTo(".welcome", 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1, stagger: 0.3 }, 
+      0.5
+    )
+    .to(".castle", { scale: 1.05, duration: 1.5 }, 0.5)
+    .to([cloudRefs.left1.current, cloudRefs.left2.current], {
+      xPercent: -100,
+      opacity: 0,
+      duration: 2,
+      stagger: 0.4
+    }, 1)
+     .fromTo(".name", 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1, stagger: 0.3 }, 
+      0.5
+    )
+    .to([cloudRefs.right1.current, cloudRefs.right2.current], {
+      xPercent: 100,
+      opacity: 0,
+      duration: 2,
+      stagger: 0.4
+    }, 1);
+
+  return tl;
 };
 
 export default function Hero() {
@@ -74,18 +125,16 @@ export default function Hero() {
   };
 
   const [deviceType, setDeviceType] = useState("desktop");
+  const animationTimeline = useRef();
 
   useEffect(() => {
     const checkDevice = () => {
       const width = window.innerWidth;
-      // Only consider devices > 1024px as desktop for animations
       if (width > 2085) {
         setDeviceType("desktop");
       } else {
-        // Everything else (tablets and mobiles) gets static view
         setDeviceType("static");
       }
-      ScrollTrigger.refresh();
     };
    
     checkDevice();
@@ -94,11 +143,16 @@ export default function Hero() {
   }, []);
 
   useGSAP(() => {
-    if (deviceType === "static") {
-      setupStaticView();
+    // Kill existing timeline
+    if (animationTimeline.current) {
+      animationTimeline.current.kill();
+    }
+
+    // Apply the same timeline animation to ALL devices
+    if (deviceType === "desktop") {
+      animationTimeline.current = setupDesktopAnimations(heroRef, cloudRefs);
     } else {
-      // Apply animations only for desktop
-      setupDesktopAnimations(heroRef, cloudRefs, 800);
+      animationTimeline.current = setupStaticView(cloudRefs);
     }
   }, { scope: heroRef, dependencies: [deviceType] });
 
@@ -106,35 +160,26 @@ export default function Hero() {
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
 
-      {/* ONLY CHANGE IMAGE SOURCES - KEEP EVERYTHING ELSE */}
       <img src={getSimpleImageUrl('fest/castle_rqfln4')} alt="Castle" className="castle" />
 
-      {/* Show clouds only on desktop and tablet - hide on mobile */}
-      {deviceType !== "static" && (
-        <>
-          <img ref={cloudRefs.left1} src={getSimpleImageUrl('fest/cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
-          <img ref={cloudRefs.left2} src={getSimpleImageUrl('fest/cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
-          <img ref={cloudRefs.right1} src={getSimpleImageUrl('fest/cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
-          <img ref={cloudRefs.right2} src={getSimpleImageUrl('fest/cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
-        </>
-      )}
+      {/* Show clouds on ALL devices now since animation works everywhere */}
+      <>
+        <img ref={cloudRefs.left1} src={getSimpleImageUrl('fest/cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
+        <img ref={cloudRefs.left2} src={getSimpleImageUrl('fest/cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
+        <img ref={cloudRefs.right1} src={getSimpleImageUrl('fest/cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
+        <img ref={cloudRefs.right2} src={getSimpleImageUrl('fest/cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
+      </>
 
       <div className="text-container price-font">
         <h1 className='welcome'>HPTU Presents</h1>
         <h1 className='name'>Chaitanya 1.0</h1>
       </div>
 
-     
-
-      {/* Show scroll indicator only on desktop */}
-      {deviceType === "desktop" && (
-        <div className="scroll">
-          <FontAwesomeIcon icon={faArrowDown} className="text-4xl text-white drop-shadow-lg" />
-          <h4 className="text-white text-xl font-medium drop-shadow-md">scroll down</h4>
-        </div>
-      )}
-
-  
+      {/* Show scroll indicator on ALL devices */}
+      <div className="scroll">
+        <FontAwesomeIcon icon={faArrowDown} className="text-4xl text-white drop-shadow-lg" />
+        <h4 className="text-white text-xl font-medium drop-shadow-md">scroll down</h4>
+      </div>
     </div>
   );
 }
