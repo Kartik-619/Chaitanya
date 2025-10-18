@@ -136,7 +136,7 @@ export default function Hero() {
         </div>
       )}
 
-      <Social className='social' />
+  
     </div>
   );
 }
