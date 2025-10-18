@@ -164,7 +164,7 @@ const About = forwardRef((props, ref) => {
       <div className="section-counter">
         {currentIndex + 1} / {contentComponents.length}
       </div>
-      <Sidebar />
+      
 
       <div className="book-container">
         <div ref={frontPageRef} className="page front-page" style={{ zIndex: 2 }}>
@@ -179,7 +179,7 @@ const About = forwardRef((props, ref) => {
       <div
         className={`page-corner ${flipDirection} ${isAnimating ? "visible" : ""}`}
       ></div>
-      <Social />
+     
       <div className="scroll-indicators">
         {contentComponents.map((_, index) => (
           <div
