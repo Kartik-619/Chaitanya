@@ -17,13 +17,12 @@ body {
   font-family: sans-serif;
 }
 
-/* Hero container - DESKTOP BASE (Applies when no media query matches) */
+/* Hero container - UNIVERSAL SCALING BASE */
 .hero {
   position: relative;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  /* Ensure text and icons are centered vertically and horizontally */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -37,12 +36,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('/images/background.png') center/cover no-repeat;
+  background: url('https://res.cloudinary.com/dpe1pmwsv/image/upload/v1760810742/background_indvby.png') center/cover no-repeat;
   z-index: -2;
 }
 
 /* -------------------------------------------------------------------------------------------------- */
-/* Hero Content Elements - DESKTOP BASE */
+/* Hero Content Elements - UNIVERSAL SCALING */
 /* -------------------------------------------------------------------------------------------------- */
 
 /* Castle foreground */
@@ -53,30 +52,31 @@ body {
   transform: translateX(-50%);
   width: 100vw;
   max-width: 100%;
-  height: 90vh; /* Large height for desktop view */
+  height: 65vh; /* Maintain desktop proportions */
   z-index: 5;
+  object-fit: cover; /* Ensure image scales properly */
 }
 
-/* Text Container (Centers the two titles) */
+/* Text Container */
 .text-container {
   position: relative;
   text-align: center;
   bottom: 20%;
-  color: white; /* Default color for text */
-  z-index: 7; /* Above all clouds/castle */
+  color: white;
+  z-index: 7;
 }
 
 /* Welcome Text */
 .welcome {
-  font-size: 6vh; /* Smaller title */
+  font-size: 6vh; /* Maintain desktop proportions */
   margin-bottom: 0.5rem;
-  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Readable text over complex background */
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 /* Name/Title (Chaitanya 1.0) */
 .name {
-  font-size: 10vh; /* Very large font for desktop */
-  margin-top: 0; /* Already centered with flex on .hero */
+  font-size: 10vh; /* Maintain desktop proportions */
+  margin-top: 0;
   text-shadow: 3px 3px 7px rgba(0, 0, 0, 0.7);
 }
 
@@ -90,8 +90,7 @@ body {
   gap: 0.5rem;
   z-index: 7;
   cursor: pointer;
-  /* Basic animation for the scroll icon */
-  animation: bounce 2s infinite; 
+  animation: bounce 2s infinite;
 }
 
 @keyframes bounce {
@@ -106,9 +105,8 @@ body {
   }
 }
 
-
 /* -------------------------------------------------------------------------------------------------- */
-/* Cloud Layers - DESKTOP BASE (Current code for > 1024px) */
+/* Cloud Layers - UNIVERSAL SCALING */
 /* -------------------------------------------------------------------------------------------------- */
 
 /* Cloud Layer 1 (Mid-foreground) */
@@ -118,8 +116,10 @@ body {
   left: 0%;
   width: 60%;
   height: 65%;
-  z-index: 6; 
+  z-index: 6;
+  object-fit: cover;
 }
+
 .cloudRight {
   position: absolute;
   bottom: 0%;
@@ -127,6 +127,7 @@ body {
   width: 60%;
   height: 65%;
   z-index: 6;
+  object-fit: cover;
 }
 
 /* Cloud Layer 2 (Background, closer to the castle) */
@@ -137,82 +138,237 @@ body {
   width: 60%;
   height: 50%;
   z-index: 3;
+  object-fit: cover;
 }
-.cloud2{
+
+.cloud2 {
   position: absolute;
   bottom: 0%;
-  left:0%;
+  left: 0%;
   width: 60%;
   height: 60%;
   z-index: 1;
+  object-fit: cover;
 }
 
 /* -------------------------------------------------------------------------------------------------- */
+/* RESPONSIVE SCALING - MAINTAIN EXACT DESKTOP STRUCTURE */
 /* -------------------------------------------------------------------------------------------------- */
 
 /**
-* --------------------------------------------------------------------------------
-* MEDIA QUERIES FOR TABLETS (Max Width 1024px)
-* --------------------------------------------------------------------------------
+* Ultra Large Screens (4K and beyond) - Scale up proportionally
 */
-@media screen and (max-width: 1024px) {
-  /* Castle */
+@media screen and (min-width: 2560px) {
   .castle {
-      height: 80vh; /* Slightly reduce height */
+      height: 75vh;
   }
+  
+  .welcome {
+      font-size: 5vh;
+  }
+  
+  .name {
+      font-size: 12vh;
+  }
+  
+  .scroll {
+      bottom: 6vh;
+  }
+}
 
-  /* Text */
+/**
+* Large Desktop Screens (1920px - 2559px) - Default desktop values apply
+*/
+/* No changes needed - default CSS handles this */
+
+/**
+* Medium Desktop/Laptop Screens (1440px - 1919px) - Default desktop values apply
+*/
+/* No changes needed - default CSS handles this */
+
+/**
+* Small Desktop/Laptop Screens (1025px - 1439px) - Default desktop values apply
+*/
+/* No changes needed - default CSS handles this */
+
+/**
+* Tablet Landscape (769px - 1024px) - Slight scaling adjustment
+*/
+@media screen and (max-width: 1024px) and (min-width: 769px) {
+  .castle {
+      height: 75vh;
+  }
+  
+  .welcome {
+      font-size: 4.5vh;
+  }
+  
+  .name {
+      font-size: 7vh;
+  }
+  
+  .scroll {
+      bottom: 4vh;
+  }
+}
+
+/**
+* Tablet Portrait (481px - 768px) - Moderate scaling
+*/
+@media screen and (max-width: 768px) and (min-width: 481px) {
+  .castle {
+      height: 80vh;
+  }
+  
+  .welcome {
+      font-size: 5vh;
+  }
+  
+  .name {
+      font-size: 8vh;
+  }
+  
+  .text-container {
+      bottom: 15%;
+  }
+  
+  .scroll {
+      bottom: 3vh;
+  }
+  
+  /* Slightly adjust cloud positioning for better visibility */
+  .cloudLeft,
+  .cloudRight {
+      height: 60%;
+  }
+  
+  .cloud1,
+  .cloud2 {
+      height: 45%;
+  }
+}
+
+/**
+* Mobile Landscape (321px - 480px) - Significant scaling
+*/
+@media screen and (max-width: 480px) and (min-width: 321px) {
+  .castle {
+      height: 70vh;
+  }
+  
+  .welcome {
+      font-size: 4vh;
+  }
+  
+  .name {
+      font-size: 6.5vh;
+  }
+  
+  .text-container {
+      bottom: 10%;
+  }
+  
+  .scroll {
+      bottom: 2vh;
+      transform: scale(0.9);
+  }
+  
+  /* Adjust clouds for mobile landscape */
+  .cloudLeft,
+  .cloudRight {
+      height: 55%;
+      width: 65%;
+  }
+  
+  .cloud1,
+  .cloud2 {
+      height: 40%;
+      width: 65%;
+  }
+}
+
+/**
+* Mobile Portrait (320px and below) - Maximum scaling while maintaining structure
+*/
+@media screen and (max-width: 320px) {
+  .castle {
+      height: 65vh;
+  }
+  
   .welcome {
       font-size: 3.5vh;
   }
+  
   .name {
-      font-size: 10vh; /* Reduce font size */
+      font-size: 5.5vh;
   }
-
-  /* Clouds (General scaling) */
- 
-
-  /* Scroll Indicator */
+  
+  .text-container {
+      bottom: 8%;
+  }
+  
   .scroll {
-      bottom: 3vh; /* Move it slightly higher */
+      bottom: 1.5vh;
+      transform: scale(0.8);
+  }
+  
+  /* Further adjust clouds for very small screens */
+  .cloudLeft,
+  .cloudRight {
+      height: 50%;
+      width: 70%;
+  }
+  
+  .cloud1,
+  .cloud2 {
+      height: 35%;
+      width: 70%;
   }
 }
 
-/* -------------------------------------------------------------------------------------------------- */
+/**
+* Extra Tall Mobile Devices (iPhone SE, etc.)
+*/
+@media screen and (max-height: 700px) and (max-width: 768px) {
+  .castle {
+      height: 75vh;
+  }
+  
+  .text-container {
+      bottom: 12%;
+  }
+  
+  .welcome {
+      font-size: 3.5vh;
+  }
+  
+  .name {
+      font-size: 5.5vh;
+  }
+}
 
 /**
-* --------------------------------------------------------------------------------
-* MEDIA QUERIES FOR MOBILE DEVICES (Max Width 768px)
-* --------------------------------------------------------------------------------
-* Note: The JSX conditionally hides clouds and scroll indicator on "mobile" (<= 768px)
-* so we mainly focus on castle and text.
+* Ultra Short Screens (Landscape mobiles)
 */
-@media screen and (max-width: 768px) {
-  /* Hero */
-  .hero {
-      /* Ensure the full height view is preserved */
-  }
-
-  /* Castle */
+@media screen and (max-height: 500px) {
   .castle {
-      height: 60vh; /* Significant reduction for mobile screens */
+      height: 75vh;
   }
-
-  /* Text */
+  
+  .text-container {
+      bottom: 5%;
+  }
+  
   .welcome {
       font-size: 3vh;
-      margin-bottom: 0.25rem;
   }
+  
   .name {
-      font-size: 6vh; /* Smallest font size for primary title */
+      font-size: 4.5vh;
   }
-
-  /* If the JSX were changed to show clouds/scroll, these would apply: */
-  /* .cloudLeft, .cloudRight, .cloud1, .cloud2 {
-      width: 100%;
-      height: 35%;
-  }
+  
   .scroll {
-      display: none; // Already handled by JSX: {deviceType !== "mobile" && ...}
-  } */
+      bottom: 1vh;
+      transform: scale(0.7);
+  }
 }
