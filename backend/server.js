@@ -145,6 +145,22 @@ app.use((req, res, next) => {
  */
 app.use(express.static('public'));
 
+// ==================== RENDER HEALTH CHECK ====================
+
+/**
+ * Root health check required by Render
+ * This endpoint is used by Render's health check system
+ */
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    message: 'Chaitanya 2025 Server is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+
 // ==================== ROUTES SETUP ====================
 
 // API Routes - Mount all API endpoints
