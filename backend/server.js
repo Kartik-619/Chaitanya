@@ -32,7 +32,9 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const BackupService = require('./services/backupService');
 
 // ==================== GLOBAL VARIABLES ====================
-let sessionCleanupInterval;  // FIX: Added missing variable
+let sessionCleanupInterval;
+let retryInterval;
+let backupInterval;
 
 // ==================== CRASH PROTECTION SYSTEM ====================
 
@@ -53,11 +55,11 @@ process.on('unhandledRejection', (reason, promise) => {
  * Memory monitoring to track potential memory leaks
  * Logs memory usage every 30 seconds
  */
-setInterval(() => {
+const memoryInterval = setInterval(() => {
   const memoryUsage = process.memoryUsage();
   const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
   const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  console.log( `Memory Usage: ${usedMB}MB / ${totalMB}MB`);
+  console.log('📊 Memory Usage: ' + usedMB + 'MB / ' + totalMB + 'MB');
 }, 30000);
 
 // ==================== GRACEFUL SHUTDOWN HANDLERS ====================
@@ -72,6 +74,7 @@ function gracefulShutdown() {
   if (retryInterval) clearInterval(retryInterval);
   if (backupInterval) clearInterval(backupInterval);
   if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
+  if (memoryInterval) clearInterval(memoryInterval);
   
   setTimeout(() => {
     console.log('✅ Server shutdown complete');
@@ -85,7 +88,7 @@ process.on('SIGINT', gracefulShutdown);
 // ==================== SERVER INITIALIZATION ====================
 
 const app = express();
-const PORT = process.env.PORT || 10000;  // FIX: Use Render's dynamic port
+const PORT = process.env.PORT || 10000;
 
 /**
  * Validate environment variables before starting server
@@ -145,12 +148,12 @@ app.use(express.static('public'));
 // ==================== ROUTES SETUP ====================
 
 // API Routes - Mount all API endpoints
-app.use('/api/payment', paymentRoutes);           // Payment processing endpoints
-app.use('/api/register', registrationLimiter);    // Apply rate limiting to registration
-app.use('/api/register', registrationRoutes);     // Registration flow endpoints
-app.use('/api/admin', adminRoutes);               // Admin dashboard endpoints
-app.use('/api/attendance', attendanceRoutes);     // Attendance tracking endpoints
-app.use('/api/debug', debugRoutes);               // Development debugging endpoints
+app.use('/api/payment', paymentRoutes);
+app.use('/api/register', registrationLimiter);
+app.use('/api/register', registrationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/debug', debugRoutes);
 
 // HTML routes - Serve admin interface pages
 app.get('/admin-login.html', (req, res) => {
@@ -309,27 +312,27 @@ app.use((req, res) => {
  * Failed registrations retry system
  * Automatically retries saving failed registrations to Google Sheets every 10 minutes
  */
-const retryInterval = setInterval(async () => {
+retryInterval = setInterval(async () => {
   try {
     console.log('🔄 Checking for failed registrations to retry...');
     await BackupService.retryFailedRegistrations();
   } catch (error) {
     console.error('❌ Failed registrations retry system error:', error.message);
   }
-}, 10 * 60 * 1000); // 10 minutes
+}, 10 * 60 * 1000);
 
 console.log('🔄 Failed registrations retry system started (every 10 minutes)');
 
 /**
  * Session backup system - backs up sessions every minute
  */
-const backupInterval = setInterval(() => {
+backupInterval = setInterval(() => {
   try {
     BackupService.saveSessionsToFile();
   } catch (error) {
     console.error('❌ Session backup error:', error.message);
   }
-}, 60 * 1000); // 1 minute
+}, 60 * 1000);
 
 console.log('💾 Session backup system started (every minute)');
 
@@ -340,7 +343,7 @@ console.log('💾 Session backup system started (every minute)');
  * Removes expired registration sessions at configured intervals
  */
 if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
-  sessionCleanupInterval = setInterval(() => {  // FIX: Removed 'const'
+  sessionCleanupInterval = setInterval(() => {
     try {
       console.log('🧹 Running session cleanup...');
       RegistrationService.cleanupOldSessions();
@@ -358,10 +361,10 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 /**
  * Start the server and initialize all required services
  */
-app.listen(PORT, '0.0.0.0', async () => {  // FIX: Added '0.0.0.0'
-  console.log(`🚀 Chaitanya 2025 Server running on port ${PORT}`);  // FIX: Updated log message
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📧 Email service: ${process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'}`);
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
+  console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
+  console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
   
   // Initialize Google Sheets service
   console.log('🔄 Initializing Google Sheets...');
@@ -375,7 +378,6 @@ app.listen(PORT, '0.0.0.0', async () => {  // FIX: Added '0.0.0.0'
   // Initialize Backup Service
   console.log('💾 Initializing Backup Service...');
   try {
-    // Restore any previous sessions
     const restored = BackupService.restoreSessions();
     if (restored) {
       console.log('✅ Previous sessions restored from backup');
@@ -403,10 +405,9 @@ app.listen(PORT, '0.0.0.0', async () => {  // FIX: Added '0.0.0.0'
  * Cleanup intervals when process exits
  */
 process.on('exit', () => {
-  clearInterval(retryInterval);
-  clearInterval(backupInterval);
-  if (sessionCleanupInterval) {
-    clearInterval(sessionCleanupInterval);
-  }
+  if (retryInterval) clearInterval(retryInterval);
+  if (backupInterval) clearInterval(backupInterval);
+  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
+  if (memoryInterval) clearInterval(memoryInterval);
   console.log('🧹 All background services stopped');
 });
