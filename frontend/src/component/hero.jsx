@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-import { getSimpleImageUrl } from '../utils/cloudinary';
+import { getOptimizedImageUrl } from '../utiils/cloudinary';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -160,14 +160,14 @@ export default function Hero() {
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
 
-      <img src={getSimpleImageUrl('fest/castle_rqfln4')} alt="Castle" className="castle" />
+      <img src={getOptimizedImageUrl('castle_rqfln4')} alt="Castle" className="castle" />
 
       {/* Show clouds on ALL devices now since animation works everywhere */}
       <>
-        <img ref={cloudRefs.left1} src={getSimpleImageUrl('fest/cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
-        <img ref={cloudRefs.left2} src={getSimpleImageUrl('fest/cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
-        <img ref={cloudRefs.right1} src={getSimpleImageUrl('fest/cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
-        <img ref={cloudRefs.right2} src={getSimpleImageUrl('fest/cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
+        <img ref={cloudRefs.left1} src={getOptimizedImageUrl('cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
+        <img ref={cloudRefs.left2} src={getOptimizedImageUrl('cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
+        <img ref={cloudRefs.right1} src={getOptimizedImageUrl('cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
+        <img ref={cloudRefs.right2} src={getOptimizedImageUrl('cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
       </>
 
       <div className="text-container price-font">

@@ -1,4 +1,4 @@
-const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+const cloudName = 'dpe1pmwsv';
 
 export const getOptimizedImageUrl = (publicId, options = {}) => {
   const {
