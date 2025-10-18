@@ -45,7 +45,7 @@ class GoogleSheetsService {
       console.log('🔄 [DEBUG] Initializing Google Sheets Service...');
       
       // Path to service account credentials
-      const credPath = path.join(__dirname, '../secure/techfest-credentials.json');
+      const credPath = path.join(process.cwd(), 'techfest-credentials.json');
       
       // Check if credentials file exists
       if (!fs.existsSync(credPath)) {
