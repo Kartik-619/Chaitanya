@@ -5,7 +5,10 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-import { getOptimizedImageUrl } from '../utils/cloudinary';
+
+const getOptimizedImageUrl = (publicId) => {
+  return `https://res.cloudinary.com/dpe1pmwsv/image/upload/${publicId}`;
+};
 
 gsap.registerPlugin(ScrollTrigger);
 
