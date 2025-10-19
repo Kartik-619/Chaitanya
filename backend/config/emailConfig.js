@@ -5,6 +5,7 @@
  * - Sending emails to users
  * - Designing ID cards for registered users
  */
+
 const ID_CONFIG = {
   INDIVIDUAL_PREFIX: 'CH25-I',
   TEAM_PREFIX: 'CH25-T', 
@@ -14,9 +15,9 @@ const ID_CONFIG = {
 };
 
 const EMAIL_CONFIG = {
-  // Email sending settings
+  // Email sending settings - USE ENVIRONMENT VARIABLES
   SERVICE: 'Gmail',
-  FROM_EMAIL: 'chaitanyahptu@gmail.com',  // Your exact email
+  FROM_EMAIL: process.env.UNIVERSITY_EMAIL || 'chaitanyahptu@gmail.com',  // FIXED: Use env variable
   FROM_NAME: 'Chaitanya 2025 Team',
   
   // ID Card design - colors and sizes
