@@ -30,6 +30,7 @@ const GoogleSheetsService = require('./services/googleSheetsService');
 const RegistrationService = require('./services/registrationService');
 const paymentRoutes = require('./routes/paymentRoutes');
 const BackupService = require('./services/backupService');
+const emailService = require('./services/emailService');
 
 // ==================== GLOBAL VARIABLES ====================
 let sessionCleanupInterval;
@@ -174,6 +175,73 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/debug', debugRoutes);
 
 // HTML routes - Serve admin interface pages
+
+// Add this test route to your main server file
+app.get('/test-email-config', async (req, res) => {
+  try {
+    const emailService = require('./services/emailService'); // Adjust path as needed
+    
+    console.log('🧪 Testing email configuration endpoint called');
+    
+    // Test connection first
+    const connectionTest = await emailService.testEmailConnection();
+    
+    if (!connectionTest.success) {
+      return res.json({
+        success: false,
+        message: 'Email configuration test failed',
+        error: connectionTest.error,
+        debug: connectionTest.debug
+      });
+    }
+    
+    // If connection works, test actual email sending
+    console.log('✅ Connection good, testing email send...');
+    const testResult = await emailService.testEmailService();
+    
+    res.json({
+      success: true,
+      message: 'Email test completed',
+      connection: connectionTest,
+      email_test: testResult,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Test endpoint error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      debug: {
+        email_set: !!process.env.UNIVERSITY_EMAIL,
+        password_set: !!process.env.UNIVERSITY_EMAIL_PASSWORD,
+        node_env: process.env.NODE_ENV
+      }
+    });
+  }
+});
+
+// Simple health check for email service
+app.get('/email-health', async (req, res) => {
+  try {
+    const emailService = require('./services/emailService');
+    const connectionTest = await emailService.testEmailConnection();
+    
+    res.json({
+      service: 'email',
+      status: connectionTest.success ? 'healthy' : 'unhealthy',
+      ...connectionTest,
+      system_stats: emailService.getSystemStats()
+    });
+  } catch (error) {
+    res.status(500).json({
+      service: 'email',
+      status: 'error',
+      error: error.message
+    });
+  }
+});
+
 app.get('/admin-login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
 });
