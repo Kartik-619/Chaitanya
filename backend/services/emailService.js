@@ -100,6 +100,48 @@ class EmailService {
   }
 
   /**
+ * Test email connection and configuration
+ */
+async testEmailConnection() {
+  try {
+    console.log('🔧 Testing email configuration...');
+    console.log('Email:', process.env.UNIVERSITY_EMAIL);
+    console.log('Password exists:', !!process.env.UNIVERSITY_EMAIL_PASSWORD);
+    
+    if (!process.env.UNIVERSITY_EMAIL) {
+      throw new Error('UNIVERSITY_EMAIL environment variable is not set');
+    }
+    
+    if (!process.env.UNIVERSITY_EMAIL_PASSWORD) {
+      throw new Error('UNIVERSITY_EMAIL_PASSWORD environment variable is not set');
+    }
+
+    // Test transporter connection
+    await this.transporter.verify();
+    console.log('✅ SMTP connection successful!');
+    
+    return { 
+      success: true, 
+      message: 'Email configuration is correct',
+      email: process.env.UNIVERSITY_EMAIL,
+      password_length: process.env.UNIVERSITY_EMAIL_PASSWORD.length
+    };
+  } catch (error) {
+    console.error('❌ SMTP connection failed:', error);
+    return { 
+      success: false, 
+      error: error.message,
+      email: process.env.UNIVERSITY_EMAIL,
+      debug: {
+        email_set: !!process.env.UNIVERSITY_EMAIL,
+        password_set: !!process.env.UNIVERSITY_EMAIL_PASSWORD,
+        node_env: process.env.NODE_ENV
+      }
+    };
+  }
+}
+  
+  /**
    * Main registration handler with short IDs and portrait ID cards
    */
   async handleRegistration(registrationData, registrationType) {
