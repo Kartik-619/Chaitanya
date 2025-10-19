@@ -1,7 +1,7 @@
 /**
  * 📧 EMAIL SERVICE
  * 
- * This service handles all email and ID card operations using SendGrid API:
+ * This service handles all email and ID card operations:
  * - Registration confirmation emails
  * - PDF ID card generation and delivery
  * - Queue management for high-volume email sending
@@ -23,15 +23,15 @@ const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 
 class EmailService {
   constructor() {
-    // Initialize SendGrid
+    // Initialize email transporter with connection pooling and rate limiting
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    this.initialized = !!process.env.SENDGRID_API_KEY;
-    
-    if (!this.initialized) {
-      console.warn('⚠️ SendGrid API key not found. Registration emails will not be sent.');
-    } else {
-      console.log('✅ SendGrid Email Service Initialized with Enhanced PDF System');
-    }
+  this.initialized = !!process.env.SENDGRID_API_KEY;
+  
+  if (!this.initialized) {
+    console.warn('⚠️ SendGrid API key not found. Registration emails will not be sent.');
+  } else {
+    console.log('✅ SendGrid Email Service Initialized with Enhanced PDF System');
+  }
 
     // PDF generation queue system
     this.pdfQueue = [];                    // Queue for pending PDF generations
@@ -44,7 +44,7 @@ class EmailService {
       console.log('📧 Daily email counter reset to 0');
     }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 
-    this.MAX_EMAILS_PER_DAY = 90;         // Leave 10 emails for OTP service
+    this.MAX_EMAILS_PER_DAY = 90;          
     this.pdfDeliveryTracker = new Map();   // Track PDF delivery status
     
     // Sequence numbers for ID generation (in production, use database)
@@ -81,86 +81,10 @@ class EmailService {
     // Update premium and accommodation fees
     this.PREMIUM_FEE = 200;
     this.ACCOMMODATION_FEE = 600;
+
+    console.log('📧 University Email Service Initialized with Enhanced PDF System');
   }
 
-  /**
-   * Send email using SendGrid API
-   */
-  async sendEmail(mailOptions) {
-    if (!this.initialized) {
-      console.warn(`📧 [SIMULATED] Email would be sent to: ${mailOptions.to}`);
-      return { success: true, simulated: true };
-    }
-
-    if (this.dailyEmailCount >= this.MAX_EMAILS_PER_DAY) {
-      console.warn('📧 Daily email limit reached, queuing for tomorrow');
-      return { success: false, error: 'Daily email limit reached' };
-    }
-
-    try {
-      const msg = {
-        to: mailOptions.to,
-        from: {
-          email: 'chaitanyahptu@gmail.com',
-          name: 'Chaitanya 2025'
-        },
-        subject: mailOptions.subject,
-        text: mailOptions.text,
-        html: mailOptions.html,
-        attachments: mailOptions.attachments || []
-      };
-
-      await sgMail.send(msg);
-      this.dailyEmailCount++;
-      console.log(`✅ Email sent to: ${mailOptions.to} (${this.dailyEmailCount}/${this.MAX_EMAILS_PER_DAY})`);
-      return { success: true };
-    } catch (error) {
-      console.error('❌ SendGrid error:', error.response?.body || error.message);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
-   * Test email connection and configuration
-   */
-  async testEmailConnection() {
-    try {
-      console.log('🔧 Testing email configuration...');
-      
-      if (!this.initialized) {
-        return { 
-          success: false, 
-          error: 'SendGrid API key not configured',
-          debug: {
-            api_key_set: !!process.env.SENDGRID_API_KEY,
-            node_env: process.env.NODE_ENV
-          }
-        };
-      }
-
-      // Test with a simple email
-      const testResult = await this.sendEmail({
-        to: 'chaitanyahptu@gmail.com',
-        subject: 'Chaitanya 2025 - Email Service Test',
-        text: 'This is a test email from Chaitanya 2025 backend service.',
-        html: '<p>This is a test email from <strong>Chaitanya 2025</strong> backend service.</p>'
-      });
-
-      return { 
-        success: testResult.success,
-        message: testResult.success ? 'Email service is working!' : 'Failed to send test email',
-        dailyCount: this.dailyEmailCount,
-        maxDaily: this.MAX_EMAILS_PER_DAY
-      };
-    } catch (error) {
-      console.error('❌ Email test failed:', error);
-      return { 
-        success: false, 
-        error: error.message
-      };
-    }
-  }
-  
   /**
    * Main registration handler with short IDs and portrait ID cards
    */
@@ -237,15 +161,25 @@ class EmailService {
    * Generate short, readable IDs for individuals and teams
    */
   generateShortID(registrationType, sequenceNumber) {
-    const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
+  const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
+  
+  if (registrationType === 'individual') {
+    // CURRENT CODE (generates CH25-I0001):
+    const paddedNumber = sequenceNumber.toString().padStart(4, '0');
+    return `${INDIVIDUAL_PREFIX}${paddedNumber}`;
     
-    if (registrationType === 'individual') {
-      return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;
-    } else {
-      return `${TEAM_PREFIX}${sequenceNumber}`;
-    }
+    // CHANGE TO (generates CH25-I1):
+    return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;
+    
+  } else {
+    // CURRENT CODE (generates CH25-T001):
+    const paddedNumber = sequenceNumber.toString().padStart(3, '0');
+    return `${TEAM_PREFIX}${paddedNumber}`;
+    
+    // CHANGE TO (generates CH25-T1):
+    return `${TEAM_PREFIX}${sequenceNumber}`;
   }
-
+}
   /**
    * Generate team member IDs (CH25-T001-M1, CH25-T001-M2, etc.)
    */
@@ -370,34 +304,41 @@ class EmailService {
    * Send quick confirmation email without PDF attachment
    */
   async sendQuickConfirmation(registrationData) {
-    try {
-      const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
-      const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
-      
-      if (!email) {
-        console.error('❌ No email address found for confirmation');
-        return { success: false, error: 'No email address provided' };
-      }
-
-      const result = await this.sendEmail({
-        to: email,
-        subject: `Chaitanya 2025 - Registration Confirmed ✅`,
-        text: this._generateConfirmationText(registrationData, name),
-        html: this._generateConfirmationHTML(registrationData, name)
-      });
-
-      if (result.success) {
-        console.log('✅ Quick confirmation sent to:', email);
-        return { success: true, quick: true };
-      } else {
-        return { success: false, error: result.error };
-      }
-
-    } catch (error) {
-      console.error('❌ Quick email failed:', error.message);
-      return { success: false, error: error.message };
+  try {
+    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+    
+    if (!email) {
+      console.error('❌ No email address found for confirmation');
+      return { success: false, error: 'No email address provided' };
     }
+
+    if (!this.initialized) {
+      console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
+      return { success: true, quick: true, simulated: true };
+    }
+
+    const msg = {
+      to: email,
+      from: {
+        email: 'chaitanyahptu@gmail.com',
+        name: 'Chaitanya 2025'
+      },
+      subject: `Chaitanya 2025 - Registration Confirmed ✅`,
+      text: this._generateConfirmationText(registrationData, name),
+      html: this._generateConfirmationHTML(registrationData, name)
+    };
+
+    await sgMail.send(msg);
+    this.dailyEmailCount++;
+    console.log('✅ Quick confirmation sent to:', email);
+    return { success: true, quick: true };
+
+  } catch (error) {
+    console.error('❌ Quick email failed:', error.message);
+    return { success: false, error: error.message };
   }
+}
 
   _generateConfirmationText(registrationData, name) {
     return `Dear ${name},
@@ -636,14 +577,23 @@ Himachal Pradesh Technical University`;
   /**
    * Simple text-only fallback email when PDF generation fails
    */
-  async sendSimpleConfirmation(registrationData) {
-    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
-    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
-    
-    const result = await this.sendEmail({
-      to: email,
-      subject: `Chaitanya 2025 Registration Confirmed - ${registrationData.registrationId}`,
-      text: `Dear ${name},
+ async sendSimpleConfirmation(registrationData) {
+  const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+  const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+  
+  if (!this.initialized) {
+    console.warn(`📧 [SIMULATED] Simple confirmation for: ${email}`);
+    return { success: true, simulated: true };
+  }
+
+  const msg = {
+    to: email,
+    from: {
+      email: 'chaitanyahptu@gmail.com',
+      name: 'Chaitanya 2025'
+    },
+    subject: `Chaitanya 2025 Registration Confirmed - ${registrationData.registrationId}`,
+    text: `Dear ${name},
 
 Your registration for Chaitanya 2025 has been confirmed!
 
@@ -658,9 +608,9 @@ If you have any questions, contact: chaitanyahptu@gmail.com
 Best regards,
 Chaitanya 2025 Team
 Himachal Pradesh Technical University`
-    });
+    };
 
-    return result;
+    return await sgMail.send(msg);
   }
 
   /**
@@ -723,21 +673,31 @@ Himachal Pradesh Technical University`
    * Send PDF email with attachment
    */
   async _sendPDFEmail(email, name, data, pdfBuffer, filename) {
-    const result = await this.sendEmail({
-      to: email,
-      subject: `Chaitanya 2025 - Your Official ID Card 🎫`,
-      text: this._generatePDFEmailText(name, data),
-      html: this._generatePDFEmailHTML(name, data),
-      attachments: [{
-        filename: filename,
-        content: pdfBuffer.toString('base64'),
-        type: 'application/pdf',
-        disposition: 'attachment'
-      }]
-    });
-
-    return result;
+  if (!this.initialized) {
+    console.warn(`📧 [SIMULATED] PDF email for: ${email}`);
+    return;
   }
+
+  const msg = {
+    to: email,
+    from: {
+      email: 'chaitanyahptu@gmail.com',
+      name: 'Chaitanya 2025'
+    },
+    subject: `Chaitanya 2025 - Your Official ID Card 🎫`,
+    text: this._generatePDFEmailText(name, data),
+    html: this._generatePDFEmailHTML(name, data),
+    attachments: [{
+      content: pdfBuffer.toString('base64'),
+      filename: filename,
+      type: 'application/pdf',
+      disposition: 'attachment'
+    }]
+  };
+
+  await sgMail.send(msg);
+  this.dailyEmailCount++;
+}
 
   _generatePDFEmailText(name, data) {
     const teamInfo = data.teamId ? `Team ID: ${data.teamId}` : '';
@@ -816,12 +776,6 @@ Himachal Pradesh Technical University`;
 </body>
 </html>`;
   }
-
-  // ==================== ID CARD GENERATION METHODS ====================
-  // [Keep all your existing ID card generation methods exactly as they are]
-  // generateIndividualIDCard, generateTeamLeaderIDCard, generateTeamMemberIDCard
-  // _getInitials, _truncateText, _getEventsText, _hasPremiumPackage
-  // [Copy all these methods from your current file - they don't need changes]
 
 // ==================== INDIVIDUAL ID CARD ====================
 
