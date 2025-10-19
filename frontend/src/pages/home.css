@@ -13,9 +13,10 @@ body {
 .hero-section {
   /* INCREASED HEIGHT: This is the total scrollable distance for the Hero animation.
          It MUST be greater than 100vh for a scroll-based pin effect to work. */
-  height: 100vh;
+  height: 105vh;
   /* Set to 150vh to ensure a long, smooth scroll effect */
   width: 100vw;
+  padding-bottom: 50rem;
   position: relative;
 }
 
@@ -54,7 +55,7 @@ body {
 @media screen and (max-width: 768px) {
 
   .hero-section {
-    height: 80vh;
+    height: 100vh;
   }
 
   .horizontal-wrapper {
