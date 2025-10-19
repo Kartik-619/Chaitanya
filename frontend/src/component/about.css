@@ -41,8 +41,8 @@
 /* ===== BOOK CONTAINER ===== */
 .book-container {
   position: relative;
-  width: 65vw;
-  height: 65vh;
+  width: 55vw;
+  height: 55vh;
   transform-style: preserve-3d;
   filter: drop-shadow(0 15px 30px var(--shadow-dark));
 }
@@ -73,7 +73,7 @@
 
 .page-content {
   width: 100%;
-  height: 90vh;
+  height: 65vh;
   padding: 2.5rem;
   background: 
     radial-gradient(circle at top left, rgba(255, 255, 200, 0.3), transparent 70%),
@@ -219,7 +219,7 @@
 /* ===== TYPOGRAPHY ===== */
 .page-content h1 {
   font-family: "price-down",sans-serif;
-  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-size: 5rem;
   color: var(--primary-brown);
   margin-bottom: 1.5rem;
   text-shadow: 1px 1px 3px var(--shadow-light);
@@ -227,7 +227,7 @@
 
 .page-content p {
   font-family: sans-serif;
-  font-size: clamp(1.8rem, 2.5vw, 1.8rem);
+  font-size: 3.4rem;
   line-height: 1.6;
   color: rgba(0, 0, 0, 0.7);
   font-weight: 400;
@@ -256,16 +256,16 @@
 /* Extra Large Desktops (1440px and above) */
 @media (min-width: 1440px) {
   .book-container {
-    width:70vw;
-    height: 65vh;
+    width:60vw;
+    height: 55vh;
   }
   
   .page-content {
-    padding: 3.5rem;
+    padding: 4.5rem;
   }
   
   .page-content h1 {
-    font-size: clamp(2.2rem, 3vw, 2.8rem);
+    font-size: 3.2rem;
   }
   
   .page-content p {
@@ -276,8 +276,8 @@
 /* Large Desktops (1200px - 1439px) */
 @media (min-width: 1200px) and (max-width: 1439px) {
   .book-container {
-    width:70vw;
-    height: 65vh;
+    width:60vw;
+    height: 55vh;
   }
   
   .page-content {
@@ -288,12 +288,12 @@
 /* Standard Desktops (1024px - 1199px) */
 @media (min-width: 1024px) and (max-width: 1199px) {
   .book-container {
-    width:70vw;
+    width:60vw;
     height: 65vh;
   }
   
   .page-content {
-    padding: 2.5rem;
+    padding: 5.5rem;
   }
 }
 
@@ -305,7 +305,7 @@
   }
   
   .page-content {
-    padding: 2.2rem;
+    padding: 4.2rem;
   }
 }
 
@@ -313,12 +313,12 @@
 @media (min-width: 768px) and (max-width: 991px) {
   .about-section1 {
     padding: 1.5rem;
-    perspective: 1400px;
+    
   }
   
   .book-container {
-    width:70vw;
-    height: 65vh;
+    width:60vw;
+    height: 55vh;
   }
   
   .page-content {
@@ -326,12 +326,12 @@
   }
   
   .page-content h1 {
-    font-size: clamp(1.8rem, 4vw, 2.2rem);
+    font-size: 1.8rem;
     margin-bottom: 1.2rem;
   }
   
   .page-content p {
-    font-size: clamp(1.1rem, 2.8vw, 1.3rem);
+    font-size: 1.3rem;
     line-height: 1.5;
   }
   
@@ -350,13 +350,13 @@
 @media (min-width: 600px) and (max-width: 767px) {
   .about-section1 {
     padding: 1rem;
-    perspective: 1200px;
+   
   }
   
   .book-container {
-    width: 70%;
-    height: 60vh;
-    max-width: 650px;
+    width: 60%;
+    height: 50vh;
+    
   }
   
   .page-content {
@@ -364,12 +364,12 @@
   }
   
   .page-content h1 {
-    font-size: clamp(1.7rem, 4.5vw, 2rem);
+    font-size: 1.9rem;
     margin-bottom: 1rem;
   }
   
   .page-content p {
-    font-size: clamp(1.05rem, 3vw, 1.2rem);
+    font-size: 1.5rem;
     line-height: 1.5;
   }
   
@@ -405,11 +405,11 @@
 @media (min-width: 480px) and (max-width: 599px) {
   .about-section1 {
     padding: 0.8rem;
-    perspective: 1100px;
+    
   }
   
   .book-container {
-    width: 76%;
+    width: 66%;
     height: min(58vh, 380px);
   }
   
@@ -425,7 +425,7 @@
   }
   
   .page-content p {
-    font-size: clamp(1rem, 3.2vw, 1.15rem);
+    font-size: clamp(1.3rem, 3.2vw, 1.15rem);
     line-height: 1.45;
     margin-bottom: 0.9rem;
   }
@@ -471,7 +471,7 @@
 @media (min-width: 400px) and (max-width: 479px) {
   .about-section1 {
     padding: 0.6rem;
-    perspective: 900px;
+
   }
   
   .book-container {
@@ -527,7 +527,7 @@
 @media (min-width: 360px) and (max-width: 399px) {
   .about-section1 {
     padding: 0.5rem;
-    perspective: 900px;
+ 
   }
   
   .book-container {
@@ -565,7 +565,7 @@
 @media (min-width: 320px) and (max-width: 359px) {
   .about-section1 {
     padding: 0.4rem;
-    perspective: 900px;
+ 
   }
   
   .book-container {
@@ -629,11 +629,11 @@
 @media (max-width: 319px) {
   .about-section1 {
     padding: 0.3rem;
-    perspective: 800px;
+   
   }
   
   .book-container {
-    width: 69%;
+    width: 59%;
     height: min(48vh, 300px);
   }
   
@@ -667,17 +667,17 @@
   }
   
   .book-container {
-    width:70vw;
+    width:60vw;
     height: 65vh;
   }
   
   .page-content {
-    padding: 1rem;
+    padding: 1.5rem;
     justify-content: center;
   }
   
   .page-content h1 {
-    font-size: 1.5rem;
+    font-size: 1.9rem;
     margin-bottom: 0.5rem;
   }
   
@@ -697,7 +697,7 @@
 /* Small Mobile Landscape */
 @media (max-height: 500px) and (orientation: landscape) {
   .book-container {
-    width:70vw;
+    width:60vw;
     height: 65vh;
   }
   
@@ -706,12 +706,12 @@
   }
   
   .page-content h1 {
-    font-size: 1.3rem;
+    font-size: 3.3rem;
     margin-bottom: 0.3rem;
   }
   
   .page-content p {
-    font-size: 0.9rem;
+    font-size: 1.9rem;
     margin-bottom: 0.3rem;
     line-height: 1.3;
   }
