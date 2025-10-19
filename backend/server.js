@@ -1,17 +1,3 @@
-/**
- * 🚀 CHAITANYA 2025 SERVER ENTRY POINT
- * 
- * This is the main server file that initializes and configures the entire application.
- * It sets up security, routes, middleware, and background services.
- * 
- * 🔒 SECURITY FEATURES:
- * - Helmet.js for security headers
- * - CORS configuration
- * - Rate limiting
- * - Input sanitization
- * - Crash protection systems
- */
-
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
@@ -31,141 +17,124 @@ const RegistrationService = require('./services/registrationService');
 const paymentRoutes = require('./routes/paymentRoutes');
 const BackupService = require('./services/backupService');
 
-// ==================== GLOBAL VARIABLES ====================
-let sessionCleanupInterval;
-let retryInterval;
-let backupInterval;
-
-// ==================== CRASH PROTECTION SYSTEM ====================
-
-/**
- * Global error handlers to prevent server crashes
- * These catch unhandled exceptions and rejections
- */
-process.on('uncaughtException', (error) => {
-  console.error('🆘 UNCAUGHT EXCEPTION - Keeping server alive:', error.message);
-  console.error('Stack trace:', error.stack);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('🆘 UNHANDLED REJECTION at:', promise, 'reason:', reason);
-});
-
-/**
- * Memory monitoring to track potential memory leaks
- * Logs memory usage every 30 seconds
- */
-const memoryInterval = setInterval(() => {
-  const memoryUsage = process.memoryUsage();
-  const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-  const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  console.log('📊 Memory Usage: ' + usedMB + 'MB / ' + totalMB + 'MB');
-}, 30000);
-
-// ==================== GRACEFUL SHUTDOWN HANDLERS ====================
-
-/**
- * Graceful shutdown handlers for proper server termination
- */
-function gracefulShutdown() {
-  console.log('🛑 Received shutdown signal, shutting down gracefully...');
-  
-  // Clear all intervals
-  if (retryInterval) clearInterval(retryInterval);
-  if (backupInterval) clearInterval(backupInterval);
-  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  if (memoryInterval) clearInterval(memoryInterval);
-  
-  setTimeout(() => {
-    console.log('✅ Server shutdown complete');
-    process.exit(0);
-  }, 1000);
-}
-
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-
-// ==================== SERVER INITIALIZATION ====================
-
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// 🚀 CRITICAL FIX: Trust proxy for Render deployment
+// 🚨 DEBUG: Trust proxy for Render
 app.set('trust proxy', 1);
+console.log('🔧 DEBUG: Trust proxy enabled');
 
-/**
- * Validate environment variables before starting server
- * Exits process if required environment variables are missing
- */
-if (!validateEnvironment()) {
-  console.error('❌ Server cannot start - missing environment variables');
-  process.exit(1);
-}
-
-// ==================== MIDDLEWARE SETUP ====================
-
-/**
- * Security middleware - Helmet.js for security headers
- * Configures Content Security Policy to prevent XSS attacks
- */
-app.use(helmet({ 
-  contentSecurityPolicy: { 
-    directives: SERVER_CONFIG.CSP_DIRECTIVES 
-  } 
-}));
-
-/**
- * CORS configuration for cross-origin requests
- * FIXED: Proper CORS configuration for frontend
- */
+// 🚨 DEBUG: Simple CORS to avoid blocking
 app.use(cors({
-  origin: true,  // Allow all origins
+  origin: true,
   credentials: true
 }));
+console.log('🔧 DEBUG: CORS set to allow all origins');
 
-/**
- * JSON parsing with size limit to prevent DoS attacks
- */
-app.use(express.json({ limit: SERVER_CONFIG.SECURITY.JSON_LIMIT }));
+// Security middleware
+app.use(helmet({ 
+  contentSecurityPolicy: false // Disable for debugging
+}));
 
-/**
- * Input sanitization middleware
- * Trims strings and limits length to prevent abuse
- */
+app.use(express.json({ limit: '10mb' }));
+
+// 🚨 DEBUG: Request logger - shows EVERY request
 app.use((req, res, next) => {
-  if (req.body && typeof req.body === 'object') {
-    Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
-        req.body[key] = req.body[key].trim().substring(0, SERVER_CONFIG.SECURITY.TRIM_MAX_LENGTH);
-      }
-    });
-  }
+  console.log('📍 INCOMING REQUEST:', {
+    method: req.method,
+    url: req.url,
+    origin: req.headers.origin,
+    'user-agent': req.headers['user-agent']?.substring(0, 50),
+    body: req.body ? 'Has body data' : 'No body'
+  });
   next();
 });
 
-/**
- * Static file serving for admin dashboard and public assets
- */
+// Static files
 app.use(express.static('public'));
 
-// ==================== RENDER HEALTH CHECK ====================
-
-/**
- * Root health check required by Render
- * This endpoint is used by Render's health check system
- */
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    message: 'Chaitanya 2025 Server is running',
+// 🚨 DEBUG: Test route to check if server is reachable
+app.get('/api/debug/test-server', (req, res) => {
+  console.log('✅ DEBUG: Test route hit successfully');
+  res.json({ 
+    success: true, 
+    message: 'Server is reachable!',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// ==================== ROUTES SETUP ====================
+// 🚨 DEBUG: Test email configuration
+app.get('/api/debug/test-email', async (req, res) => {
+  try {
+    console.log('🔧 DEBUG: Testing email configuration...');
+    
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.UNIVERSITY_EMAIL,
+        pass: process.env.UNIVERSITY_EMAIL_PASSWORD
+      },
+      connectionTimeout: 10000
+    });
 
-// API Routes - Mount all API endpoints
+    console.log('🔧 DEBUG: Testing SMTP connection...');
+    await transporter.verify();
+    console.log('✅ DEBUG: SMTP connection successful');
+
+    console.log('🔧 DEBUG: Testing email sending...');
+    await transporter.sendMail({
+      from: process.env.UNIVERSITY_EMAIL,
+      to: 'djdikshit1922@gmail.com',
+      subject: 'DEBUG: Test Email from Server',
+      text: 'This is a test email from your debug server'
+    });
+
+    console.log('✅ DEBUG: Email sent successfully');
+    res.json({ 
+      success: true, 
+      message: 'Email test passed - check your inbox' 
+    });
+  } catch (error) {
+    console.error('❌ DEBUG: Email test failed:', error.message);
+    res.json({ 
+      success: false, 
+      error: error.message,
+      step: 'Check if App Password is correct and 2FA is enabled'
+    });
+  }
+});
+
+// 🚨 DEBUG: Test registration endpoint directly
+app.post('/api/debug/test-registration', async (req, res) => {
+  try {
+    console.log('🔧 DEBUG: Testing registration endpoint...');
+    console.log('🔧 DEBUG: Request body:', req.body);
+
+    // Simulate registration without email
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`✅ DEBUG: OTP generated: ${otp}`);
+
+    res.json({
+      success: true,
+      message: 'DEBUG: Registration test successful',
+      otp: otp,
+      sessionId: 'debug-session-' + Date.now(),
+      note: 'This is a test - check server logs for OTP'
+    });
+  } catch (error) {
+    console.error('❌ DEBUG: Registration test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Regular routes
 app.use('/api/payment', paymentRoutes);
 app.use('/api/register', registrationLimiter);
 app.use('/api/register', registrationRoutes);
@@ -173,7 +142,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/debug', debugRoutes);
 
-// HTML routes - Serve admin interface pages
+// Admin routes
 app.get('/admin-login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
 });
@@ -186,249 +155,69 @@ app.get('/admin', (req, res) => {
   res.redirect('/admin-login.html');
 });
 
-// ==================== HEALTH ENDPOINT ====================
+// Health endpoints
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
 
-/**
- * Health check endpoint for monitoring and load balancers
- * Returns server status, memory usage, and system information
- */
 app.get('/api/health', (req, res) => {
-  const memoryUsage = process.memoryUsage();
-  
   res.json({ 
     success: true, 
-    message: 'Chaitanya 2025 Server is running',
-    time: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    system: {
-      uptime: process.uptime(),
-      memory: {
-        used: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
-        total: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB',
-        rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB'
-      }
-    },
-    services: {
-      googleSheets: GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline',
-      backup: '✅ Active',
-      sessionCleanup: '✅ Active',
-      premiumSystem: '✅ Active',
-      accommodationSystem: '✅ Active',
-      teamPricing: '✅ Active'
-    },
-    features: {
-      collegeDropdown: '✅ Enabled',
-      premiumPackage: '✅ Enabled', 
-      accommodationBooking: '✅ Enabled',
-      teamSizeValidation: '✅ Enabled',
-      esportsSelection: '✅ Enabled'
-    }
+    message: 'DEBUG Server is running',
+    time: new Date().toISOString()
   });
 });
 
-/**
- * Basic status endpoint for quick server checks
- */
-app.get('/status', (req, res) => {
-  res.json({
-    status: 'online',
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()) + ' seconds',
-    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB'
-  });
-});
-
-/**
- * Root endpoint with API documentation
- * Lists all available endpoints and their purposes
- */
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Chaitanya 2025 Registration API',
-    version: '2.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString(),
-    newFeatures: [
-      'College dropdown selection',
-      'Premium package (₹200)',
-      'Accommodation booking (₹600/person)',
-      'Team size validation',
-      'E-sports game selection',
-      'Updated event pricing'
-    ],
-    endpoints: {
-      'GET /api/health': 'Server status with detailed info',
-      'GET /status': 'Basic server status',
-      'POST /api/admin/login': 'Admin login',
-      'GET /api/admin/stats': 'Registration statistics',
-      'GET /api/admin/registrations': 'All registrations',
-      'GET /api/admin/export-finance': 'Export financial data',
-      'GET /api/admin/events': 'Events participation data',
-      'POST /api/attendance/scan': 'Scan attendance QR',
-      'GET /api/attendance/report': 'Get attendance report',
-      'GET /api/attendance/check-duplicate': 'Check duplicate attendance',
-      'POST /api/register/start': 'Start registration',
-      'POST /api/register/verify-otp': 'Verify OTP',
-      'POST /api/register/setup-individual': 'Individual setup',
-      'POST /api/register/setup-team': 'Team setup',
-      'POST /api/register/complete': 'Complete registration',
-      'GET /api/debug/debug-env': 'Environment check',
-      'GET /api/debug/debug/sheets': 'Google Sheets status',
-      'GET /api/debug/test-email': 'Test email service',
-      'GET /admin-login.html': 'Admin login page',
-      'GET /admin-dashboard.html': 'Admin dashboard',
-      'GET /api/register/colleges': 'Get college list',
-      'GET /api/register/team-events': 'Get team events with rules',
-      'GET /api/register/individual-events': 'Get individual events',
-      'GET /api/admin/premium-analytics': 'Premium package analytics',
-      'GET /api/admin/accommodation-analytics': 'Accommodation analytics'
+    message: 'Chaitanya 2025 DEBUG Server',
+    debugEndpoints: {
+      'GET /api/debug/test-server': 'Test if server is reachable',
+      'GET /api/debug/test-email': 'Test email configuration',
+      'POST /api/debug/test-registration': 'Test registration without email'
     }
   });
 });
 
-// ==================== 404 HANDLER ====================
-
-/**
- * 404 handler for undefined routes
- * Returns consistent error format for unknown endpoints
- */
+// 404 handler
 app.use((req, res) => {
+  console.log('❌ DEBUG: 404 - Route not found:', req.method, req.url);
   res.status(404).json({
     success: false,
-    message: 'Endpoint not found',
-    path: req.originalUrl,
-    method: req.method,
-    availableEndpoints: [
-      'GET /api/health',
-      'GET /status', 
-      'GET /',
-      'POST /api/register/start',
-      'POST /api/register/verify-otp',
-      'POST /api/register/setup-individual',
-      'POST /api/register/setup-team', 
-      'POST /api/register/complete',
-      'POST /api/admin/login',
-      'GET /api/admin/stats',
-      'GET /api/admin/registrations',
-      'GET /api/admin/export-finance',
-      'GET /api/admin/events',
-      'POST /api/attendance/scan',
-      'GET /api/attendance/report',
-      'GET /api/attendance/check-duplicate',
-      'POST /api/payment/initialize-payment',
-      'POST /api/payment/verify-payment',
-      'GET /admin-login.html',
-      'GET /admin-dashboard.html'
-    ]
+    message: 'Endpoint not found - check server logs'
   });
 });
 
-// ==================== BACKGROUND SERVICES ====================
-
-/**
- * Failed registrations retry system
- * Automatically retries saving failed registrations to Google Sheets every 10 minutes
- */
-retryInterval = setInterval(async () => {
-  try {
-    console.log('🔄 Checking for failed registrations to retry...');
-    await BackupService.retryFailedRegistrations();
-  } catch (error) {
-    console.error('❌ Failed registrations retry system error:', error.message);
-  }
-}, 10 * 60 * 1000);
-
-console.log('🔄 Failed registrations retry system started (every 10 minutes)');
-
-/**
- * Session backup system - backs up sessions every minute
- */
-backupInterval = setInterval(() => {
-  try {
-    BackupService.saveSessionsToFile();
-  } catch (error) {
-    console.error('❌ Session backup error:', error.message);
-  }
-}, 60 * 1000);
-
-console.log('💾 Session backup system started (every minute)');
-
-// ==================== SESSION MANAGEMENT ====================
-
-/**
- * Automatic session cleanup to prevent memory leaks
- * Removes expired registration sessions at configured intervals
- */
-if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
-  sessionCleanupInterval = setInterval(() => {
-    try {
-      console.log('🧹 Running session cleanup...');
-      RegistrationService.cleanupOldSessions();
-      RegistrationService.cleanupMemory();
-    } catch (error) {
-      console.error('❌ Session cleanup error:', error.message);
-    }
-  }, SERVER_CONFIG.SESSION_CLEANUP.INTERVAL);
-  
-  console.log('🧹 Session cleanup system started');
-}
-
-// ==================== SERVER STARTUP ====================
-
-/**
- * Start the server and initialize all required services
- */
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
-  console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
-  console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
-  console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
-  
-  // Initialize Google Sheets service
-  console.log('🔄 Initializing Google Sheets...');
-  const sheetsInit = await GoogleSheetsService.initialize();
-  if (sheetsInit) {
-    console.log('✅ Google Sheets Service Ready!');
-  } else {
-    console.log('❌ Google Sheets failed to initialize - running in backup mode');
-  }
-  
-  // Initialize Backup Service
-  console.log('💾 Initializing Backup Service...');
-  try {
-    const restored = BackupService.restoreSessions();
-    if (restored) {
-      console.log('✅ Previous sessions restored from backup');
-    }
-  } catch (error) {
-    console.log('ℹ No previous sessions to restore');
-  }
-  
-  // System status report
-  console.log('\n📋 SYSTEM STATUS:');
-  console.log('🛡  Crash protection systems: ✅ Active');
-  console.log('📊 Memory monitoring: ✅ Enabled');
-  console.log('💾 Backup systems: ✅ Active');
-  console.log('🧹 Session cleanup: ✅ Enabled');
-  console.log('🎯 Registration API: ✅ Ready');
-  console.log('👑 Admin Dashboard: ✅ Enabled');
-  console.log('📝 Attendance System: ✅ Ready');
-  console.log('💳 Payment System: ✅ Ready');
-  console.log('🔒 Trust Proxy: ✅ Enabled');
-  console.log('🌐 CORS: ✅ Configured');
-  console.log('\n🎉 All systems operational! Waiting for requests...');
+// 🚨 DEBUG: Global error handler
+app.use((error, req, res, next) => {
+  console.error('❌ DEBUG: Global error caught:', error.message);
+  console.error('❌ DEBUG: Error stack:', error.stack);
+  res.status(500).json({
+    success: false,
+    message: 'DEBUG: Internal server error - check logs',
+    error: error.message
+  });
 });
 
-// ==================== CLEANUP ON EXIT ====================
-
-/**
- * Cleanup intervals when process exits
- */
-process.on('exit', () => {
-  if (retryInterval) clearInterval(retryInterval);
-  if (backupInterval) clearInterval(backupInterval);
-  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  if (memoryInterval) clearInterval(memoryInterval);
-  console.log('🧹 All background services stopped');
+// Start server
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log('🚀 DEBUG Server started on port', PORT);
+  console.log('🔧 DEBUG: Testing environment...');
+  console.log('🔧 DEBUG: UNIVERSITY_EMAIL exists:', !!process.env.UNIVERSITY_EMAIL);
+  console.log('🔧 DEBUG: UNIVERSITY_EMAIL_PASSWORD exists:', !!process.env.UNIVERSITY_EMAIL_PASSWORD);
+  
+  // Initialize services
+  try {
+    await GoogleSheetsService.initialize();
+    console.log('✅ DEBUG: Google Sheets initialized');
+  } catch (error) {
+    console.error('❌ DEBUG: Google Sheets failed:', error.message);
+  }
+  
+  console.log('🎯 DEBUG: Server ready for testing!');
+  console.log('📋 Test these endpoints:');
+  console.log('1. GET  /api/debug/test-server');
+  console.log('2. GET  /api/debug/test-email');
+  console.log('3. POST /api/debug/test-registration');
 });
