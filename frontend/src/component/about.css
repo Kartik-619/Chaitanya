@@ -52,8 +52,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 55vw;
-  height: 65vh;
+  width: 50vw;
+  height: 45vh;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   border-radius: 8px 15px 15px 8px;
@@ -219,7 +219,7 @@
 /* ===== TYPOGRAPHY ===== */
 .page-content h1 {
   font-family: "price-down",sans-serif;
-  font-size: 5rem;
+  font-size: 4rem;
   color: var(--primary-brown);
   margin-bottom: 1.5rem;
   text-shadow: 1px 1px 3px var(--shadow-light);
