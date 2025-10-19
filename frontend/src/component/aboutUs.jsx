@@ -7,6 +7,7 @@ import AboutContent from "./aboutContent";
 import EventsCarousel from "./eventOverview";
 
 import "./about.css";
+import Icon from "./icon";
 
 
 gsap.registerPlugin(ScrollTrigger);
@@ -165,7 +166,7 @@ const About = forwardRef((props, ref) => {
         {currentIndex + 1} / {contentComponents.length}
       </div>
       
-
+    <Icon/>
       <div className="book-container">
         <div ref={frontPageRef} className="page front-page" style={{ zIndex: 2 }}>
           <div className="page-content">{FrontComponent}</div>

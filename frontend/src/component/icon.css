@@ -1,0 +1,21 @@
+.icon-bg{
+    background-image: url('/icon.png'); /* Remove 'images/' from path */
+    background-size: contain; /* Add this to ensure image fits */
+    background-repeat: no-repeat; /* Prevent repeating */
+    background-position: center; /* Center the image */
+    position: absolute;
+    height: 15vh;
+    width: 14vw;
+    top: 2.5vh;
+    left: 2.5vh;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.icon-bg:hover {
+    transform: scale(1.1);
+}
+
+.icon-bg:active {
+    transform: scale(0.95);
+}

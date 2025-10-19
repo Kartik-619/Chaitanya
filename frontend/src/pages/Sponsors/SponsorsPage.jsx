@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mail, ExternalLink, Sparkles, Award, Star } from 'lucide-react';
 import Sidebar from '../../component/navbar';
 import Social from '../../component/socials';
+import Icon from '../../component/icon';
 
 export default function SponsorsPage() {
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -166,6 +167,7 @@ Thank you,
             animation: 'float 10s ease-in-out infinite reverse',
           }}
         />
+        <Icon/>
         <Sidebar/>
         <Social/>
         <div

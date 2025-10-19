@@ -3,6 +3,7 @@ import EventSection from '../component/Events/EventSection';
 import './EventPage.css';
 import Sidebar from '../component/navbar';
 import Social from '../component/socials';
+import Icon from '../component/icon';
 
 export default function EventPage() {
   const cloud1Ref = useRef(null);
@@ -32,6 +33,7 @@ export default function EventPage() {
     <div id="event-page-container" className="event-page-container">
       {/* Background */}
       <div id="background-container" className="background-container">
+        <Icon/>
         <div id="background-gradient" className="background-gradient">
           {/* Cloud Layers */}
           <div

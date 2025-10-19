@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
+import Icon from './icon';
 
 const getOptimizedImageUrl = (publicId) => {
   return `https://res.cloudinary.com/dpe1pmwsv/image/upload/${publicId}`;
@@ -169,7 +170,7 @@ export default function Hero() {
   return (
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
-
+    <Icon/>
       <img src={getOptimizedImageUrl('castle_rqfln4')} alt="Castle" className="castle" />
 
       {/* Show clouds on ALL devices now since animation works everywhere */}
