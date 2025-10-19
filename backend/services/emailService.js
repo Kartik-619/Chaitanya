@@ -16,7 +16,7 @@
  * - Portrait orientation (300x450px) with large QR codes
  */
 
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
@@ -24,20 +24,14 @@ const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 class EmailService {
   constructor() {
     // Initialize email transporter with connection pooling and rate limiting
-    this.transporter = nodemailer.createTransport({
-    service: 'gmail',  // Use service name instead of host/port
-    auth: {
-      user: process.env.UNIVERSITY_EMAIL,
-      pass: process.env.UNIVERSITY_EMAIL_PASSWORD
-    },
-    // Keep your rate limiting
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    rateDelta: 1000,
-    rateLimit: 5
-  });
-
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  this.initialized = !!process.env.SENDGRID_API_KEY;
+  
+  if (!this.initialized) {
+    console.warn('⚠️ SendGrid API key not found. Registration emails will not be sent.');
+  } else {
+    console.log('✅ SendGrid Email Service Initialized with Enhanced PDF System');
+  }
 
     // PDF generation queue system
     this.pdfQueue = [];                    // Queue for pending PDF generations
@@ -50,7 +44,7 @@ class EmailService {
       console.log('📧 Daily email counter reset to 0');
     }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 
-    this.MAX_EMAILS_PER_DAY = 450;         // Gmail daily sending limit
+    this.MAX_EMAILS_PER_DAY = 90;          
     this.pdfDeliveryTracker = new Map();   // Track PDF delivery status
     
     // Sequence numbers for ID generation (in production, use database)
@@ -91,48 +85,6 @@ class EmailService {
     console.log('📧 University Email Service Initialized with Enhanced PDF System');
   }
 
-  /**
- * Test email connection and configuration
- */
-async testEmailConnection() {
-  try {
-    console.log('🔧 Testing email configuration...');
-    console.log('Email:', process.env.UNIVERSITY_EMAIL);
-    console.log('Password exists:', !!process.env.UNIVERSITY_EMAIL_PASSWORD);
-    
-    if (!process.env.UNIVERSITY_EMAIL) {
-      throw new Error('UNIVERSITY_EMAIL environment variable is not set');
-    }
-    
-    if (!process.env.UNIVERSITY_EMAIL_PASSWORD) {
-      throw new Error('UNIVERSITY_EMAIL_PASSWORD environment variable is not set');
-    }
-
-    // Test transporter connection
-    await this.transporter.verify();
-    console.log('✅ SMTP connection successful!');
-    
-    return { 
-      success: true, 
-      message: 'Email configuration is correct',
-      email: process.env.UNIVERSITY_EMAIL,
-      password_length: process.env.UNIVERSITY_EMAIL_PASSWORD.length
-    };
-  } catch (error) {
-    console.error('❌ SMTP connection failed:', error);
-    return { 
-      success: false, 
-      error: error.message,
-      email: process.env.UNIVERSITY_EMAIL,
-      debug: {
-        email_set: !!process.env.UNIVERSITY_EMAIL,
-        password_set: !!process.env.UNIVERSITY_EMAIL_PASSWORD,
-        node_env: process.env.NODE_ENV
-      }
-    };
-  }
-}
-  
   /**
    * Main registration handler with short IDs and portrait ID cards
    */
@@ -352,39 +304,41 @@ async testEmailConnection() {
    * Send quick confirmation email without PDF attachment
    */
   async sendQuickConfirmation(registrationData) {
-    try {
-      const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
-      const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
-      
-      if (!email) {
-        console.error('❌ No email address found for confirmation');
-        return { success: false, error: 'No email address provided' };
-      }
-
-      const mailOptions = {
-        from: `"${EMAIL_CONFIG.FROM_NAME}" <${EMAIL_CONFIG.FROM_EMAIL}>`,
-        to: email,
-        subject: `Chaitanya 2025 - Registration Confirmed ✅`,
-        text: this._generateConfirmationText(registrationData, name),
-        html: this._generateConfirmationHTML(registrationData, name)
-      };
-
-      const emailPromise = this.transporter.sendMail(mailOptions);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Email timeout')), 30000)
-      );
-
-      await Promise.race([emailPromise, timeoutPromise]);
-      
-      this.dailyEmailCount++;
-      console.log('✅ Quick confirmation sent to:', email);
-      return { success: true, quick: true };
-
-    } catch (error) {
-      console.error('❌ Quick email failed:', error.message);
-      return { success: false, error: error.message };
+  try {
+    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+    
+    if (!email) {
+      console.error('❌ No email address found for confirmation');
+      return { success: false, error: 'No email address provided' };
     }
+
+    if (!this.initialized) {
+      console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
+      return { success: true, quick: true, simulated: true };
+    }
+
+    const msg = {
+      to: email,
+      from: {
+        email: 'chaitanyahptu@gmail.com',
+        name: 'Chaitanya 2025'
+      },
+      subject: `Chaitanya 2025 - Registration Confirmed ✅`,
+      text: this._generateConfirmationText(registrationData, name),
+      html: this._generateConfirmationHTML(registrationData, name)
+    };
+
+    await sgMail.send(msg);
+    this.dailyEmailCount++;
+    console.log('✅ Quick confirmation sent to:', email);
+    return { success: true, quick: true };
+
+  } catch (error) {
+    console.error('❌ Quick email failed:', error.message);
+    return { success: false, error: error.message };
   }
+}
 
   _generateConfirmationText(registrationData, name) {
     return `Dear ${name},
@@ -623,15 +577,23 @@ Himachal Pradesh Technical University`;
   /**
    * Simple text-only fallback email when PDF generation fails
    */
-  async sendSimpleConfirmation(registrationData) {
-    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
-    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
-    
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.FROM_NAME}" <${EMAIL_CONFIG.FROM_EMAIL}>`,
-      to: email,
-      subject: `Chaitanya 2025 Registration Confirmed - ${registrationData.registrationId}`,
-      text: `Dear ${name},
+ async sendSimpleConfirmation(registrationData) {
+  const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+  const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+  
+  if (!this.initialized) {
+    console.warn(`📧 [SIMULATED] Simple confirmation for: ${email}`);
+    return { success: true, simulated: true };
+  }
+
+  const msg = {
+    to: email,
+    from: {
+      email: 'chaitanyahptu@gmail.com',
+      name: 'Chaitanya 2025'
+    },
+    subject: `Chaitanya 2025 Registration Confirmed - ${registrationData.registrationId}`,
+    text: `Dear ${name},
 
 Your registration for Chaitanya 2025 has been confirmed!
 
@@ -648,7 +610,7 @@ Chaitanya 2025 Team
 Himachal Pradesh Technical University`
     };
 
-    return await this.transporter.sendMail(mailOptions);
+    return await sgMail.send(msg);
   }
 
   /**
@@ -711,27 +673,31 @@ Himachal Pradesh Technical University`
    * Send PDF email with attachment
    */
   async _sendPDFEmail(email, name, data, pdfBuffer, filename) {
-    const mailOptions = {
-      from: `"${EMAIL_CONFIG.FROM_NAME}" <${EMAIL_CONFIG.FROM_EMAIL}>`,
-      to: email,
-      subject: `Chaitanya 2025 - Your Official ID Card 🎫`,
-      text: this._generatePDFEmailText(name, data),
-      html: this._generatePDFEmailHTML(name, data),
-      attachments: [{
-        filename: filename,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      }]
-    };
-
-    const emailPromise = this.transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Email timeout')), 45000)
-    );
-
-    await Promise.race([emailPromise, timeoutPromise]);
-    this.dailyEmailCount++;
+  if (!this.initialized) {
+    console.warn(`📧 [SIMULATED] PDF email for: ${email}`);
+    return;
   }
+
+  const msg = {
+    to: email,
+    from: {
+      email: 'chaitanyahptu@gmail.com',
+      name: 'Chaitanya 2025'
+    },
+    subject: `Chaitanya 2025 - Your Official ID Card 🎫`,
+    text: this._generatePDFEmailText(name, data),
+    html: this._generatePDFEmailHTML(name, data),
+    attachments: [{
+      content: pdfBuffer.toString('base64'),
+      filename: filename,
+      type: 'application/pdf',
+      disposition: 'attachment'
+    }]
+  };
+
+  await sgMail.send(msg);
+  this.dailyEmailCount++;
+}
 
   _generatePDFEmailText(name, data) {
     const teamInfo = data.teamId ? `Team ID: ${data.teamId}` : '';
