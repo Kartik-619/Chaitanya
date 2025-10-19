@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-import Icon from './icon';
+import Loader from './loader/loader'; // Import the loader
 
 const getOptimizedImageUrl = (publicId) => {
   return `https://res.cloudinary.com/dpe1pmwsv/image/upload/${publicId}`;
@@ -38,28 +38,27 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
   tl.to(".scroll", { opacity: 0, duration: 0.5 }, 0)
     .fromTo(".welcome", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1, stagger: 0.3,delay:1 }, 
+      { opacity: 1, y: 0, duration: 1, stagger: 0.1, delay: 1 }, 
       0.5
     )
-    .to(".castle", { scale: 1.05, duration: 1.5,delay:2 }, 0.5)
+    .to(".castle", { scale: 1.05, duration: 1.5, delay: 2 }, 0.5)
     .to([cloudRefs.left1.current, cloudRefs.left2.current], {
       xPercent: -100,
       opacity: 0,
       duration: 2,
-      stagger: 0.4
+   
     }, 1)
     .fromTo(".name", 
-      { opacity: 0, y: 50,duration:1.5 }, 
-      { opacity: 1, y: 0, duration: 1, stagger: 0.3,delay:2 }, 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1, delay: 2 }, 
       0.5
     )
-    
     .to([cloudRefs.right1.current, cloudRefs.right2.current], {
       xPercent: 100,
       opacity: 0,
       duration: 2,
-      stagger: 0.4,
-      delay:1
+      
+      delay: 1
     }, 1);
 
   return tl;
@@ -101,26 +100,26 @@ const setupStaticView = (cloudRefs) => {
   tl.to(".scroll", { opacity: 0, duration: 0.5 }, 0)
     .fromTo(".welcome", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1, stagger: 0.3,delay:1 }, 
+      { opacity: 1, y: 0, duration: 1, delay: 1 }, 
       0.5
     )
-    .to(".castle", { scale: 1.05, duration: 1.5,delay:2 }, 0.5)
+    .to(".castle", { scale: 1.05, duration: 1.5, delay: 2 }, 0.5)
     .to([cloudRefs.left1.current, cloudRefs.left2.current], {
       xPercent: -100,
       opacity: 0,
       duration: 2,
-      stagger: 0.4,delay:2
+      delay: 2
     }, 1)
-     .fromTo(".name", 
+    .fromTo(".name", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1, stagger: 0.3 ,delay:1.5}, 
+      { opacity: 1, y: 0, duration: 1,  delay: 1.5 }, 
       0.5
     )
     .to([cloudRefs.right1.current, cloudRefs.right2.current], {
       xPercent: 100,
       opacity: 0,
       duration: 2,
-      stagger: 0.4,delay:0.8
+      delay: 0.8
     }, 1);
 
   return tl;
@@ -136,7 +135,30 @@ export default function Hero() {
   };
 
   const [deviceType, setDeviceType] = useState("desktop");
+  const [isLoading, setIsLoading] = useState(true); // Loading state
   const animationTimeline = useRef();
+
+  // Image loading function
+  const preloadImages = () => {
+    const imageUrls = [
+      getOptimizedImageUrl('castle_rqfln4'),
+      getOptimizedImageUrl('cloudLeft_bsofo7'),
+      getOptimizedImageUrl('cloud_1_l2qd7g'),
+      getOptimizedImageUrl('cloud2_othzfm'),
+      getOptimizedImageUrl('cloud_right1_qibfp4')
+    ];
+
+    const promises = imageUrls.map(url => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+    });
+
+    return Promise.all(promises);
+  };
 
   useEffect(() => {
     const checkDevice = () => {
@@ -150,10 +172,28 @@ export default function Hero() {
    
     checkDevice();
     window.addEventListener('resize', checkDevice);
+
+    // Preload images and then hide loader
+    preloadImages()
+      .then(() => {
+        // Add a small delay for smooth transition
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      })
+      .catch((error) => {
+        console.error('Error loading images:', error);
+        // Still hide loader after a timeout even if some images fail
+        setTimeout(() => setIsLoading(false), 3000);
+      });
+
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   useGSAP(() => {
+    // Don't start animations if still loading
+    if (isLoading) return;
+
     // Kill existing timeline
     if (animationTimeline.current) {
       animationTimeline.current.kill();
@@ -165,12 +205,17 @@ export default function Hero() {
     } else {
       animationTimeline.current = setupStaticView(cloudRefs);
     }
-  }, { scope: heroRef, dependencies: [deviceType] });
+  }, { scope: heroRef, dependencies: [deviceType, isLoading] });
+
+  // Show loader while loading
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
-    <Icon/>
+
       <img src={getOptimizedImageUrl('castle_rqfln4')} alt="Castle" className="castle" />
 
       {/* Show clouds on ALL devices now since animation works everywhere */}
