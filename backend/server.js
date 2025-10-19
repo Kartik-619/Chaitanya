@@ -30,6 +30,7 @@ const GoogleSheetsService = require('./services/googleSheetsService');
 const RegistrationService = require('./services/registrationService');
 const paymentRoutes = require('./routes/paymentRoutes');
 const BackupService = require('./services/backupService');
+const emailService = require('./services/emailService');
 
 // ==================== GLOBAL VARIABLES ====================
 let sessionCleanupInterval;
