@@ -25,17 +25,27 @@ class EmailService {
   constructor() {
     // Initialize email transporter with connection pooling and rate limiting
     this.transporter = nodemailer.createTransport({
-      service: EMAIL_CONFIG.SERVICE,
-      auth: {
-        user: EMAIL_CONFIG.FROM_EMAIL,
-        pass: process.env.UNIVERSITY_EMAIL_PASSWORD
-      },
-      pool: true,           // Use connection pooling
-      maxConnections: 5,    // Maximum simultaneous connections
-      maxMessages: 100,     // Messages per connection
-      rateDelta: 1000,      // Time window for rate limiting
-      rateLimit: 5          // Emails per second
-    });
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.UNIVERSITY_EMAIL,
+      pass: process.env.UNIVERSITY_EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    // ✅ KEEP ALL YOUR RATE LIMITING SETTINGS:
+    pool: true,           // Use connection pooling
+    maxConnections: 5,    // Maximum simultaneous connections
+    maxMessages: 100,     // Messages per connection
+    rateDelta: 1000,      // Time window for rate limiting (1 second)
+    rateLimit: 5,         // Emails per second (your existing setting)
+    // Additional reliability settings
+    connectionTimeout: 60000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000
+  });
 
     // PDF generation queue system
     this.pdfQueue = [];                    // Queue for pending PDF generations
