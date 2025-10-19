@@ -50,21 +50,22 @@ export default function Sidebar() {
 
           {/* Sidebar Panel */}
           <div
-            className="fixed top-0 right-0 h-full w-110 bg-stone-900 shadow-xl z-50 transform transition-transform duration-300 ease-in-out"
-            style={{ boxShadow: "0 0 30px rgba(0,0,0,0.5)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-5 pl-25 ml-50 border-b border-gray-600 flex justify-between items-center bg-stone-800">
-              <h3 className="price-font  ml-[25%] text-5xl  font-bold text-white">Menu</h3>
-              <button
-                onClick={() => setMenu(false)}
-                className="p-1 hover:bg-gray-700 rounded transition"
-                aria-label="Close menu"
-              >
-                <CloseIcon className="text-white w-5 h-5" />
-              </button>
-            </div>
+  className="fixed top-0 right-0 h-full w-110 bg-stone-900 shadow-xl z-50 transform transition-transform duration-300 ease-in-out"
+  style={{ boxShadow: "0 0 30px rgba(0,0,0,0.5)" }}
+  onClick={(e) => e.stopPropagation()}
+>
+  {/* Header */}
+  <div className="p-5 border-b border-gray-600 flex justify-between items-center bg-stone-800 relative">
+    <h3 className="price-font text-5xl font-bold text-white absolute left-1/2 transform -translate-x-1/2">Menu</h3>
+    <button
+      onClick={() => setMenu(false)}
+      className="p-1 hover:bg-gray-700 rounded transition ml-auto"
+      aria-label="Close menu"
+    >
+      <CloseIcon className="text-white w-5 h-5" />
+    </button>
+  </div>
+
 
             {/* Navigation Links */}
             <ul className="nav-links">
@@ -115,7 +116,7 @@ export default function Sidebar() {
                 </Link>
               </li>
             </ul>
-          </div>
+            </div>
         </>
       )}
     </>

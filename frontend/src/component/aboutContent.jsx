@@ -10,11 +10,8 @@ export default function AboutContent() {
         With over 40 affiliated colleges and a main campus in Hamirpur, it drives societal progress 
         through technical education, research, and innovation.
       </p>
-      <p>
-        Programs are industry-aligned and delivered via public-private partnerships, with a strong 
-        focus on Science, Engineering, and Technology. Quality is ensured through innovation and 
-        rigorous benchmarking.
-      </p>
+   
+     
       <p className='website-link'>
         👉 Visit the official website: {' '}
         <a href='https://www.himtu.ac.in/' target="_blank" rel="noopener noreferrer">HPTU</a>

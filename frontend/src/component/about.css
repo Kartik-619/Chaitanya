@@ -19,7 +19,6 @@
   --shadow-medium: rgba(0,0,0,0.2);
   --shadow-dark: rgba(0,0,0,0.3);
   --transition: 0.3s ease;
-
 }
 
 /* ===== MAIN SECTION ===== */
@@ -33,9 +32,15 @@
     url('https://res.cloudinary.com/dpe1pmwsv/image/upload/v1760811046/bg2_bxyhji.jpg') center/cover no-repeat;
   padding: 2rem;
   text-align: center;
-  position: relative;
+  position: fixed; /* Change this to fixed */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  
+  z-index: 10; /* Ensure it's above other content */
 }
 
 /* ===== BOOK CONTAINER ===== */
@@ -95,7 +100,404 @@
   overflow: hidden;
 }
 
-/* ===== PAGE SHADOW ===== */
+/* ===== RESPONSIVE TYPOGRAPHY ===== */
+.page-content h1 {
+  font-family: "price-down", sans-serif;
+  color: var(--primary-brown);
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 3px var(--shadow-light);
+  font-size: clamp(2rem, 4vw, 4rem); /* Responsive font size */
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.page-content p {
+  font-family: sans-serif;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: 400;
+  margin-bottom: 1rem;
+  font-size: clamp(1rem, 2.5vw, 3.4rem); /* Responsive font size */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.website-link {
+  color: #1e40af !important;
+  font-weight: 600;
+}
+
+.website-link a {
+  color: #1d4ed8;
+  text-decoration: none;
+  border-bottom: 2px solid #1d4ed8;
+  transition: all var(--transition);
+  font-size: clamp(0.9rem, 2vw, 1.2rem); /* Responsive link size */
+}
+
+.website-link a:hover {
+  color: #1e3a8a;
+  border-bottom-color: #1e3a8a;
+}
+
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Extra Large Desktops (1920px and above) */
+@media (min-width: 1920px) {
+  .page-content h1 {
+    font-size: 3.5rem;
+  }
+  
+  .page-content p {
+    font-size: 2rem;
+  }
+}
+
+/* Large Desktops (1440px - 1919px) */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .book-container {
+    width: 60vw;
+    height: 55vh;
+  }
+  
+  .page-content {
+    padding: 3rem;
+  }
+  
+  .page-content h1 {
+    font-size: 3rem;
+  }
+  
+  .page-content p {
+    font-size: 1.8rem;
+  }
+}
+
+/* Standard Desktops (1200px - 1439px) */
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .book-container {
+    width: 65vw;
+    height: 55vh;
+  }
+  
+  .page-content {
+    padding: 2.5rem;
+  }
+  
+  .page-content h1 {
+    font-size: 2.8rem;
+  }
+  
+  .page-content p {
+    font-size: 1.6rem;
+  }
+}
+
+/* Small Desktops/Laptops (1024px - 1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .book-container {
+    width: 70vw;
+    height: 55vh;
+  }
+  
+  .page-content {
+    padding: 2rem;
+  }
+  
+  .page-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .page-content p {
+    font-size: 1.4rem;
+  }
+}
+
+/* Tablets Landscape (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .about-section1 {
+    padding: 1.5rem;
+  }
+  
+  .book-container {
+    width: 75vw;
+    height: 50vh;
+  }
+  
+  .page-content {
+    padding: 1.8rem;
+    height: 60vh;
+  }
+  
+  .page-content h1 {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .page-content p {
+    font-size: 1.3rem;
+    line-height: 1.5;
+  }
+}
+
+/* Tablets Portrait (600px - 767px) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .about-section1 {
+    padding: 1rem;
+  }
+  
+  .book-container {
+    width: 80vw;
+    height: 45vh;
+  }
+  
+  .page-content {
+    padding: 1.5rem;
+    height: 55vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .page-content p {
+    font-size: 1.1rem;
+    line-height: 1.5;
+  }
+}
+
+/* Large Mobile (480px - 599px) */
+@media (min-width: 480px) and (max-width: 599px) {
+  .about-section1 {
+    padding: 0.8rem;
+  }
+  
+  .book-container {
+    width: 85vw;
+    height: 40vh;
+  }
+  
+  .page-content {
+    padding: 1.2rem;
+    height: 50vh;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+  
+  .page-content h1 {
+    font-size: 1.7rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .page-content p {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.8rem;
+  }
+}
+
+/* Medium Mobile (400px - 479px) */
+@media (min-width: 400px) and (max-width: 479px) {
+  .about-section1 {
+    padding: 0.6rem;
+  }
+  
+  .book-container {
+    width: 90vw;
+    height: 38vh;
+  }
+  
+  .page-content {
+    padding: 1rem;
+    height: 48vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.7rem;
+  }
+  
+  .page-content p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 0.7rem;
+  }
+}
+
+/* Small Mobile (360px - 399px) */
+@media (min-width: 360px) and (max-width: 399px) {
+  .book-container {
+    width: 92vw;
+    height: 36vh;
+  }
+  
+  .page-content {
+    padding: 0.9rem;
+    height: 46vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .page-content p {
+    font-size: 0.9rem;
+    line-height: 1.35;
+    margin-bottom: 0.6rem;
+  }
+}
+
+/* Extra Small Mobile (320px - 359px) */
+@media (min-width: 320px) and (max-width: 359px) {
+  .about-section1 {
+    padding: 0.4rem;
+  }
+  
+  .book-container {
+    width: 94vw;
+    height: 34vh;
+  }
+  
+  .page-content {
+    padding: 0.8rem;
+    height: 44vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .page-content p {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Ultra Small Mobile (below 320px) */
+@media (max-width: 319px) {
+  .about-section1 {
+    padding: 0.3rem;
+  }
+  
+  .book-container {
+    width: 96vw;
+    height: 32vh;
+  }
+  
+  .page-content {
+    padding: 0.6rem;
+    height: 42vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .page-content p {
+    font-size: 0.8rem;
+    line-height: 1.25;
+    margin-bottom: 0.4rem;
+  }
+}
+
+/* ===== LANDSCAPE ORIENTATION HANDLING ===== */
+
+/* Mobile Landscape (Height constraints) */
+@media (max-height: 600px) and (orientation: landscape) {
+  .about-section1 {
+    padding: 0.5rem;
+  }
+  
+  .book-container {
+    width: 70vw;
+    height: 75vh;
+  }
+  
+  .page-content {
+    padding: 1.5rem;
+    height: 85vh;
+    justify-content: center;
+  }
+  
+  .page-content h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .page-content p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+}
+
+/* Small Mobile Landscape */
+@media (max-height: 500px) and (orientation: landscape) {
+  .book-container {
+    width: 75vw;
+    height: 80vh;
+  }
+  
+  .page-content {
+    padding: 1rem;
+    height: 90vh;
+  }
+  
+  .page-content h1 {
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .page-content p {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+    line-height: 1.3;
+  }
+}
+
+/* ===== TEXT SCALING ENHANCEMENTS ===== */
+
+/* Ensure text doesn't overflow on very small screens */
+.page-content h1,
+.page-content p {
+  max-width: 100%;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Improve readability on very small screens */
+@media (max-width: 480px) {
+  .page-content {
+    text-align: center;
+  }
+  
+  .page-content h1,
+  .page-content p {
+    text-align: center;
+  }
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    transition-duration: 0.1s;
+  }
+}
+
+/* ===== ENHANCED FOCUS STATES ===== */
+.page-content:focus-within {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 3px;
+}
+
+/* Keep the rest of your existing CSS (shadows, corners, indicators, etc.) */
 .page-shadow {
   position: absolute;
   top: 0;
@@ -114,34 +516,6 @@
   opacity: 0.3;
 }
 
-/* ===== PAGE CORNER FOLD ===== */
-.page-corner {
-  position: absolute;
-  top: 50%;
-  width: 40px;
-  height: 50px;
-  background: linear-gradient(135deg, transparent 45%, var(--shadow-dark) 50%, transparent 55%);
-  opacity: 0;
-  transition: opacity var(--transition);
-  z-index: 5;
-  pointer-events: none;
-}
-
-.page-corner.visible {
-  opacity: 0.6;
-}
-
-.page-corner.forward {
-  right: 8%;
-  transform: translateY(-50%) rotate(45deg);
-}
-
-.page-corner.backward {
-  left: 8%;
-  transform: translateY(-50%) rotate(-135deg);
-}
-
-/* ===== SCROLL INDICATORS ===== */
 .scroll-indicators {
   position: fixed;
   right: 1.5rem;
@@ -169,7 +543,6 @@
   box-shadow: 0 0 10px rgba(193, 154, 107, 0.5);
 }
 
-/* ===== SCROLL HINT ===== */
 .scroll-hint {
   position: absolute;
   bottom: 2rem;
@@ -187,573 +560,4 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }
-}
-
-/* ===== SECTION COUNTER ===== */
-.section-counter {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.6rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  z-index: 10;
-  border: 1px solid rgba(193, 154, 107, 0.3);
-}
-
-/* ===== SCROLL PROTECTION ===== */
-.scroll-protection-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  z-index: 9999;
-  cursor: not-allowed;
-}
-
-/* ===== TYPOGRAPHY ===== */
-.page-content h1 {
-  font-family: "price-down",sans-serif;
-  font-size: 4rem;
-  color: var(--primary-brown);
-  margin-bottom: 1.5rem;
-  text-shadow: 1px 1px 3px var(--shadow-light);
-}
-
-.page-content p {
-  font-family: sans-serif;
-  font-size: 3.4rem;
-  line-height: 1.6;
-  color: rgba(0, 0, 0, 0.7);
-  font-weight: 400;
-  margin-bottom: 1rem;
-}
-
-.website-link {
-  color: #1e40af !important;
-  font-weight: 600;
-}
-
-.website-link a {
-  color: #1d4ed8;
-  text-decoration: none;
-  border-bottom: 2px solid #1d4ed8;
-  transition: all var(--transition);
-}
-
-.website-link a:hover {
-  color: #1e3a8a;
-  border-bottom-color: #1e3a8a;
-}
-
-/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
-
-/* Extra Large Desktops (1440px and above) */
-@media (min-width: 1440px) {
-  .book-container {
-    width:60vw;
-    height: 55vh;
-  }
-  
-  .page-content {
-    padding: 4.5rem;
-  }
-  
-  .page-content h1 {
-    font-size: 3.2rem;
-  }
-  
-  .page-content p {
-    font-size: clamp(1.3rem, 2vw, 1.6rem);
-  }
-}
-
-/* Large Desktops (1200px - 1439px) */
-@media (min-width: 1200px) and (max-width: 1439px) {
-  .book-container {
-    width:60vw;
-    height: 55vh;
-  }
-  
-  .page-content {
-    padding: 3rem;
-  }
-}
-
-/* Standard Desktops (1024px - 1199px) */
-@media (min-width: 1024px) and (max-width: 1199px) {
-  .book-container {
-    width:60vw;
-    height: 65vh;
-  }
-  
-  .page-content {
-    padding: 5.5rem;
-  }
-}
-
-/* Small Desktops/Laptops (992px - 1023px) */
-@media (min-width: 992px) and (max-width: 1023px) {
-  .book-container {
-    width:60vw;
-    height: 65vh;
-  }
-  
-  .page-content {
-    padding: 4.2rem;
-  }
-}
-
-/* Tablets Landscape (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .about-section1 {
-    padding: 1.5rem;
-    
-  }
-  
-  .book-container {
-    width:60vw;
-    height: 55vh;
-  }
-  
-  .page-content {
-    padding: 2rem;
-  }
-  
-  .page-content h1 {
-    font-size: 1.8rem;
-    margin-bottom: 1.2rem;
-  }
-  
-  .page-content p {
-    font-size: 1.3rem;
-    line-height: 1.5;
-  }
-  
-  .scroll-indicators {
-    right: 1.2rem;
-    gap: 0.9rem;
-  }
-  
-  .scroll-hint {
-    font-size: 0.85rem;
-    padding: 0.7rem 1.3rem;
-  }
-}
-
-/* Tablets Portrait (600px - 767px) */
-@media (min-width: 600px) and (max-width: 767px) {
-  .about-section1 {
-    padding: 1rem;
-   
-  }
-  
-  .book-container {
-    width: 60%;
-    height: 50vh;
-    
-  }
-  
-  .page-content {
-    padding: 1.8rem;
-  }
-  
-  .page-content h1 {
-    font-size: 1.9rem;
-    margin-bottom: 1rem;
-  }
-  
-  .page-content p {
-    font-size: 1.5rem;
-    line-height: 1.5;
-  }
-  
-  .scroll-indicators {
-    right: 1rem;
-    gap: 0.8rem;
-  }
-  
-  .indicator {
-    width: 10px;
-    height: 10px;
-  }
-  
-  .scroll-hint {
-    font-size: 0.8rem;
-    padding: 0.6rem 1.2rem;
-    bottom: 1.5rem;
-  }
-  
-  .section-counter {
-    top: 1rem;
-    left: 1rem;
-    font-size: 0.85rem;
-  }
-  
-  .page-corner {
-    width: 32px;
-    height: 42px;
-  }
-}
-
-/* Large Mobile (480px - 599px) */
-@media (min-width: 480px) and (max-width: 599px) {
-  .about-section1 {
-    padding: 0.8rem;
-    
-  }
-  
-  .book-container {
-    width: 66%;
-    height: min(58vh, 380px);
-  }
-  
-  .page-content {
-    padding: 1.6rem;
-    justify-content: flex-start;
-    overflow-y: auto;
-  }
-  
-  .page-content h1 {
-    font-size: clamp(1.6rem, 5vw, 1.9rem);
-    margin-bottom: 0.9rem;
-  }
-  
-  .page-content p {
-    font-size: clamp(1.3rem, 3.2vw, 1.15rem);
-    line-height: 1.45;
-    margin-bottom: 0.9rem;
-  }
-  
-  .scroll-indicators {
-    right: 0.9rem;
-    gap: 0.7rem;
-  }
-  
-  .indicator {
-    width: 9px;
-    height: 9px;
-  }
-  
-  .scroll-hint {
-    font-size: 0.78rem;
-    padding: 0.55rem 1.1rem;
-    bottom: 1.2rem;
-  }
-  
-  .section-counter {
-    top: 0.9rem;
-    left: 0.9rem;
-    font-size: 0.8rem;
-    padding: 0.45rem 0.7rem;
-  }
-  
-  .page-corner {
-    width: 28px;
-    height: 38px;
-  }
-  
-  .page-corner.forward {
-    right: 6%;
-  }
-  
-  .page-corner.backward {
-    left: 6%;
-  }
-}
-
-/* Medium Mobile (400px - 479px) */
-@media (min-width: 400px) and (max-width: 479px) {
-  .about-section1 {
-    padding: 0.6rem;
-
-  }
-  
-  .book-container {
-    width: 67%;
-    height: min(55vh, 360px);
-  }
-  
-  .page-content {
-    padding: 1.4rem;
-  }
-  
-  .page-content h1 {
-    font-size: clamp(1.5rem, 5.5vw, 1.8rem);
-    margin-bottom: 0.8rem;
-  }
-  
-  .page-content p {
-    font-size: clamp(0.95rem, 3.5vw, 1.1rem);
-    line-height: 1.4;
-    margin-bottom: 0.8rem;
-  }
-  
-  .scroll-indicators {
-    right: 0.8rem;
-    gap: 0.6rem;
-  }
-  
-  .indicator {
-    width: 8px;
-    height: 8px;
-  }
-  
-  .scroll-hint {
-    font-size: 0.75rem;
-    padding: 0.5rem 1rem;
-    bottom: 1rem;
-  }
-  
-  .section-counter {
-    top: 0.8rem;
-    left: 0.8rem;
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
-  }
-  
-  .page-corner {
-    width: 25px;
-    height: 35px;
-  }
-}
-
-/* Small Mobile (360px - 399px) */
-@media (min-width: 360px) and (max-width: 399px) {
-  .about-section1 {
-    padding: 0.5rem;
- 
-  }
-  
-  .book-container {
-    width: 68%;
-    height: min(52vh, 340px);
-  }
-  
-  .page-content {
-    padding: 1.2rem;
-  }
-  
-  .page-content h1 {
-    font-size: clamp(1.4rem, 6vw, 1.7rem);
-    margin-bottom: 0.7rem;
-  }
-  
-  .page-content p {
-    font-size: clamp(0.9rem, 3.8vw, 1.05rem);
-    line-height: 1.35;
-    margin-bottom: 0.7rem;
-  }
-  
-  .scroll-hint {
-    font-size: 0.72rem;
-    padding: 0.45rem 0.9rem;
-  }
-  
-  .page-corner {
-    width: 22px;
-    height: 32px;
-  }
-}
-
-/* Extra Small Mobile (320px - 359px) */
-@media (min-width: 320px) and (max-width: 359px) {
-  .about-section1 {
-    padding: 0.4rem;
- 
-  }
-  
-  .book-container {
-    width: 69%;
-    height: min(50vh, 320px);
-  }
-  
-  .page-content {
-    padding: 1rem;
-  }
-  
-  .page-content h1 {
-    font-size: clamp(1.3rem, 6.5vw, 1.6rem);
-    margin-bottom: 0.6rem;
-  }
-  
-  .page-content p {
-    font-size: clamp(0.85rem, 4vw, 1rem);
-    line-height: 1.3;
-    margin-bottom: 0.6rem;
-  }
-  
-  .scroll-indicators {
-    right: 0.7rem;
-    gap: 0.5rem;
-  }
-  
-  .indicator {
-    width: 7px;
-    height: 7px;
-  }
-  
-  .scroll-hint {
-    font-size: 0.7rem;
-    padding: 0.4rem 0.8rem;
-    bottom: 0.8rem;
-  }
-  
-  .section-counter {
-    top: 0.7rem;
-    left: 0.7rem;
-    font-size: 0.7rem;
-    padding: 0.35rem 0.5rem;
-  }
-  
-  .page-corner {
-    width: 20px;
-    height: 30px;
-  }
-  
-  .page-corner.forward {
-    right: 4%;
-  }
-  
-  .page-corner.backward {
-    left: 4%;
-  }
-}
-
-/* Ultra Small Mobile (below 320px) */
-@media (max-width: 319px) {
-  .about-section1 {
-    padding: 0.3rem;
-   
-  }
-  
-  .book-container {
-    width: 59%;
-    height: min(48vh, 300px);
-  }
-  
-  .page-content {
-    padding: 0.8rem;
-  }
-  
-  .page-content h1 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .page-content p {
-    font-size: 0.8rem;
-    line-height: 1.25;
-    margin-bottom: 0.5rem;
-  }
-  
-  .scroll-hint {
-    font-size: 0.65rem;
-    padding: 0.35rem 0.7rem;
-  }
-}
-
-/* ===== LANDSCAPE ORIENTATION HANDLING ===== */
-
-/* Mobile Landscape (Height constraints) */
-@media (max-height: 600px) and (orientation: landscape) {
-  .about-section1 {
-    padding: 0.5rem;
-  }
-  
-  .book-container {
-    width:60vw;
-    height: 65vh;
-  }
-  
-  .page-content {
-    padding: 1.5rem;
-    justify-content: center;
-  }
-  
-  .page-content h1 {
-    font-size: 1.9rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .page-content p {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-  }
-  
-  .scroll-hint {
-    bottom: 0.8rem;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.75rem;
-  }
-}
-
-/* Small Mobile Landscape */
-@media (max-height: 500px) and (orientation: landscape) {
-  .book-container {
-    width:60vw;
-    height: 65vh;
-  }
-  
-  .page-content {
-    padding: 0.8rem;
-  }
-  
-  .page-content h1 {
-    font-size: 3.3rem;
-    margin-bottom: 0.3rem;
-  }
-  
-  .page-content p {
-    font-size: 1.9rem;
-    margin-bottom: 0.3rem;
-    line-height: 1.3;
-  }
-}
-
-/* ===== REDUCED MOTION SUPPORT ===== */
-@media (prefers-reduced-motion: reduce) {
-  .page {
-    transition-duration: 0.1s;
-  }
-  
-  .scroll-hint {
-    animation: none;
-  }
-  
-  .indicator {
-    transition: none;
-  }
-}
-
-/* ===== ENHANCED FOCUS STATES ===== */
-.page-content:focus-within {
-  outline: 2px solid var(--border-gold);
-  outline-offset: 3px;
-}
-
-/* ===== PRINT STYLES ===== */
-@media print {
-  .about-section1 {
-    background: white !important;
-  }
-  
-  .page-content {
-    background: white !important;
-    border: 1px solid #ccc !important;
-    box-shadow: none !important;
-  }
-  
-  .scroll-indicators,
-  .scroll-hint,
-  .page-corner,
-  .scroll-protection-overlay {
-    display: none !important;
-  }
 }
