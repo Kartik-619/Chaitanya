@@ -178,7 +178,7 @@ app.use('/api/debug', debugRoutes);
 // Add this test route to your main server file
 app.get('/test-email-config', async (req, res) => {
   try {
-    const emailService = require('./services/EmailService'); // Adjust path as needed
+    const emailService = require('./services/emailService'); // Adjust path as needed
     
     console.log('🧪 Testing email configuration endpoint called');
     
@@ -223,7 +223,7 @@ app.get('/test-email-config', async (req, res) => {
 // Simple health check for email service
 app.get('/email-health', async (req, res) => {
   try {
-    const emailService = require('./services/EmailService');
+    const emailService = require('./services/emailService');
     const connectionTest = await emailService.testEmailConnection();
     
     res.json({
