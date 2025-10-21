@@ -1,16 +1,8 @@
 /**
- * 💳 PAYMENT ROUTES
+ * 💳 UPI PAYMENT ROUTES
  * 
- * This file defines all routes for payment processing:
- * - Razorpay payment initialization
- * - Payment verification and confirmation
- * - Payment configuration for frontend
- * 
- * 🔒 SECURITY FEATURES:
- * - Payment rate limiting to prevent abuse
- * - Input sanitization on all endpoints
- * - Payment data validation
- * - Session validation for transaction tracking
+ * Same routes as Razorpay but for UPI payments
+ * No changes needed in frontend URLs
  */
 
 const express = require('express');
@@ -23,11 +15,6 @@ const { paymentLimiter } = require('../middleware/rateLimit');
 
 /**
  * 🧹 APPLY SECURITY MIDDLEWARE TO ALL PAYMENT ROUTES
- * 
- * Protects against:
- * - Malicious input injection
- * - Payment fraud attempts
- * - Session hijacking
  */
 router.use(SecurityMiddleware.sanitizeInput);
 
@@ -41,56 +28,44 @@ router.use(SecurityMiddleware.sanitizeInput);
  * Purpose: Provide payment configuration to frontend
  * Access: Public
  * 
- * Returns: Razorpay key for client-side payment initialization
- * Security: Only exposes public key, never secret key
+ * Returns: UPI configuration
  */
 router.get('/config', (req, res) => {
   res.json({
-    key: process.env.RAZORPAY_KEY_ID
+    key: 'upi_payment_system',
+    method: 'upi',
+    supportedApps: ['Google Pay', 'PhonePe', 'Paytm', 'BHIM UPI']
   });
 });
 
 // ========================
-// 💰 PAYMENT PROCESSING
+// 💰 UPI PAYMENT PROCESSING
 // ========================
 
 /**
  * POST /payment/initialize-payment
  * 
- * Purpose: Create a new payment order in Razorpay
+ * Purpose: Create a new UPI payment request
  * Access: Public (with rate limiting)
- * Protection: Payment limiter, payment validation, session validation
- * 
- * Process:
- * - Validates payment amount and session
- * - Creates Razorpay order
- * - Returns order ID for frontend
  */
 router.post('/initialize-payment', 
-  paymentLimiter,                      // Prevent payment abuse
-  SecurityMiddleware.validatePayment,  // Validate payment data
-  SecurityMiddleware.validateSession,  // Verify session exists
-  paymentController.initializePayment  // Create Razorpay order
+  paymentLimiter,
+  SecurityMiddleware.validatePayment,
+  SecurityMiddleware.validateSession,
+  paymentController.initializePayment
 );
 
 /**
  * POST /payment/verify-payment
  * 
- * Purpose: Verify payment completion and capture funds
+ * Purpose: Verify UPI payment completion automatically
  * Access: Public (with rate limiting)
- * Protection: Payment limiter, payment validation, session validation
- * 
- * Process:
- * - Validates Razorpay payment signature
- * - Confirms payment capture
- * - Updates registration status
- * - Sends confirmation email
  */
 router.post('/verify-payment', 
-  paymentLimiter,                      // Prevent verification abuse
-  SecurityMiddleware.validatePayment,  // Validate payment data
-  SecurityMiddleware.validateSession,  // Verify session exists
-  paymentController.verifyPayment      // Verify and capture payment
+  paymentLimiter,
+  SecurityMiddleware.validatePayment,
+  SecurityMiddleware.validateSession,
+  paymentController.verifyPayment
 );
 
 // Export the router for use in main server file
