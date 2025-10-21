@@ -387,7 +387,7 @@ app.get('/api/health', (req, res) => {
     services: {
       googleSheets: GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline',
       backup: '✅ Active',
-      sessionCleanup: '✅ Active',
+      sessionCleanup: '✅ Enabled',
       premiumSystem: '✅ Active',
       accommodationSystem: '✅ Active',
       teamPricing: '✅ Active'
@@ -504,54 +504,19 @@ app.use((req, res) => {
 });
 
 // ==================== BACKGROUND SERVICES ====================
+// 🚨 TEMPORARILY DISABLED TO PREVENT CRASHES
+console.log('🔴 BACKGROUND SERVICES DISABLED - Server stability mode');
 
-/**
- * Failed registrations retry system
- * Automatically retries saving failed registrations to Google Sheets every 60 minutes
- */
-retryInterval = setInterval(async () => {
+// Run cleanup ONLY once on startup
+setTimeout(() => {
+  console.log('🧹 Running one-time startup cleanup...');
   try {
-    console.log('🔄 Checking for failed registrations to retry...');
-    await BackupService.retryFailedRegistrations();
+    RegistrationService.cleanupOldSessions();
+    RegistrationService.cleanupMemory();
   } catch (error) {
-    console.error('❌ Failed registrations retry system error:', error.message);
+    console.error('❌ Startup cleanup error:', error.message);
   }
-}, 60 * 60 * 1000); // Every 60 minutes
-
-console.log('🔄 Failed registrations retry system started (every 60 minutes)');
-
-/**
- * Session backup system - backs up sessions every 30 minutes
- */
-backupInterval = setInterval(() => {
-  try {
-    BackupService.saveSessionsToFile();
-  } catch (error) {
-    console.error('❌ Session backup error:', error.message);
-  }
-}, 30 * 60 * 1000); // Every 30 minutes
-
-console.log('💾 Session backup system started (every 30 minutes)');
-
-// ==================== SESSION MANAGEMENT ====================
-
-/**
- * Automatic session cleanup to prevent memory leaks
- * Removes expired registration sessions at configured intervals
- */
-if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
-  sessionCleanupInterval = setInterval(() => {
-    try {
-      console.log('🧹 Running session cleanup...');
-      RegistrationService.cleanupOldSessions();
-      RegistrationService.cleanupMemory();
-    } catch (error) {
-      console.error('❌ Session cleanup error:', error.message);
-    }
-  }, SERVER_CONFIG.SESSION_CLEANUP.INTERVAL);
-  
-  console.log('🧹 Session cleanup system started');
-}
+}, 30000); // 30 seconds after startup
 
 // ==================== SERVER STARTUP ====================
 
@@ -617,8 +582,5 @@ app.listen(PORT, '0.0.0.0', async () => {
  * Cleanup intervals when process exits
  */
 process.on('exit', () => {
-  if (retryInterval) clearInterval(retryInterval);
-  if (backupInterval) clearInterval(backupInterval);
-  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  console.log('🧹 All background services stopped');
+  console.log('🧹 Server shutdown complete');
 });
