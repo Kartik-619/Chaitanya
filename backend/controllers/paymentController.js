@@ -94,12 +94,39 @@ const verifyPayment = async (req, res) => {
       amount
     } = req.body;
 
-    if (!sessionId || !upiTransactionId) {
+    console.log('🔍 [PAYMENT DEBUG] Verification request:', {
+      sessionId,
+      upiTransactionId, 
+      amount
+    });
+
+    // ✅ FIX: Add validation for ALL required fields
+    if (!sessionId || !upiTransactionId || !amount) {
+      console.error('❌ Missing payment verification data:', {
+        sessionId: !!sessionId,
+        upiTransactionId: !!upiTransactionId,
+        amount: !!amount
+      });
       return res.status(400).json({
         success: false,
-        message: 'Session ID and UPI Transaction ID are required'
+        message: 'Missing payment verification data. Required: sessionId, upiTransactionId, amount'
       });
     }
+
+    // Get registration data from session
+    const registrationData = RegistrationService.getRegistrationSession(sessionId);
+    if (!registrationData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registration session not found'
+      });
+    }
+
+    console.log('🔍 [PAYMENT DEBUG] Session found:', {
+      registrationType: registrationData.registrationType,
+      totalAmount: registrationData.totalAmount,
+      expectedAmount: amount
+    });
 
     // Verify UPI payment automatically
     const verificationResult = await PaymentService.verifyUPIPayment(
@@ -107,40 +134,65 @@ const verifyPayment = async (req, res) => {
       amount
     );
 
+    console.log('🔍 [PAYMENT DEBUG] Verification result:', verificationResult);
+
     if (!verificationResult.success) {
       return res.status(400).json(verificationResult);
     }
 
-    // Complete registration process
+    // ✅ CRITICAL FIX: Complete registration with proper payment data
     const registrationResult = await RegistrationService.verifyAndCompleteRegistration(
       sessionId,
       { 
-        upiTransactionId,
-        ...verificationResult
+        // UPI data
+        upiTransactionId: upiTransactionId,
+        paymentId: upiTransactionId,
+        orderId: `ORDER_${upiTransactionId}`,
+        signature: `SIG_${upiTransactionId}`,
+        
+        // Razorpay-compatible fields (for existing code)
+        razorpay_payment_id: upiTransactionId,
+        razorpay_order_id: `ORDER_${upiTransactionId}`,
+        razorpay_signature: `SIG_${upiTransactionId}`,
+        
+        // Payment details
+        status: 'completed',
+        paymentDetails: {
+          transactionId: upiTransactionId,
+          orderId: `ORDER_${upiTransactionId}`,
+          amount: amount,
+          currency: 'INR',
+          method: 'upi',
+          captured: true,
+          createdAt: new Date().toISOString()
+        }
       },
-      'upi' // payment method
+      'upi'
     );
 
-    console.log('🔍 [PAYMENT DEBUG] Final registration data:', JSON.stringify(registrationResult.finalRegistration, null, 2));
+    console.log('🔍 [PAYMENT DEBUG] Registration completed:', {
+      registrationId: registrationResult.registrationId,
+      teamId: registrationResult.teamId
+    });
 
-    console.log('✅ Registration completed, now saving to Google Sheets and sending email...');
-
+    // ✅ FORCE SAVE TO GOOGLE SHEETS
+    console.log('💾 FORCE SAVING TO GOOGLE SHEETS...');
+    
     let sheetsResult = { success: false, message: 'Not attempted' };
-    let eventsResult = { success: false, message: 'Not attempted' };
+    let eventsResult = { success: false, message: 'Not attempted' }; 
     let emailResult = { success: false, message: 'Not attempted' };
 
-    // 1. Save to main registration sheet
     try {
-      console.log('💾 Saving to main registration sheet...');
+      console.log('📊 Saving to main registration sheet...');
       const GoogleSheetsService = require('../services/googleSheetsService');
       sheetsResult = await GoogleSheetsService.saveRegistration(registrationResult.finalRegistration);
-      console.log('📊 Main sheet save result:', sheetsResult);
+      console.log('✅ Main sheet save result:', sheetsResult);
     } catch (sheetsError) {
       console.error('❌ Main sheet save failed:', sheetsError);
       sheetsResult = { success: false, message: sheetsError.message };
     }
 
-    // 2. Save to events sheet
+    // Save to events sheet
     try {
       console.log('🎯 Saving to events sheet...');
       const GoogleSheetsService = require('../services/googleSheetsService');
@@ -151,7 +203,7 @@ const verifyPayment = async (req, res) => {
       eventsResult = { success: false, message: eventsError.message };
     }
 
-    // 3. Send confirmation email
+    // Send confirmation email
     try {
       console.log('📧 Sending confirmation email...');
       const EmailService = require('../services/emailService');
@@ -166,7 +218,7 @@ const verifyPayment = async (req, res) => {
       emailResult = { success: false, message: emailError.message };
     }
 
-    // Return all results for debugging
+    // Return success response
     res.json({
       success: true,
       registrationId: registrationResult.registrationId,
@@ -175,17 +227,18 @@ const verifyPayment = async (req, res) => {
       paymentResult: verificationResult,
       services: {
         mainSheet: sheetsResult,
-        eventsSheet: eventsResult, 
+        eventsSheet: eventsResult,
         email: emailResult
       },
-      message: 'UPI payment verified and registration completed automatically'
+      message: 'UPI payment verified and registration completed successfully!'
     });
 
   } catch (error) {
-    console.error('Verify UPI payment error:', error);
+    console.error('❌ Verify UPI payment error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
+      debug: 'Check server logs for detailed error information'
     });
   }
 };
