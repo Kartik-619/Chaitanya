@@ -559,56 +559,49 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
  * Start the server and initialize all required services
  */
 app.listen(PORT, '0.0.0.0', async () => {
-  console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
-  console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
-  console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
-  console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
-  
-  // Initialize Google Sheets service WITH DEBUG
-  console.log('🔄 Initializing Google Sheets...');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
+    console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
+    console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
+    console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
+    console.log('🔄 Initializing Google Sheets...');
+  }
+
   const sheetsInit = await GoogleSheetsService.initialize();
 
-  // ADDED DEBUG INFORMATION
-  console.log('🔍 GOOGLE SHEETS DEBUG INFORMATION:');
-  console.log('✅ Initialization Result:', sheetsInit);
-  console.log('📊 Service Status:', GoogleSheetsService.initialized);
-  console.log('📁 Credentials File Exists:', fs.existsSync('./techfest-credentials.json'));
-  console.log('🔑 Spreadsheet ID:', GoogleSheetsService.spreadsheetId);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 GOOGLE SHEETS DEBUG INFORMATION:');
+    console.log('✅ Initialization Result:', sheetsInit);
+    console.log('📊 Service Status:', GoogleSheetsService.initialized);
+    console.log('📁 Credentials File Exists:', fs.existsSync('./techfest-credentials.json'));
+    console.log('🔑 Spreadsheet ID:', GoogleSheetsService.spreadsheetId);
+  }
 
   if (sheetsInit) {
     console.log('✅ Google Sheets Service Ready!');
-    
-    // 🚨 MEMORY LEAK FIX: REMOVED Google Sheets test call
-    // This was loading ALL registration data into memory causing crashes
-    
   } else {
     console.log('❌ Google Sheets failed to initialize - running in backup mode');
   }
-  
-  // Initialize Backup Service
-  console.log('💾 Initializing Backup Service...');
-  try {
-    const restored = BackupService.restoreSessions();
-    if (restored) {
-      console.log('✅ Previous sessions restored from backup');
-    }
-  } catch (error) {
-    console.log('ℹ No previous sessions to restore');
+
+  const restored = BackupService.restoreSessions();
+  if (restored && process.env.NODE_ENV !== 'production') {
+    console.log('✅ Previous sessions restored from backup');
   }
-  
-  // System status report
-  console.log('\n📋 SYSTEM STATUS:');
-  console.log('🛡  Crash protection systems: ✅ Active');
-  console.log('💾 Backup systems: ✅ Active');
-  console.log('🧹 Session cleanup: ✅ Enabled');
-  console.log('🎯 Registration API: ✅ Ready');
-  console.log('👑 Admin Dashboard: ✅ Enabled');
-  console.log('📝 Attendance System: ✅ Ready');
-  console.log('💳 Payment System: ✅ Ready');
-  console.log('🔒 Trust Proxy: ✅ Enabled');
-  console.log('🌐 CORS: ✅ Configured');
-  console.log('📊 Google Sheets:', GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline');
-  console.log('\n🎉 All systems operational! Waiting for requests...');
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('\n📋 SYSTEM STATUS:');
+    console.log('🛡 Crash protection systems: ✅ Active');
+    console.log('💾 Backup systems: ✅ Active');
+    console.log('🧹 Session cleanup: ✅ Enabled');
+    console.log('🎯 Registration API: ✅ Ready');
+    console.log('👑 Admin Dashboard: ✅ Enabled');
+    console.log('📝 Attendance System: ✅ Ready');
+    console.log('💳 Payment System: ✅ Ready');
+    console.log('🔒 Trust Proxy: ✅ Enabled');
+    console.log('🌐 CORS: ✅ Configured');
+    console.log('📊 Google Sheets:', GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline');
+    console.log('\n🎉 All systems operational! Waiting for requests...');
+  }
 });
 
 // ==================== CLEANUP ON EXIT ====================
