@@ -660,18 +660,21 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
     needsAccommodation: finalRegistration.needsAccommodation // ✅ Now this should show correctly
   });
 
-  // 🚨🚨🚨 REMOVE THIS DUPLICATE GOOGLE SHEETS CALL (LINES 430-440) 🚨🚨🚨
-  // ❌ DELETE THESE 7 LINES:
-  // ✅ CRITICAL FIX: Save to Google Sheets
-  // try {
-  //   const GoogleSheetsService = require('./googleSheetsService');
-  //   console.log('💾 Saving to Google Sheets...');
-  //   GoogleSheetsService.saveRegistration(finalRegistration);
-  //   console.log('✅ Google Sheets save initiated');
-  // } catch (error) {
-  //   console.error('❌ Failed to save to Google Sheets:', error);
-  // }
-  // 🚨🚨🚨 END OF REMOVAL 🚨🚨🚨
+  try {
+    const GoogleSheetsService = require('./googleSheetsService');
+    console.log('💾 Saving to Google Sheets...');
+    GoogleSheetsService.saveRegistration(finalRegistration);
+    console.log('✅ Google Sheets save initiated');
+  } catch (error) {
+    console.error('❌ Failed to save to Google Sheets:', error);
+  }
+
+  console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
+    teamLeader: finalRegistration.teamLeader?.name,
+    prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
+    isPremium: finalRegistration.isPremium,
+    needsAccommodation: finalRegistration.needsAccommodation
+  });
 
   // Save to completed registrations
   this.completedRegistrations.set(registrationId, finalRegistration);
