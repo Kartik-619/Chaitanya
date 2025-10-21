@@ -87,9 +87,7 @@ export default function EventSection() {
                   <h3 className="main-event-title">{ev.title}</h3>
                   <p className="main-event-description">{ev.shortDesc}</p>
                   <div className="main-event-footer">
-                    <div className="prize-amount">
-                      <span>{ev.prize}</span>
-                    </div>
+                 
                     <button 
                       className="view-details-btn"
                       style={{ background: ev.color }}
