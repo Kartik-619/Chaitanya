@@ -552,10 +552,7 @@ class RegistrationService {
     }
   }
 
-  /**
- * Complete registration and store final data
- */
-async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
+  async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   const session = this.registrationSessions.get(sessionId);
   if (!session) throw new Error('Session not found');
   
@@ -591,8 +588,8 @@ async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay')
       registrationId,
       personalDetails: session.personalDetails,
       prelimEvents: session.prelimEvents,
-      isPremium: isPremium, // ✅ FIXED: Use extracted value
-      needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
+      isPremium: isPremium,
+      needsAccommodation: needsAccommodation,
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
@@ -632,8 +629,8 @@ async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay')
       teamMembers: session.teamData.teamMembers,
       teamSize: session.teamData.teamSize,
       esportsGame: session.teamData.esportsGame,
-      isPremium: isPremium, // ✅ FIXED: Use extracted value
-      needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
+      isPremium: isPremium,
+      needsAccommodation: needsAccommodation,
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
@@ -656,8 +653,8 @@ async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay')
   console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
     teamLeader: finalRegistration.teamLeader?.name,
     prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
-    isPremium: finalRegistration.isPremium, // ✅ Now this should show correctly
-    needsAccommodation: finalRegistration.needsAccommodation // ✅ Now this should show correctly
+    isPremium: finalRegistration.isPremium,
+    needsAccommodation: finalRegistration.needsAccommodation
   });
 
   try {
@@ -669,21 +666,7 @@ async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay')
     console.error('❌ Failed to save to Google Sheets:', error);
   }
 
-  console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
-    teamLeader: finalRegistration.teamLeader?.name,
-    prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
-    isPremium: finalRegistration.isPremium,
-    needsAccommodation: finalRegistration.needsAccommodation
-  });
-
-   try {
-    const GoogleSheetsService = require('./googleSheetsService');
-    console.log('💾 Saving to Google Sheets...');
-    GoogleSheetsService.saveRegistration(finalRegistration);
-    console.log('✅ Google Sheets save initiated');
-  } catch (error) {
-    console.error('❌ Failed to save to Google Sheets:', error);
-  }
+  // 🚨 DELETE LINES 86-92 FROM HERE - REMOVE THE DUPLICATE LOG AND SAVE!
 
   // 🚨 ADD THIS: Events Sheet Saving
   try {
@@ -702,7 +685,6 @@ async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay')
 
   console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
   console.log(`💰 Transaction ID stored: ${transactionId}`);
-  console.log(`📊 Final registration data:`, finalRegistration);
   
   return {
     registrationId,
