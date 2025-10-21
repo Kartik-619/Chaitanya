@@ -86,8 +86,6 @@ const initializePayment = async (req, res) => {
 /**
  * Verify UPI payment completion and complete registration process
  */
-// In verifyPayment function, REPLACE the entire function with this:
-
 const verifyPayment = async (req, res) => {
   try {
     const { 
@@ -130,6 +128,15 @@ const verifyPayment = async (req, res) => {
       expectedAmount: amount
     });
 
+    // ✅ CRITICAL: Check if this session was already processed
+    if (registrationData.paymentStatus === 'completed') {
+      console.log('⚠️ Payment already completed for session:', sessionId);
+      return res.status(400).json({
+        success: false,
+        message: 'Payment already processed for this registration'
+      });
+    }
+
     // Verify UPI payment automatically
     const verificationResult = await PaymentService.verifyUPIPayment(
       upiTransactionId,
@@ -164,12 +171,12 @@ const verifyPayment = async (req, res) => {
           orderId: `ORDER_${upiTransactionId}`,
           amount: amount,
           currency: 'INR',
-          method: 'upi', // ✅ FIXED: Change to 'upi'
+          method: 'upi',
           captured: true,
           createdAt: new Date().toISOString()
         }
       },
-      'upi' // ✅ FIXED: Pass 'upi' as payment method
+      'upi'
     );
 
     console.log('🔍 [PAYMENT DEBUG] Registration completed:', {
@@ -177,7 +184,7 @@ const verifyPayment = async (req, res) => {
       teamId: registrationResult.teamId
     });
 
-    // ✅ REMOVED: Duplicate Google Sheets saving code
+    // ✅ REMOVED: All duplicate Google Sheets saving code
     // The registration is already saved in RegistrationService.completeRegistration()
 
     // Return success response
