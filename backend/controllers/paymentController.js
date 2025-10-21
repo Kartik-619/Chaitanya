@@ -86,6 +86,8 @@ const initializePayment = async (req, res) => {
 /**
  * Verify UPI payment completion and complete registration process
  */
+// In verifyPayment function, REPLACE the entire function with this:
+
 const verifyPayment = async (req, res) => {
   try {
     const { 
@@ -162,12 +164,12 @@ const verifyPayment = async (req, res) => {
           orderId: `ORDER_${upiTransactionId}`,
           amount: amount,
           currency: 'INR',
-          method: 'upi',
+          method: 'upi', // ✅ FIXED: Change to 'upi'
           captured: true,
           createdAt: new Date().toISOString()
         }
       },
-      'upi'
+      'upi' // ✅ FIXED: Pass 'upi' as payment method
     );
 
     console.log('🔍 [PAYMENT DEBUG] Registration completed:', {
@@ -175,48 +177,8 @@ const verifyPayment = async (req, res) => {
       teamId: registrationResult.teamId
     });
 
-    // ✅ FORCE SAVE TO GOOGLE SHEETS
-    console.log('💾 FORCE SAVING TO GOOGLE SHEETS...');
-    
-    let sheetsResult = { success: false, message: 'Not attempted' };
-    let eventsResult = { success: false, message: 'Not attempted' }; 
-    let emailResult = { success: false, message: 'Not attempted' };
-
-    try {
-      console.log('📊 Saving to main registration sheet...');
-      const GoogleSheetsService = require('../services/googleSheetsService');
-      sheetsResult = await GoogleSheetsService.saveRegistration(registrationResult.finalRegistration);
-      console.log('✅ Main sheet save result:', sheetsResult);
-    } catch (sheetsError) {
-      console.error('❌ Main sheet save failed:', sheetsError);
-      sheetsResult = { success: false, message: sheetsError.message };
-    }
-
-    // Save to events sheet
-    try {
-      console.log('🎯 Saving to events sheet...');
-      const GoogleSheetsService = require('../services/googleSheetsService');
-      eventsResult = await GoogleSheetsService.saveToEventsSheet(registrationResult.finalRegistration);
-      console.log('✅ Events sheet save result:', eventsResult);
-    } catch (eventsError) {
-      console.error('❌ Events sheet save failed:', eventsError);
-      eventsResult = { success: false, message: eventsError.message };
-    }
-
-    // Send confirmation email
-    try {
-      console.log('📧 Sending confirmation email...');
-      const EmailService = require('../services/emailService');
-      if (registrationResult.finalRegistration.registrationType === 'individual') {
-        emailResult = await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
-      } else {
-        emailResult = await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
-      }
-      console.log('📧 Email send result:', emailResult);
-    } catch (emailError) {
-      console.error('❌ Email send failed:', emailError);
-      emailResult = { success: false, message: emailError.message };
-    }
+    // ✅ REMOVED: Duplicate Google Sheets saving code
+    // The registration is already saved in RegistrationService.completeRegistration()
 
     // Return success response
     res.json({
@@ -225,11 +187,6 @@ const verifyPayment = async (req, res) => {
       teamId: registrationResult.teamId,
       finalRegistration: registrationResult.finalRegistration,
       paymentResult: verificationResult,
-      services: {
-        mainSheet: sheetsResult,
-        eventsSheet: eventsResult,
-        email: emailResult
-      },
       message: 'UPI payment verified and registration completed successfully!'
     });
 
