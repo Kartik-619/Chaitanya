@@ -21,7 +21,8 @@ class BackupService {
   constructor() {
     this.backupFile = path.join(__dirname, '../backups/sessions.json');
     this.failedRegistrationsFile = path.join(__dirname, '../backups/failed-registrations.json');
-    this.backupInterval = 60000;
+    this.backupInterval = 30000;
+    this.maxBackupFiles = 5;
     this.startBackup();
   }
 
