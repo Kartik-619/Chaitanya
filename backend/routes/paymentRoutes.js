@@ -1,30 +1,16 @@
 /**
  * 💳 UPI PAYMENT ROUTES
- * 
- * Handles UPI payment processing
  */
-
 const express = require('express');
 const router = express.Router();
-
-// Import controller and middleware
 const paymentController = require('../controllers/paymentController');
 const SecurityMiddleware = require('../middleware/security');
 const { paymentLimiter } = require('../middleware/rateLimit');
 
-/**
- * 🧹 APPLY SECURITY MIDDLEWARE TO ALL PAYMENT ROUTES
- */
+// Security middleware
 router.use(SecurityMiddleware.sanitizeInput);
 
-// ========================
-// 🔧 PAYMENT CONFIGURATION
-// ========================
-
-/**
- * GET /payment/config
- * Payment configuration
- */
+// Payment routes
 router.get('/config', (req, res) => {
   res.json({
     key: 'upi_payment_system',
@@ -33,14 +19,6 @@ router.get('/config', (req, res) => {
   });
 });
 
-// ========================
-// 💰 UPI PAYMENT PROCESSING
-// ========================
-
-/**
- * POST /payment/initialize-payment
- * Create new UPI payment request
- */
 router.post('/initialize-payment', 
   paymentLimiter,
   SecurityMiddleware.validatePayment,
@@ -48,10 +26,6 @@ router.post('/initialize-payment',
   paymentController.initializePayment
 );
 
-/**
- * POST /payment/verify-payment
- * Verify UPI payment completion
- */
 router.post('/verify-payment', 
   paymentLimiter,
   SecurityMiddleware.validatePayment,
@@ -59,49 +33,20 @@ router.post('/verify-payment',
   paymentController.verifyPayment
 );
 
-/**
- * GET /payment/status/:sessionId
- * Check payment status
- */
 router.get('/status/:sessionId',
   SecurityMiddleware.validateSession,
   paymentController.getPaymentStatus
 );
 
-/**
- * GET /payment/health
- * Payment service health check
- */
 router.get('/health', (req, res) => {
   res.json({
     success: true,
     service: 'UPI Payment Gateway',
-    status: 'operational',
-    timestamp: new Date().toISOString()
+    status: 'operational'
   });
 });
 
-// ========================
-// ❌ FIXED 404 HANDLER
-// ========================
+// ✅ REMOVED: The problematic 404 handler
+// Let the main server handle 404 for payment routes
 
-/**
- * Handle undefined payment routes
- * ✅ FIXED: Use proper Express syntax
- */
-router.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Payment endpoint not found',
-    availableEndpoints: [
-      'GET /api/payment/config',
-      'GET /api/payment/health',
-      'GET /api/payment/status/:sessionId',
-      'POST /api/payment/initialize-payment',
-      'POST /api/payment/verify-payment'
-    ]
-  });
-});
-
-// Export the router
 module.exports = router;
