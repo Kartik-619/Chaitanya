@@ -324,7 +324,7 @@ class EmailService {
         email: 'chaitanyahptu@gmail.com',
         name: 'Chaitanya 2025'
       },
-      subject: `Chaitanya 2025 - Registration Confirmed ✅`,
+      subject: `Your Chaitanya 2025 Registration Confirmation`,
       text: this._generateConfirmationText(registrationData, name),
       html: this._generateConfirmationHTML(registrationData, name)
     };
@@ -449,6 +449,13 @@ Himachal Pradesh Technical University`;
               <p>Best regards,<br>
               <strong>The Chaitanya 2025 Team</strong><br>
               Himachal Pradesh Technical University</p>
+              <div style="font-size: 12px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                <strong>Official Address:</strong><br>
+                Chaitanya 2025 Technical Festival<br>
+                Himachal Pradesh Technical University<br>
+                Gandhi Chowk, Hamirpur, HP 177001<br>
+                <a href="mailto:chaitanyahptu@gmail.com" style="color: #666;">Email Support</a>
+            </div>
           </div>
       </div>
   </body>
@@ -771,6 +778,13 @@ Himachal Pradesh Technical University`;
             <p>Best regards,<br>
             <strong>The Chaitanya 2025 Team</strong><br>
             Himachal Pradesh Technical University</p>
+            <div style="font-size: 12px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                <strong>Official Address:</strong><br>
+                Chaitanya 2025 Technical Festival<br>
+                Himachal Pradesh Technical University<br>
+                Gandhi Chowk, Hamirpur, HP 177001<br>
+                <a href="mailto:chaitanyahptu@gmail.com" style="color: #666;">Email Support</a>
+            </div>
         </div>
     </div>
 </body>

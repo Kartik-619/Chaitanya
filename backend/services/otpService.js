@@ -47,7 +47,7 @@ class OTPService {
           email: 'chaitanyahptu@gmail.com',
           name: 'Chaitanya 2025'
         },
-        subject: 'Chaitanya 2025 - OTP Verification Code',
+        subject: 'Your Verification Code for Chaitanya 2025 Registration',
         text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
         html: this.generateOTPEmailHTML(otp)
       };
@@ -156,6 +156,13 @@ class OTPService {
             <p>Best regards,<br>
             <strong>Chaitanya 2025 Team</strong><br>
             Himachal Pradesh Technical University</p>
+            <div style="font-size: 12px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+                <strong>Event Address:</strong><br>
+                Chaitanya 2025, HPTU<br>
+                Gandhi Chowk, Hamirpur<br>
+                Himachal Pradesh 177001<br>
+                <a href="mailto:chaitanyahptu@gmail.com" style="color: #666;">Contact Support</a>
+            </div>
         </div>
     </div>
 </body>
