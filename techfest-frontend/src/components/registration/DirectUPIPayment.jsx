@@ -83,7 +83,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     }
 
     try {
-      console.log('🔍 Verifying UPI payment...', {
+      console.log('🔍 Verifying UPI payment....', {
         sessionId,
         upiTransactionId: transactionId,
         amount
