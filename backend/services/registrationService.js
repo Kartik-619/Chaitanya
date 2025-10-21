@@ -553,142 +553,155 @@ class RegistrationService {
   }
 
   /**
-   * Complete registration and store final data
-   */
-  completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
-    const session = this.registrationSessions.get(sessionId);
-    if (!session) throw new Error('Session not found');
-    
-    console.log('🔍 [COMPLETE DEBUG] Session data:', {
-      teamLeaderName: session.teamData?.teamLeader?.name,
-      teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, 
-      isPremium: session.isPremium,
-      needsAccommodation: session.needsAccommodation
-    });
+ * Complete registration and store final data
+ */
+completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
+  const session = this.registrationSessions.get(sessionId);
+  if (!session) throw new Error('Session not found');
+  
+  // ✅ CRITICAL: Check if session already completed
+  if (session.paymentStatus === 'completed') {
+    console.log('⚠️ Session already completed:', sessionId);
+    throw new Error('Registration already completed for this session');
+  }
+  
+  console.log('🔍 [COMPLETE DEBUG] Session data:', {
+    teamLeaderName: session.teamData?.teamLeader?.name,
+    teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, 
+    isPremium: session.isPremium,
+    needsAccommodation: session.needsAccommodation
+  });
 
-    const registrationId = this.generateRegistrationId(session.registrationType);
-    const teamId = session.registrationType === 'team' ? this.generateTeamId() : null;
+  const registrationId = this.generateRegistrationId(session.registrationType);
+  const teamId = session.registrationType === 'team' ? this.generateTeamId() : null;
 
-    let finalRegistration;
+  let finalRegistration;
 
-    // Get transaction ID from payment result
-    const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
-    const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
-    
-    console.log('💾 Storing payment data:', {
-      transactionId,
-      orderId,
-      amount: session.totalAmount
-    });
+  // Get transaction ID from payment result
+  const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
+  const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
+  
+  console.log('💾 Storing payment data:', {
+    transactionId,
+    orderId,
+    amount: session.totalAmount
+  });
 
-    // ✅ CRITICAL FIX: Extract premium and accommodation from session
-    const isPremium = session.isPremium || false;
-    const needsAccommodation = session.needsAccommodation || false;
+  // ✅ CRITICAL FIX: Extract premium and accommodation from session
+  const isPremium = session.isPremium || false;
+  const needsAccommodation = session.needsAccommodation || false;
 
-    if (session.registrationType === 'individual') {
-      finalRegistration = {
-        registrationType: 'individual',
-        registrationId,
-        personalDetails: session.personalDetails,
-        prelimEvents: session.prelimEvents,
-        isPremium: isPremium, // ✅ FIXED: Use extracted value
-        needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
-        paymentDetails: {
-          transactionId: transactionId,
-          orderId: orderId,
-          paymentId: paymentResult.paymentId,
-          signature: paymentResult.signature,
-          amount: session.totalAmount,
-          method: 'upi',
-          status: paymentResult.status || 'captured',
-          transactionDate: new Date().toISOString(),
-          razorpayPaymentId: transactionId,
-          razorpayOrderId: orderId,
-          ...paymentResult.paymentDetails
-        },
-        totalAmount: session.totalAmount,
-        registeredAt: new Date().toISOString(),
-        qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
-      };
-    } else {
-       const teamLeaderData = {
-        ...session.teamData.teamLeader,
-        prelimEvents: session.teamData.teamLeader.prelimEvents || [] 
-      };
-      
-      console.log('🔍 [FINAL TEAM LEADER DEBUG] Team leader data:', {
-        name: teamLeaderData.name,
-        prelimEvents: teamLeaderData.prelimEvents, 
-        email: teamLeaderData.email
-      });
-      
-      finalRegistration = {
-        registrationType: 'team',
-        teamId,
-        teamName: session.teamData.teamName,
-        registrationId,
-        teamLeader: teamLeaderData,
-        mainEvent: session.teamData.mainEvent,
-        teamMembers: session.teamData.teamMembers,
-        teamSize: session.teamData.teamSize,
-        esportsGame: session.teamData.esportsGame,
-        isPremium: isPremium, // ✅ FIXED: Use extracted value
-        needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
-        paymentDetails: {
-          transactionId: transactionId,
-          orderId: orderId,
-          paymentId: paymentResult.paymentId,
-          signature: paymentResult.signature,
-          amount: session.totalAmount,
-          method: 'upi',
-          status: paymentResult.status || 'captured',
-          transactionDate: new Date().toISOString(),
-          razorpayPaymentId: transactionId,
-          razorpayOrderId: orderId,
-          ...paymentResult.paymentDetails
-        },
-        totalAmount: session.totalAmount,
-        registeredAt: new Date().toISOString(),
-        qrData: this.generateQRData('team', teamId, session.personalDetails, session.teamData)
-      };
-    }
-
-    console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
-      teamLeader: finalRegistration.teamLeader?.name,
-      prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
-      isPremium: finalRegistration.isPremium, // ✅ Now this should show correctly
-      needsAccommodation: finalRegistration.needsAccommodation // ✅ Now this should show correctly
-    });
-
-    // ✅ CRITICAL FIX: Save to Google Sheets
-    try {
-      const GoogleSheetsService = require('./googleSheetsService');
-      console.log('💾 Saving to Google Sheets...');
-      GoogleSheetsService.saveRegistration(finalRegistration);
-      console.log('✅ Google Sheets save initiated');
-    } catch (error) {
-      console.error('❌ Failed to save to Google Sheets:', error);
-    }
-
-    // Save to completed registrations
-    this.completedRegistrations.set(registrationId, finalRegistration);
-    
-    // Clean up session
-    this.registrationSessions.delete(sessionId);
-
-    console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
-    console.log(`💰 Transaction ID stored: ${transactionId}`);
-    console.log(`📊 Final registration data:`, finalRegistration);
-    
-    return {
+  if (session.registrationType === 'individual') {
+    finalRegistration = {
+      registrationType: 'individual',
       registrationId,
+      personalDetails: session.personalDetails,
+      prelimEvents: session.prelimEvents,
+      isPremium: isPremium,
+      needsAccommodation: needsAccommodation,
+      paymentDetails: {
+        transactionId: transactionId,
+        orderId: orderId,
+        paymentId: paymentResult.paymentId,
+        signature: paymentResult.signature,
+        amount: session.totalAmount,
+        method: paymentMethod === 'upi' ? 'upi' : 'razorpay', // ✅ FIXED: Proper payment method
+        status: paymentResult.status || 'captured',
+        transactionDate: new Date().toISOString(),
+        razorpayPaymentId: transactionId,
+        razorpayOrderId: orderId,
+        ...paymentResult.paymentDetails
+      },
+      totalAmount: session.totalAmount,
+      registeredAt: new Date().toISOString(),
+      qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
+    };
+  } else {
+    const teamLeaderData = {
+      ...session.teamData.teamLeader,
+      prelimEvents: session.teamData.teamLeader.prelimEvents || [] 
+    };
+    
+    console.log('🔍 [FINAL TEAM LEADER DEBUG] Team leader data:', {
+      name: teamLeaderData.name,
+      prelimEvents: teamLeaderData.prelimEvents, 
+      email: teamLeaderData.email
+    });
+    
+    finalRegistration = {
+      registrationType: 'team',
       teamId,
-      finalRegistration,
-      transactionId: transactionId,
-      paymentDetails: finalRegistration.paymentDetails
+      teamName: session.teamData.teamName,
+      registrationId,
+      teamLeader: teamLeaderData,
+      mainEvent: session.teamData.mainEvent,
+      teamMembers: session.teamData.teamMembers,
+      teamSize: session.teamData.teamSize,
+      esportsGame: session.teamData.esportsGame,
+      isPremium: isPremium,
+      needsAccommodation: needsAccommodation,
+      paymentDetails: {
+        transactionId: transactionId,
+        orderId: orderId,
+        paymentId: paymentResult.paymentId,
+        signature: paymentResult.signature,
+        amount: session.totalAmount,
+        method: paymentMethod === 'upi' ? 'upi' : 'razorpay', // ✅ FIXED: Proper payment method
+        status: paymentResult.status || 'captured',
+        transactionDate: new Date().toISOString(),
+        razorpayPaymentId: transactionId,
+        razorpayOrderId: orderId,
+        ...paymentResult.paymentDetails
+      },
+      totalAmount: session.totalAmount,
+      registeredAt: new Date().toISOString(),
+      qrData: this.generateQRData('team', teamId, session.personalDetails, session.teamData)
     };
   }
 
+  console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
+    teamLeader: finalRegistration.teamLeader?.name,
+    prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
+    isPremium: finalRegistration.isPremium,
+    needsAccommodation: finalRegistration.needsAccommodation,
+    paymentMethod: finalRegistration.paymentDetails.method // ✅ Added payment method debug
+  });
+
+  // ✅ CRITICAL FIX: Save to Google Sheets
+  try {
+    const GoogleSheetsService = require('./googleSheetsService');
+    console.log('💾 Saving to Google Sheets...');
+    GoogleSheetsService.saveRegistration(finalRegistration);
+    console.log('✅ Google Sheets save initiated');
+  } catch (error) {
+    console.error('❌ Failed to save to Google Sheets:', error);
+    // Don't throw error here - registration should still complete
+  }
+
+  // Save to completed registrations
+  this.completedRegistrations.set(registrationId, finalRegistration);
+  
+  // ✅ CRITICAL: Mark session as completed immediately
+  session.paymentStatus = 'completed';
+  session.currentPhase = 'completed';
+  
+  // ✅ CRITICAL: Delete session immediately to prevent reuse
+  this.registrationSessions.delete(sessionId);
+
+  console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
+  console.log(`💰 Transaction ID stored: ${transactionId}`);
+  console.log(`📊 Payment Method: ${finalRegistration.paymentDetails.method}`);
+  console.log(`🧹 Session deleted: ${sessionId}`);
+  
+  return {
+    registrationId,
+    teamId,
+    finalRegistration,
+    transactionId: transactionId,
+    paymentDetails: finalRegistration.paymentDetails
+  };
+}
+  
   /**
    * Generate unique registration ID
    */
