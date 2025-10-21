@@ -8,7 +8,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [transactionId, setTransactionId] = useState('');
 
   // Your UPI ID
-  const upiId = 'priyanshuattri05@okaxis';
+  const upiId = 'poojan4604@okicici';
   
   // Generate transaction ID and UPI link
   const generateUPIPayment = () => {
