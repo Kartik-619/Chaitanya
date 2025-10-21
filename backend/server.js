@@ -53,17 +53,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🆘 UNHANDLED REJECTION at:', promise, 'reason:', reason);
 });
 
-/**
- * Memory monitoring to track potential memory leaks
- * Logs memory usage every 30 seconds
- */
-const memoryInterval = setInterval(() => {
-  const memoryUsage = process.memoryUsage();
-  const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-  const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  console.log('📊 Memory Usage: ' + usedMB + 'MB / ' + totalMB + 'MB');
-}, 30000);
-
 // ==================== GRACEFUL SHUTDOWN HANDLERS ====================
 
 /**
@@ -76,7 +65,6 @@ function gracefulShutdown() {
   if (retryInterval) clearInterval(retryInterval);
   if (backupInterval) clearInterval(backupInterval);
   if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  if (memoryInterval) clearInterval(memoryInterval);
   
   setTimeout(() => {
     console.log('✅ Server shutdown complete');
@@ -421,8 +409,7 @@ app.get('/status', (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()) + ' seconds',
-    memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB'
+    uptime: Math.floor(process.uptime()) + ' seconds'
   });
 });
 
@@ -520,7 +507,7 @@ app.use((req, res) => {
 
 /**
  * Failed registrations retry system
- * Automatically retries saving failed registrations to Google Sheets every 10 minutes
+ * Automatically retries saving failed registrations to Google Sheets every 60 minutes
  */
 retryInterval = setInterval(async () => {
   try {
@@ -529,12 +516,12 @@ retryInterval = setInterval(async () => {
   } catch (error) {
     console.error('❌ Failed registrations retry system error:', error.message);
   }
-}, 10 * 60 * 1000);
+}, 60 * 60 * 1000); // Every 60 minutes
 
-console.log('🔄 Failed registrations retry system started (every 10 minutes)');
+console.log('🔄 Failed registrations retry system started (every 60 minutes)');
 
 /**
- * Session backup system - backs up sessions every minute
+ * Session backup system - backs up sessions every 30 minutes
  */
 backupInterval = setInterval(() => {
   try {
@@ -542,9 +529,9 @@ backupInterval = setInterval(() => {
   } catch (error) {
     console.error('❌ Session backup error:', error.message);
   }
-}, 60 * 1000);
+}, 30 * 60 * 1000); // Every 30 minutes
 
-console.log('💾 Session backup system started (every minute)');
+console.log('💾 Session backup system started (every 30 minutes)');
 
 // ==================== SESSION MANAGEMENT ====================
 
@@ -612,7 +599,6 @@ app.listen(PORT, '0.0.0.0', async () => {
   // System status report
   console.log('\n📋 SYSTEM STATUS:');
   console.log('🛡  Crash protection systems: ✅ Active');
-  console.log('📊 Memory monitoring: ✅ Enabled');
   console.log('💾 Backup systems: ✅ Active');
   console.log('🧹 Session cleanup: ✅ Enabled');
   console.log('🎯 Registration API: ✅ Ready');
@@ -634,6 +620,5 @@ process.on('exit', () => {
   if (retryInterval) clearInterval(retryInterval);
   if (backupInterval) clearInterval(backupInterval);
   if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  if (memoryInterval) clearInterval(memoryInterval);
   console.log('🧹 All background services stopped');
 });
