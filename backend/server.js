@@ -591,14 +591,9 @@ app.listen(PORT, '0.0.0.0', async () => {
   if (sheetsInit) {
     console.log('✅ Google Sheets Service Ready!');
     
-    // Test connection immediately
-    try {
-      const testData = await GoogleSheetsService.getAllRegistrations();
-      console.log('🧪 Test Connection - Existing rows:', testData.count);
-      console.log('📈 Data Source:', testData.source);
-    } catch (testError) {
-      console.error('❌ Google Sheets Test Failed:', testError.message);
-    }
+    // 🚨 MEMORY LEAK FIX: REMOVED Google Sheets test call
+    // This was loading ALL registration data into memory causing crashes
+    
   } else {
     console.log('❌ Google Sheets failed to initialize - running in backup mode');
   }
