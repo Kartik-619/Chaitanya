@@ -559,12 +559,6 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   const session = this.registrationSessions.get(sessionId);
   if (!session) throw new Error('Session not found');
   
-  // ✅ CRITICAL: Check if session already completed
-  if (session.paymentStatus === 'completed') {
-    console.log('⚠️ Session already completed:', sessionId);
-    throw new Error('Registration already completed for this session');
-  }
-  
   console.log('🔍 [COMPLETE DEBUG] Session data:', {
     teamLeaderName: session.teamData?.teamLeader?.name,
     teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, 
@@ -597,15 +591,15 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
       registrationId,
       personalDetails: session.personalDetails,
       prelimEvents: session.prelimEvents,
-      isPremium: isPremium,
-      needsAccommodation: needsAccommodation,
+      isPremium: isPremium, // ✅ FIXED: Use extracted value
+      needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
         paymentId: paymentResult.paymentId,
         signature: paymentResult.signature,
         amount: session.totalAmount,
-        method: paymentMethod === 'upi' ? 'upi' : 'razorpay', // ✅ FIXED: Proper payment method
+        method: 'upi',
         status: paymentResult.status || 'captured',
         transactionDate: new Date().toISOString(),
         razorpayPaymentId: transactionId,
@@ -617,7 +611,7 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
       qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
     };
   } else {
-    const teamLeaderData = {
+     const teamLeaderData = {
       ...session.teamData.teamLeader,
       prelimEvents: session.teamData.teamLeader.prelimEvents || [] 
     };
@@ -638,15 +632,15 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
       teamMembers: session.teamData.teamMembers,
       teamSize: session.teamData.teamSize,
       esportsGame: session.teamData.esportsGame,
-      isPremium: isPremium,
-      needsAccommodation: needsAccommodation,
+      isPremium: isPremium, // ✅ FIXED: Use extracted value
+      needsAccommodation: needsAccommodation, // ✅ FIXED: Use extracted value
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
         paymentId: paymentResult.paymentId,
         signature: paymentResult.signature,
         amount: session.totalAmount,
-        method: paymentMethod === 'upi' ? 'upi' : 'razorpay', // ✅ FIXED: Proper payment method
+        method: 'upi',
         status: paymentResult.status || 'captured',
         transactionDate: new Date().toISOString(),
         razorpayPaymentId: transactionId,
@@ -662,36 +656,32 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
     teamLeader: finalRegistration.teamLeader?.name,
     prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
-    isPremium: finalRegistration.isPremium,
-    needsAccommodation: finalRegistration.needsAccommodation,
-    paymentMethod: finalRegistration.paymentDetails.method // ✅ Added payment method debug
+    isPremium: finalRegistration.isPremium, // ✅ Now this should show correctly
+    needsAccommodation: finalRegistration.needsAccommodation // ✅ Now this should show correctly
   });
 
+  // 🚨🚨🚨 REMOVE THIS DUPLICATE GOOGLE SHEETS CALL (LINES 430-440) 🚨🚨🚨
+  // ❌ DELETE THESE 7 LINES:
   // ✅ CRITICAL FIX: Save to Google Sheets
-  try {
-    const GoogleSheetsService = require('./googleSheetsService');
-    console.log('💾 Saving to Google Sheets...');
-    GoogleSheetsService.saveRegistration(finalRegistration);
-    console.log('✅ Google Sheets save initiated');
-  } catch (error) {
-    console.error('❌ Failed to save to Google Sheets:', error);
-    // Don't throw error here - registration should still complete
-  }
+  // try {
+  //   const GoogleSheetsService = require('./googleSheetsService');
+  //   console.log('💾 Saving to Google Sheets...');
+  //   GoogleSheetsService.saveRegistration(finalRegistration);
+  //   console.log('✅ Google Sheets save initiated');
+  // } catch (error) {
+  //   console.error('❌ Failed to save to Google Sheets:', error);
+  // }
+  // 🚨🚨🚨 END OF REMOVAL 🚨🚨🚨
 
   // Save to completed registrations
   this.completedRegistrations.set(registrationId, finalRegistration);
   
-  // ✅ CRITICAL: Mark session as completed immediately
-  session.paymentStatus = 'completed';
-  session.currentPhase = 'completed';
-  
-  // ✅ CRITICAL: Delete session immediately to prevent reuse
+  // Clean up session
   this.registrationSessions.delete(sessionId);
 
   console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
   console.log(`💰 Transaction ID stored: ${transactionId}`);
-  console.log(`📊 Payment Method: ${finalRegistration.paymentDetails.method}`);
-  console.log(`🧹 Session deleted: ${sessionId}`);
+  console.log(`📊 Final registration data:`, finalRegistration);
   
   return {
     registrationId,
@@ -701,7 +691,7 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
     paymentDetails: finalRegistration.paymentDetails
   };
 }
-  
+
   /**
    * Generate unique registration ID
    */
