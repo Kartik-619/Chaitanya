@@ -156,15 +156,18 @@ const ContactPage = () => {
       title: "Email Us",
       details: [
         "pro.advaitkaushal@gmail.com",
+        "pathaniaabhishek5555@gmail.com",
         "chaitanyahptu@gmail.com"
       ],
       description: "Send us an email for any queries or information"
     },
+    
     {
       icon: "📱",
       title: "Call Us",
       details: [
-        "+91 9459111001"
+        "+91 9459111001",
+        "+91 9816367020"
       ],
       description: "Available during business hours"
     },

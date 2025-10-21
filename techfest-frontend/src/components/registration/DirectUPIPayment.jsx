@@ -11,7 +11,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const isMounted = useRef(true);
 
   // Your UPI ID
-  const upiId = 'dikshitjaswal1922@okicici';
+  const upiId = '9816367020@axl';
   
   // Generate transaction ID and QR code URL with EXACT amount
   const generateUPIPayment = () => {
