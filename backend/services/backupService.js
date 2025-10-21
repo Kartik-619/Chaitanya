@@ -20,6 +20,7 @@ const path = require('path');
 class BackupService {
   constructor() {
     this.backupFile = path.join(__dirname, '../backups/sessions.json');
+    this.failedRegistrationsFile = path.join(__dirname, '../backups/failed-registrations.json');
     this.backupInterval = 60000;
     this.startBackup();
   }
