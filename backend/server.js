@@ -558,51 +558,58 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 /**
  * Start the server and initialize all required services
  */
-app.listen(PORT, '0.0.0.0', async () => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('🚀 Chaitanya 2025 Server running on port ' + PORT);
-    console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
-    console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
-    console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
-    console.log('🔄 Initializing Google Sheets...');
-  }
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Chaitanya 2025 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📧 Email service: ${process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'}`);
+  console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
 
-  const sheetsInit = await GoogleSheetsService.initialize();
+  // Run async initializations in the background
+  (async () => {
+    try {
+      console.log('🔄 Initializing Google Sheets...');
+      const sheetsInit = await GoogleSheetsService.initialize();
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('🔍 GOOGLE SHEETS DEBUG INFORMATION:');
-    console.log('✅ Initialization Result:', sheetsInit);
-    console.log('📊 Service Status:', GoogleSheetsService.initialized);
-    console.log('📁 Credentials File Exists:', fs.existsSync('./techfest-credentials.json'));
-    console.log('🔑 Spreadsheet ID:', GoogleSheetsService.spreadsheetId);
-  }
+      console.log('🔍 GOOGLE SHEETS DEBUG INFORMATION:');
+      console.log('✅ Initialization Result:', sheetsInit);
+      console.log('📊 Service Status:', GoogleSheetsService.initialized);
+      console.log('📁 Credentials File Exists:', fs.existsSync('./techfest-credentials.json'));
+      console.log('🔑 Spreadsheet ID:', GoogleSheetsService.spreadsheetId);
 
-  if (sheetsInit) {
-    console.log('✅ Google Sheets Service Ready!');
-  } else {
-    console.log('❌ Google Sheets failed to initialize - running in backup mode');
-  }
+      if (sheetsInit) {
+        console.log('✅ Google Sheets Service Ready!');
+      } else {
+        console.log('❌ Google Sheets failed to initialize - running in backup mode');
+      }
 
-  const restored = BackupService.restoreSessions();
-  if (restored && process.env.NODE_ENV !== 'production') {
-    console.log('✅ Previous sessions restored from backup');
-  }
+      console.log('💾 Initializing Backup Service...');
+      const restored = BackupService.restoreSessions();
+      if (restored) {
+        console.log('✅ Previous sessions restored from backup');
+      } else {
+        console.log('ℹ No previous sessions to restore');
+      }
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('\n📋 SYSTEM STATUS:');
-    console.log('🛡 Crash protection systems: ✅ Active');
-    console.log('💾 Backup systems: ✅ Active');
-    console.log('🧹 Session cleanup: ✅ Enabled');
-    console.log('🎯 Registration API: ✅ Ready');
-    console.log('👑 Admin Dashboard: ✅ Enabled');
-    console.log('📝 Attendance System: ✅ Ready');
-    console.log('💳 Payment System: ✅ Ready');
-    console.log('🔒 Trust Proxy: ✅ Enabled');
-    console.log('🌐 CORS: ✅ Configured');
-    console.log('📊 Google Sheets:', GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline');
-    console.log('\n🎉 All systems operational! Waiting for requests...');
-  }
+    } catch (error) {
+      console.error('❌ Startup service error:', error);
+    }
+  })();
+
+  // System status report (unchanged)
+  console.log('\n📋 SYSTEM STATUS:');
+  console.log('🛡  Crash protection systems: ✅ Active');
+  console.log('💾 Backup systems: ✅ Active');
+  console.log('🧹 Session cleanup: ✅ Enabled');
+  console.log('🎯 Registration API: ✅ Ready');
+  console.log('👑 Admin Dashboard: ✅ Enabled');
+  console.log('📝 Attendance System: ✅ Ready');
+  console.log('💳 Payment System: ✅ Ready');
+  console.log('🔒 Trust Proxy: ✅ Enabled');
+  console.log('🌐 CORS: ✅ Configured');
+  console.log('📊 Google Sheets:', GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline');
+  console.log('\n🎉 All systems operational! Waiting for requests...');
 });
+
 
 // ==================== CLEANUP ON EXIT ====================
 
