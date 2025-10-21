@@ -17,6 +17,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 // Import configurations and routes
 const { SERVER_CONFIG } = require('./config/serverConfig');
@@ -242,6 +243,125 @@ app.get('/email-health', async (req, res) => {
   }
 });
 
+// ==================== GOOGLE SHEETS DEBUG ROUTES ====================
+
+/**
+ * Test Google Sheets connection and functionality
+ */
+app.get('/test-sheets', async (req, res) => {
+  try {
+    console.log('🧪 Testing Google Sheets connection...');
+    
+    const GoogleSheetsService = require('./services/googleSheetsService');
+    
+    // Test initialization
+    const initialized = await GoogleSheetsService.initialize();
+    console.log('📊 Sheets Initialized:', initialized);
+    
+    if (!initialized) {
+      return res.json({ 
+        success: false, 
+        error: 'Google Sheets not initialized',
+        solution: 'Check techfest-credentials.json file'
+      });
+    }
+    
+    // Test reading data
+    const existingData = await GoogleSheetsService.getAllRegistrations();
+    console.log('📈 Existing Data Count:', existingData.count);
+    
+    // Test writing data
+    const testRegistration = {
+      registrationType: 'individual',
+      registrationId: 'TEST-' + Date.now(),
+      personalDetails: {
+        name: 'Test User',
+        email: 'test@example.com', 
+        phone: '1234567890',
+        college: 'Test College'
+      },
+      totalAmount: 100,
+      paymentDetails: {
+        method: 'test',
+        status: 'completed'
+      },
+      prelimEvents: ['Test Event'],
+      isPremium: false,
+      needsAccommodation: false,
+      registeredAt: new Date().toISOString()
+    };
+    
+    const saveResult = await GoogleSheetsService.saveRegistration(testRegistration);
+    console.log('💾 Save Test Result:', saveResult);
+    
+    res.json({
+      success: true,
+      sheetsInitialized: initialized,
+      existingRows: existingData.count,
+      testSave: saveResult,
+      spreadsheetId: GoogleSheetsService.spreadsheetId
+    });
+    
+  } catch (error) {
+    console.error('❌ Sheets Test Error:', error);
+    res.json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
+
+/**
+ * Debug Google Sheets configuration
+ */
+app.get('/debug-sheets', async (req, res) => {
+  try {
+    const GoogleSheetsService = require('./services/googleSheetsService');
+    
+    const debugInfo = {
+      // Check credentials file
+      credentialsFileExists: fs.existsSync('./techfest-credentials.json'),
+      credentialsFileInRoot: fs.existsSync('./techfest-credentials.json'),
+      
+      // Check environment
+      nodeEnv: process.env.NODE_ENV,
+      spreadsheetId: GoogleSheetsService.spreadsheetId,
+      
+      // Service status
+      serviceInitialized: GoogleSheetsService.initialized,
+      
+      // Test initialization
+      initializationTest: await GoogleSheetsService.initialize()
+    };
+    
+    // Try to read existing data
+    try {
+      const existingData = await GoogleSheetsService.getAllRegistrations();
+      debugInfo.existingData = {
+        success: existingData.success,
+        count: existingData.count,
+        source: existingData.source
+      };
+    } catch (readError) {
+      debugInfo.existingDataError = readError.message;
+    }
+    
+    res.json({
+      success: true,
+      debugInfo: debugInfo,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Debug Sheets Error:', error);
+    res.json({ 
+      success: false, 
+      error: error.message
+    });
+  }
+});
+
 app.get('/admin-login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-login.html'));
 });
@@ -344,6 +464,8 @@ app.get('/', (req, res) => {
       'GET /api/debug/debug-env': 'Environment check',
       'GET /api/debug/debug/sheets': 'Google Sheets status',
       'GET /api/debug/test-email': 'Test email service',
+      'GET /test-sheets': 'Test Google Sheets connection',
+      'GET /debug-sheets': 'Debug Google Sheets configuration',
       'GET /admin-login.html': 'Admin login page',
       'GET /admin-dashboard.html': 'Admin dashboard',
       'GET /api/register/colleges': 'Get college list',
@@ -386,6 +508,8 @@ app.use((req, res) => {
       'GET /api/attendance/check-duplicate',
       'POST /api/payment/initialize-payment',
       'POST /api/payment/verify-payment',
+      'GET /test-sheets',
+      'GET /debug-sheets',
       'GET /admin-login.html',
       'GET /admin-dashboard.html'
     ]
@@ -453,11 +577,28 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log('📧 Email service: ' + (process.env.UNIVERSITY_EMAIL_PASSWORD ? '✅ Ready' : '❌ Not configured'));
   console.log('🔒 Trust proxy: ✅ Enabled (for Render deployment)');
   
-  // Initialize Google Sheets service
+  // Initialize Google Sheets service WITH DEBUG
   console.log('🔄 Initializing Google Sheets...');
   const sheetsInit = await GoogleSheetsService.initialize();
+
+  // ADDED DEBUG INFORMATION
+  console.log('🔍 GOOGLE SHEETS DEBUG INFORMATION:');
+  console.log('✅ Initialization Result:', sheetsInit);
+  console.log('📊 Service Status:', GoogleSheetsService.initialized);
+  console.log('📁 Credentials File Exists:', fs.existsSync('./techfest-credentials.json'));
+  console.log('🔑 Spreadsheet ID:', GoogleSheetsService.spreadsheetId);
+
   if (sheetsInit) {
     console.log('✅ Google Sheets Service Ready!');
+    
+    // Test connection immediately
+    try {
+      const testData = await GoogleSheetsService.getAllRegistrations();
+      console.log('🧪 Test Connection - Existing rows:', testData.count);
+      console.log('📈 Data Source:', testData.source);
+    } catch (testError) {
+      console.error('❌ Google Sheets Test Failed:', testError.message);
+    }
   } else {
     console.log('❌ Google Sheets failed to initialize - running in backup mode');
   }
@@ -485,6 +626,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log('💳 Payment System: ✅ Ready');
   console.log('🔒 Trust Proxy: ✅ Enabled');
   console.log('🌐 CORS: ✅ Configured');
+  console.log('📊 Google Sheets:', GoogleSheetsService.initialized ? '✅ Ready' : '❌ Offline');
   console.log('\n🎉 All systems operational! Waiting for requests...');
 });
 
