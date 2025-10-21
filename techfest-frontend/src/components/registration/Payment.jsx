@@ -293,8 +293,9 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
           {/* UPI Payment Component */}
           {paymentMethod === 'upi' && (
             <div className="mt-6">
-              <DirectUPIPayment
+             <DirectUPIPayment
                 amount={totalAmount}
+                sessionId={data.sessionId}
                 onPaymentSuccess={handleUPIPaymentSuccess}
                 onPaymentFailure={handleUPIPaymentFailure}
               />
@@ -314,7 +315,7 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default Payment;
