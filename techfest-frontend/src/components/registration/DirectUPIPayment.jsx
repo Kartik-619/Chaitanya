@@ -5,11 +5,12 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [processing, setProcessing] = useState(false);
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [transactionId, setTransactionId] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   // Your UPI ID
   const upiId = 'priyanshuattri05@okaxis';
   
-  // Generate transaction ID and UPI link
+  // Generate transaction ID and QR code
   const generateUPIPayment = () => {
     const newTransactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
     const note = `Chaitanya 2025 Registration - ${newTransactionId}`;
@@ -17,19 +18,29 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     // UPI payment link with EXACT amount
     const upiLink = `upi://pay?pa=${upiId}&pn=Chaitanya%202025&am=${amount}&tn=${encodeURIComponent(note)}&cu=INR`;
     
+    // Generate QR code using Google Charts API
+    const qrCode = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(upiLink)}&choe=UTF-8`;
+    
     return {
       upiLink,
-      transactionId: newTransactionId
+      transactionId: newTransactionId,
+      qrCodeUrl: qrCode
     };
   };
 
   const handlePayNow = () => {
-    const { upiLink, transactionId: newTxId } = generateUPIPayment();
+    const { upiLink, transactionId: newTxId, qrCodeUrl } = generateUPIPayment();
     setTransactionId(newTxId);
     setPaymentInitiated(true);
+    setQrCodeUrl(qrCodeUrl);
     
-    // Try to open UPI app automatically
-    window.location.href = upiLink;
+    // Try to open UPI app automatically (works on mobile)
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.location.href = upiLink;
+      toast.success('Opening UPI app... Complete payment and return here');
+    } else {
+      toast.success('Scan the QR code below with your UPI app');
+    }
     
     // Store transaction for verification
     localStorage.setItem('lastUPITransaction', JSON.stringify({
@@ -37,8 +48,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       amount: amount,
       timestamp: Date.now()
     }));
-    
-    toast.success('Opening UPI app... Complete payment and return here');
   };
 
   const handleVerifyPayment = async () => {
@@ -120,6 +129,8 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       if (timeDiff < 10 * 60 * 1000) {
         setTransactionId(paymentData.transactionId);
         setPaymentInitiated(true);
+        const { qrCodeUrl } = generateUPIPayment();
+        setQrCodeUrl(qrCodeUrl);
       } else {
         localStorage.removeItem('lastUPITransaction');
       }
@@ -132,12 +143,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     toast.success('UPI ID copied to clipboard!');
   };
 
-  // Copy payment details
-  const copyPaymentDetails = () => {
-    const details = `UPI ID: ${upiId}\nAmount: ₹${amount}\nNote: Chaitanya 2025 Registration`;
-    navigator.clipboard.writeText(details);
-    toast.success('Payment details copied!');
-  };
+  const { qrCodeUrl: currentQrCode } = generateUPIPayment();
 
   return (
     <div className="glass-card p-6 border-2 border-green-500/20">
@@ -146,19 +152,39 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           <span className="text-2xl">💳</span>
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Pay with UPI</h3>
-        <p className="text-gray-300">Instant payment - Click to open UPI app</p>
+        <p className="text-gray-300">Scan QR code with any UPI app</p>
       </div>
 
       {/* Payment Amount */}
       <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-4 mb-6 text-center border-2 border-green-500/30">
         <p className="text-gray-300 text-sm mb-1">Amount to Pay</p>
         <p className="text-4xl font-bold text-green-400">₹{amount}</p>
-        <p className="text-xs text-green-300 mt-1">✅ Exact amount auto-filled in UPI app</p>
+        <p className="text-xs text-green-300 mt-1">✅ Exact amount auto-filled</p>
+      </div>
+
+      {/* QR Code Section */}
+      <div className="text-center mb-6">
+        <div className="bg-white p-4 rounded-xl inline-block mb-3 border-2 border-green-500">
+          <img 
+            src={qrCodeUrl || currentQrCode} 
+            alt="UPI Payment QR Code"
+            className="w-64 h-64"
+            onError={(e) => {
+              e.target.src = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(`UPI ID: ${upiId}\nAmount: ₹${amount}\nNote: Chaitanya 2025 Registration`)}&choe=UTF-8`;
+            }}
+          />
+        </div>
+        <p className="text-sm text-gray-300 mb-2">
+          Scan this QR code with any UPI app
+        </p>
+        <p className="text-xs text-green-400">
+          Amount: <strong>₹{amount}</strong> • UPI ID: <strong>{upiId}</strong>
+        </p>
       </div>
 
       {/* UPI ID Display */}
       <div className="bg-black/30 rounded-lg p-4 mb-6">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center">
           <span className="text-gray-300">UPI ID:</span>
           <div className="flex items-center space-x-2">
             <code className="text-white font-mono bg-black/50 px-3 py-1 rounded border border-green-500/30">
@@ -172,12 +198,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             </button>
           </div>
         </div>
-        <button 
-          onClick={copyPaymentDetails}
-          className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 py-2 rounded text-sm border border-blue-500/30 transition-colors"
-        >
-          📋 Copy All Payment Details
-        </button>
       </div>
 
       {!paymentInitiated ? (
@@ -189,7 +209,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             className="w-full bg-green-500 hover:bg-green-600 text-white py-4 px-6 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 text-lg flex items-center justify-center space-x-2"
           >
             <span>📱</span>
-            <span>Open UPI App - ₹{amount}</span>
+            <span>Generate QR Code - ₹{amount}</span>
           </button>
 
           {/* Instructions */}
@@ -198,11 +218,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">1.</span>
-                <span>Click "Open UPI App" above</span>
+                <span>Click "Generate QR Code" above</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">2.</span>
-                <span>Your UPI app will open automatically</span>
+                <span>Scan QR code with UPI app</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">3.</span>
@@ -218,15 +238,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               </div>
             </div>
           </div>
-
-          {/* Manual Payment Option */}
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-400 mb-2 text-center">Manual Payment:</h4>
-            <p className="text-yellow-300 text-sm text-center">
-              If UPI app doesn't open automatically, manually send ₹{amount} to:<br/>
-              <code className="bg-black/30 px-2 py-1 rounded mt-1 inline-block">{upiId}</code>
-            </p>
-          </div>
         </div>
       ) : (
         // Payment Verification Section
@@ -238,7 +249,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               <span className="font-semibold">Payment Initiated</span>
             </div>
             <p className="text-yellow-300 text-sm text-center">
-              Complete payment in your UPI app and return here
+              Complete payment by scanning QR code and return here
             </p>
             <p className="text-xs text-yellow-400 text-center mt-2">
               Transaction ID: <code className="bg-black/30 px-2 py-1 rounded">{transactionId}</code>
