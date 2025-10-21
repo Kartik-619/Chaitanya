@@ -555,7 +555,7 @@ class RegistrationService {
   /**
  * Complete registration and store final data
  */
-completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
+async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   const session = this.registrationSessions.get(sessionId);
   if (!session) throw new Error('Session not found');
   
@@ -675,6 +675,24 @@ completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
     isPremium: finalRegistration.isPremium,
     needsAccommodation: finalRegistration.needsAccommodation
   });
+
+   try {
+    const GoogleSheetsService = require('./googleSheetsService');
+    console.log('💾 Saving to Google Sheets...');
+    GoogleSheetsService.saveRegistration(finalRegistration);
+    console.log('✅ Google Sheets save initiated');
+  } catch (error) {
+    console.error('❌ Failed to save to Google Sheets:', error);
+  }
+
+  // 🚨 ADD THIS: Events Sheet Saving
+  try {
+    console.log('🎯 Saving to Events Participation sheet...');
+    await GoogleSheetsService.saveToEventsSheet(finalRegistration);
+    console.log('✅ Events sheet save initiated');
+  } catch (error) {
+    console.error('❌ Failed to save to Events sheet:', error);
+  }
 
   // Save to completed registrations
   this.completedRegistrations.set(registrationId, finalRegistration);
