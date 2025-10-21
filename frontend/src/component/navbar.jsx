@@ -115,6 +115,15 @@ export default function Sidebar() {
                 About
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/contact"
+                  onClick={() => setMenu(false)}
+                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
+                >
+                Contact US
+                </Link>
+              </li>
             </ul>
             </div>
             

@@ -7,6 +7,7 @@ import Hero from './component/hero';
 
 import AboutPage from './pages/AboutPage';
 import SponsorsPage from './pages/Sponsors/SponsorsPage';
+import ContactPage from './pages/Contact';
 
 
 
@@ -19,7 +20,7 @@ function App() {
         <Route path="/sponsor" element={<SponsorsPage/>} />
         <Route path="/about" element={<AboutPage/>} />
         <Route path="/events" element={<EventPage/>} />
-       { /*<Route path="/contact" element={<Contact />} />*/}
+        <Route path="/contact" element={<ContactPage/>}/>
     
       </Routes>
     
