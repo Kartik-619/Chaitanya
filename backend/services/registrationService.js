@@ -555,32 +555,19 @@ class RegistrationService {
   async completeRegistration(sessionId, paymentResult, paymentMethod = 'razorpay') {
   const session = this.registrationSessions.get(sessionId);
   if (!session) throw new Error('Session not found');
-  
-  console.log('🔍 [COMPLETE DEBUG] Session data:', {
-    teamLeaderName: session.teamData?.teamLeader?.name,
-    teamLeaderPrelimEvents: session.teamData?.teamLeader?.prelimEvents, 
-    isPremium: session.isPremium,
-    needsAccommodation: session.needsAccommodation
-  });
 
   const registrationId = this.generateRegistrationId(session.registrationType);
   const teamId = session.registrationType === 'team' ? this.generateTeamId() : null;
 
-  let finalRegistration;
-
   // Get transaction ID from payment result
   const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
   const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
-  
-  console.log('💾 Storing payment data:', {
-    transactionId,
-    orderId,
-    amount: session.totalAmount
-  });
 
   // ✅ CRITICAL FIX: Extract premium and accommodation from session
   const isPremium = session.isPremium || false;
   const needsAccommodation = session.needsAccommodation || false;
+
+  let finalRegistration;
 
   if (session.registrationType === 'individual') {
     finalRegistration = {
@@ -608,16 +595,10 @@ class RegistrationService {
       qrData: this.generateQRData('individual', registrationId, session.personalDetails, session.prelimEvents)
     };
   } else {
-     const teamLeaderData = {
+    const teamLeaderData = {
       ...session.teamData.teamLeader,
       prelimEvents: session.teamData.teamLeader.prelimEvents || [] 
     };
-    
-    console.log('🔍 [FINAL TEAM LEADER DEBUG] Team leader data:', {
-      name: teamLeaderData.name,
-      prelimEvents: teamLeaderData.prelimEvents, 
-      email: teamLeaderData.email
-    });
     
     finalRegistration = {
       registrationType: 'team',
@@ -650,15 +631,10 @@ class RegistrationService {
     };
   }
 
-  console.log('✅ [FINAL REGISTRATION DEBUG] Final registration:', {
-    teamLeader: finalRegistration.teamLeader?.name,
-    prelimEvents: finalRegistration.teamLeader?.prelimEvents, 
-    isPremium: finalRegistration.isPremium,
-    needsAccommodation: finalRegistration.needsAccommodation
-  });
+  // ✅ SINGLE Google Sheets Service Load
+  const GoogleSheetsService = require('./googleSheetsService');
 
   try {
-    const GoogleSheetsService = require('./googleSheetsService');
     console.log('💾 Saving to Google Sheets...');
     GoogleSheetsService.saveRegistration(finalRegistration);
     console.log('✅ Google Sheets save initiated');
@@ -666,9 +642,6 @@ class RegistrationService {
     console.error('❌ Failed to save to Google Sheets:', error);
   }
 
-  // 🚨 DELETE LINES 86-92 FROM HERE - REMOVE THE DUPLICATE LOG AND SAVE!
-
-  // 🚨 ADD THIS: Events Sheet Saving
   try {
     console.log('🎯 Saving to Events Participation sheet...');
     await GoogleSheetsService.saveToEventsSheet(finalRegistration);
@@ -684,7 +657,6 @@ class RegistrationService {
   this.registrationSessions.delete(sessionId);
 
   console.log(`✅ ${session.registrationType} registration completed: ${registrationId}`);
-  console.log(`💰 Transaction ID stored: ${transactionId}`);
   
   return {
     registrationId,
