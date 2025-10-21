@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailure }) => {
@@ -6,19 +6,24 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [transactionId, setTransactionId] = useState('');
   const [verificationAttempted, setVerificationAttempted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  
+  // ✅ STRONGER DUPLICATE PREVENTION: useRef for immediate updates
+  const verificationInProgress = useRef(false);
+  const isMounted = useRef(true);
 
-  // Your UPI ID
+  // Your UPI ID - HARDCODED for security
   const upiId = 'dikshitjaswal1922@okicici';
   
-  // Generate transaction ID and QR code URL
+  // Generate transaction ID and QR code URL with EXACT amount
   const generateUPIPayment = () => {
     const newTransactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
     const note = `Chaitanya 2025 Registration - ${newTransactionId}`;
     
-    // UPI payment link with EXACT amount
+    // ✅ SECURITY: UPI link with EXACT amount from backend - NO manual entry
     const upiLink = `upi://pay?pa=${upiId}&pn=Chaitanya%202025&am=${amount}&tn=${encodeURIComponent(note)}&cu=INR`;
     
-    // Generate QR code using reliable service
+    // Generate QR code with exact amount embedded
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiLink)}`;
     
     return {
@@ -31,25 +36,54 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const { upiLink, transactionId: defaultTxId, qrCodeUrl } = generateUPIPayment();
 
   const handlePayNow = () => {
+    // ✅ PREVENT: Check if already completed
+    if (isCompleted) {
+      toast.error('Payment already completed!');
+      return;
+    }
+
     const newTransactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
     setTransactionId(newTransactionId);
     setPaymentInitiated(true);
-    setVerificationAttempted(false); // Reset verification lock
+    setVerificationAttempted(false);
     
     // Store transaction for verification
     localStorage.setItem('lastUPITransaction', JSON.stringify({
       transactionId: newTransactionId,
       amount: amount,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      sessionId: sessionId,
+      // ✅ ADDED: Mark as initiated to prevent reuse
+      initiated: true
     }));
     
     toast.success('QR code generated! Scan with UPI app');
+    
+    // Try to open UPI app on mobile devices
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      setTimeout(() => {
+        window.location.href = upiLink;
+      }, 1000);
+    }
   };
 
+  // ✅ STRONGER DUPLICATE PREVENTION FUNCTION
   const handleVerifyPayment = async () => {
-    // ✅ FIX: Prevent multiple verification calls
+    // Level 1: Check if already completed
+    if (isCompleted) {
+      toast.error('Payment already completed! Do not resubmit.');
+      return;
+    }
+
+    // Level 2: Check if verification already in progress (useRef for immediate check)
+    if (verificationInProgress.current) {
+      toast.error('Payment verification already in progress. Please wait...');
+      return;
+    }
+
+    // Level 3: Check state
     if (verificationAttempted) {
-      toast.error('Payment verification already in progress');
+      toast.error('Payment verification already submitted.');
       return;
     }
     
@@ -58,9 +92,19 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       return;
     }
 
+    // ✅ LOCK: Immediately set all flags to prevent duplicates
+    verificationInProgress.current = true;
     setVerificationAttempted(true);
     setProcessing(true);
-    
+
+    // ✅ DISABLE BUTTON IMMEDIATELY
+    const verifyButton = document.querySelector('[data-verify-button]');
+    if (verifyButton) {
+      verifyButton.disabled = true;
+      verifyButton.style.opacity = '0.5';
+      verifyButton.style.cursor = 'not-allowed';
+    }
+
     try {
       console.log('🔍 Verifying UPI payment...', {
         sessionId,
@@ -68,7 +112,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         amount
       });
 
-      // ✅ FIX: Simplified backend call - removed unnecessary Razorpay fields
       const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
@@ -78,7 +121,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           sessionId: sessionId,
           upiTransactionId: transactionId,
           amount: amount
-          // ✅ REMOVED: Razorpay compatibility fields to prevent confusion
         }),
       });
 
@@ -92,15 +134,21 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       console.log('Verification result:', verifyResult);
       
       if (verifyResult.success) {
+        // ✅ MARK AS COMPLETED - PREVENT ANY FURTHER ACTIONS
+        setIsCompleted(true);
+        verificationInProgress.current = false;
+        
         toast.success('Payment verified successfully! Registration completed!');
         
         // Clear stored transaction
         localStorage.removeItem('lastUPITransaction');
         
+        // ✅ Call success callback
         onPaymentSuccess({
           upiTransactionId: transactionId,
           amount: amount,
-          status: 'completed'
+          status: 'completed',
+          registrationId: verifyResult.registrationId
         });
         
       } else {
@@ -109,6 +157,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       
     } catch (error) {
       console.error('❌ Payment verification failed:', error);
+      
+      // ✅ RESET FLAGS ON ERROR (allow retry)
+      verificationInProgress.current = false;
+      setVerificationAttempted(false);
+      
       let errorMessage = 'Payment verification failed';
       
       try {
@@ -118,9 +171,26 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         errorMessage = error.message || errorMessage;
       }
       
-      toast.error(errorMessage);
-      onPaymentFailure(error);
-      setVerificationAttempted(false); // Reset lock on error to allow retry
+      // ✅ SPECIFIC ERROR FOR DUPLICATES
+      if (errorMessage.includes('already processed') || errorMessage.includes('already completed')) {
+        setIsCompleted(true);
+        toast.error('This payment was already processed successfully!');
+        onPaymentSuccess({
+          upiTransactionId: transactionId,
+          amount: amount,
+          status: 'already_completed'
+        });
+      } else {
+        toast.error(errorMessage);
+        onPaymentFailure(error);
+      }
+      
+      // ✅ RE-ENABLE BUTTON ON ERROR
+      if (verifyButton) {
+        verifyButton.disabled = false;
+        verifyButton.style.opacity = '1';
+        verifyButton.style.cursor = 'pointer';
+      }
     } finally {
       setProcessing(false);
     }
@@ -133,21 +203,53 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       const paymentData = JSON.parse(storedPayment);
       const timeDiff = Date.now() - paymentData.timestamp;
       
-      // If payment was initiated less than 10 minutes ago
-      if (timeDiff < 10 * 60 * 1000) {
+      // If payment was initiated less than 10 minutes ago AND same session
+      if (timeDiff < 10 * 60 * 1000 && paymentData.sessionId === sessionId) {
         setTransactionId(paymentData.transactionId);
         setPaymentInitiated(true);
       } else {
         localStorage.removeItem('lastUPITransaction');
       }
     }
-  }, []);
+
+    // Cleanup on unmount
+    return () => {
+      isMounted.current = false;
+    };
+  }, [sessionId]);
 
   // Copy UPI ID to clipboard
   const copyUPIID = () => {
     navigator.clipboard.writeText(upiId);
     toast.success('UPI ID copied to clipboard!');
   };
+
+  // ✅ PREVENT ANY ACTION IF COMPLETED
+  if (isCompleted) {
+    return (
+      <div className="glass-card p-6 border-2 border-green-500/20">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">✅</span>
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2">Payment Completed!</h3>
+          <p className="text-gray-300">Your registration was successful</p>
+        </div>
+        
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
+          <p className="text-green-400 font-semibold">Transaction ID: {transactionId}</p>
+          <p className="text-green-300 text-sm mt-2">Amount: ₹{amount}</p>
+          <p className="text-green-300 text-sm">Status: Completed</p>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-gray-400 text-sm">
+            Please check your email for confirmation and ID card
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-6 border-2 border-green-500/20">
@@ -156,14 +258,27 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           <span className="text-2xl">💳</span>
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Pay with UPI</h3>
-        <p className="text-gray-300">Scan QR code with any UPI app</p>
+        <p className="text-gray-300">Secure payment - Amount auto-filled</p>
       </div>
 
-      {/* Payment Amount */}
+      {/* Payment Amount - HIGHLIGHTED & LOCKED */}
       <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-4 mb-6 text-center border-2 border-green-500/30">
         <p className="text-gray-300 text-sm mb-1">Amount to Pay</p>
         <p className="text-4xl font-bold text-green-400">₹{amount}</p>
-        <p className="text-xs text-green-300 mt-1">✅ Exact amount auto-filled</p>
+        <p className="text-xs text-green-300 mt-1">
+          ✅ <strong>Auto-filled</strong> - Do not change this amount in UPI app
+        </p>
+      </div>
+
+      {/* Security Warning */}
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+        <div className="flex items-center justify-center space-x-2 text-red-400 mb-1">
+          <span>⚠️</span>
+          <span className="font-semibold">Security Notice</span>
+        </div>
+        <p className="text-red-300 text-sm text-center">
+          Pay <strong>exactly ₹{amount}</strong>. Wrong amounts will cause registration failure.
+        </p>
       </div>
 
       {/* QR Code Section - Always show */}
@@ -175,7 +290,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             className="w-64 h-64 mx-auto"
             onError={(e) => {
               console.error('QR code failed to load');
-              // Fallback QR code
               e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`UPI:${upiId}&AMOUNT:${amount}&NOTE:Chaitanya2025`)}`;
             }}
           />
@@ -184,7 +298,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           Scan QR code with UPI app
         </p>
         <p className="text-xs text-green-400">
-          Amount: ₹{amount} • UPI ID: {upiId}
+          Amount: <strong>₹{amount}</strong> • UPI ID: {upiId}
         </p>
       </div>
 
@@ -205,7 +319,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </div>
         </div>
         <p className="text-xs text-gray-400 text-center mt-2">
-          Or manually send ₹{amount} to this UPI ID
+          Or manually send <strong>₹{amount}</strong> to this UPI ID
         </p>
       </div>
 
@@ -217,11 +331,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             className="w-full bg-green-500 hover:bg-green-600 text-white py-4 px-6 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 text-lg flex items-center justify-center space-x-2"
           >
             <span>📱</span>
-            <span>I'll Pay Now - Generate Payment</span>
+            <span>Generate QR Code - ₹{amount}</span>
           </button>
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-400 mb-2 text-center">Instructions:</h4>
+            <h4 className="font-semibold text-blue-400 mb-2 text-center">How to Pay Securely:</h4>
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">1.</span>
@@ -233,20 +347,17 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">3.</span>
-                <span>Complete payment in UPI app</span>
+                <span><strong>Amount ₹{amount} is auto-filled</strong></span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">4.</span>
-                <span>Return and click "Verify Payment"</span>
+                <span>Do NOT change the amount in UPI app</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-400">5.</span>
+                <span>Complete payment and verify</span>
               </div>
             </div>
-          </div>
-
-          {/* Security Notice */}
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
-            <p className="text-yellow-400 text-sm text-center">
-              🔒 <strong>Secure Payment:</strong> Your payment goes directly to Chaitanya 2025 official account
-            </p>
           </div>
         </div>
       ) : (
@@ -263,9 +374,13 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <p className="text-xs text-yellow-400 text-center mt-2">
               Transaction ID: <code className="bg-black/30 px-2 py-1 rounded">{transactionId}</code>
             </p>
+            <p className="text-xs text-yellow-300 text-center mt-1">
+              Required Amount: <strong>₹{amount}</strong>
+            </p>
           </div>
 
           <button
+            data-verify-button
             onClick={handleVerifyPayment}
             disabled={processing || verificationAttempted}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg flex items-center justify-center space-x-2"
@@ -278,7 +393,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             ) : (
               <>
                 <span>✅</span>
-                <span>I've Paid - Verify Now</span>
+                <span>I've Paid ₹{amount} - Verify Now</span>
               </>
             )}
           </button>
@@ -296,6 +411,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               setPaymentInitiated(false);
               setTransactionId('');
               setVerificationAttempted(false);
+              verificationInProgress.current = false;
             }}
             className="w-full glass-input py-3 px-6 font-medium hover:bg-white/10 transition-colors rounded-lg text-sm"
           >
@@ -304,28 +420,27 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         </div>
       )}
 
-      {/* Supported UPI Apps */}
+      {/* Enhanced Security Features Display */}
       <div className="mt-6 pt-4 border-t border-gray-600">
-        <p className="text-center text-gray-400 text-sm mb-3">Supported UPI Apps</p>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { name: 'GPay', color: 'bg-blue-500' },
-            { name: 'PhonePe', color: 'bg-purple-600' },
-            { name: 'Paytm', color: 'bg-blue-600' },
-            { name: 'BHIM', color: 'bg-orange-500' }
-          ].map((app) => (
-            <div key={app.name} className={`${app.color} rounded-lg p-2 text-center text-white text-xs font-bold`}>
-              {app.name}
-            </div>
-          ))}
+        <h4 className="font-semibold text-white mb-3 text-center">Security Features</h4>
+        <div className="grid grid-cols-1 gap-2 text-sm">
+          <div className="flex items-center space-x-2 text-green-400">
+            <span>🔒</span>
+            <span>Amount auto-filled to prevent errors</span>
+          </div>
+          <div className="flex items-center space-x-2 text-green-400">
+            <span>🔒</span>
+            <span>Backend amount verification</span>
+          </div>
+          <div className="flex items-center space-x-2 text-green-400">
+            <span>🔒</span>
+            <span>Multi-layer duplicate prevention</span>
+          </div>
+          <div className="flex items-center space-x-2 text-green-400">
+            <span>🔒</span>
+            <span>Real-time button locking</span>
+          </div>
         </div>
-      </div>
-
-      {/* Help Section */}
-      <div className="mt-4 text-center">
-        <p className="text-xs text-gray-500">
-          Need help? Ensure you have a UPI app installed and sufficient balance.
-        </p>
       </div>
     </div>
   );
