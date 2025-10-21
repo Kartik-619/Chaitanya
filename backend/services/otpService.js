@@ -47,7 +47,7 @@ class OTPService {
           email: 'chaitanyahptu@gmail.com',
           name: 'Chaitanya 2025'
         },
-        subject: 'Chaitanya 2025 - OTP Verification Code',
+        subject: 'Your Verification Code for Chaitanya 2025 Registration',
         text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
         html: this.generateOTPEmailHTML(otp)
       };
