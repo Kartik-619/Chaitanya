@@ -42,47 +42,52 @@ class PaymentService {
   }
 
   /**
-   * Verify UPI payment automatically (simulated for now)
-   */
-  async verifyUPIPayment(upiTransactionId, amount) {
-    try {
-      console.log('🔍 Verifying UPI payment:', upiTransactionId);
-      
-      // Simulate automatic UPI verification
-      // In production, integrate with UPI service provider
-      const isVerified = true; // Auto-verify for now
-      
-      if (isVerified) {
-        return {
-          success: true,
-          paymentId: upiTransactionId,
+ * Verify UPI payment automatically (simulated for now)
+ */
+async verifyUPIPayment(upiTransactionId, amount) {
+  try {
+    console.log('🔍 Verifying UPI payment:', upiTransactionId);
+    
+    // Simulate automatic UPI verification
+    // In production, integrate with UPI service provider
+    const isVerified = true; // Auto-verify for now
+    
+    if (isVerified) {
+      return {
+        success: true,
+        paymentId: upiTransactionId,
+        orderId: `ORDER_${upiTransactionId}`,
+        status: 'completed',
+        // ✅ ADDED: Include all payment details needed by registration service
+        paymentDetails: {
+          transactionId: upiTransactionId,
           orderId: `ORDER_${upiTransactionId}`,
-          status: 'completed',
-          paymentDetails: {
-            transactionId: upiTransactionId,
-            orderId: `ORDER_${upiTransactionId}`,
-            amount: amount,
-            currency: 'INR',
-            method: 'upi',
-            captured: true,
-            createdAt: new Date().toISOString()
-          }
-        };
-      } else {
-        return {
-          success: false,
-          message: 'UPI payment verification failed'
-        };
-      }
-
-    } catch (error) {
-      console.error('UPI payment verification error:', error);
+          amount: amount,
+          currency: 'INR',
+          method: 'upi',
+          captured: true,
+          createdAt: new Date().toISOString()
+        },
+        // ✅ ADDED: Razorpay-compatible fields
+        razorpay_payment_id: upiTransactionId,
+        razorpay_order_id: `ORDER_${upiTransactionId}`,
+        razorpay_signature: `SIG_${upiTransactionId}`
+      };
+    } else {
       return {
         success: false,
-        message: 'UPI verification failed: ' + error.message
+        message: 'UPI payment verification failed'
       };
     }
+
+  } catch (error) {
+    console.error('UPI payment verification error:', error);
+    return {
+      success: false,
+      message: 'UPI verification failed: ' + error.message
+    };
   }
+}
 
   /**
    * Initialize payment - UPI version
