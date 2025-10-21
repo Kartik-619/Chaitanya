@@ -324,7 +324,7 @@ class EmailService {
         email: 'chaitanyahptu@gmail.com',
         name: 'Chaitanya 2025'
       },
-      subject: `Chaitanya 2025 - Registration Confirmed ✅`,
+      subject: `Your Chaitanya 2025 Registration Confirmation`,
       text: this._generateConfirmationText(registrationData, name),
       html: this._generateConfirmationHTML(registrationData, name)
     };
