@@ -128,12 +128,24 @@ const verifyPayment = async (req, res) => {
       expectedAmount: amount
     });
 
-    // ✅ CRITICAL: Check if this session was already processed
+    // ✅ ENHANCED: Stronger duplicate payment check
     if (registrationData.paymentStatus === 'completed') {
       console.log('⚠️ Payment already completed for session:', sessionId);
-      return res.status(400).json({
-        success: false,
-        message: 'Payment already processed for this registration'
+      
+      // ✅ ADD: Return existing registration data to prevent frontend errors
+      const existingRegistrations = Array.from(RegistrationService.completedRegistrations.values());
+      const existingRegistration = existingRegistrations.find(reg => 
+        reg.personalDetails?.email === registrationData.personalDetails?.email ||
+        reg.teamLeader?.email === registrationData.personalDetails?.email
+      );
+      
+      return res.json({
+        success: true,
+        message: 'Payment already processed successfully',
+        alreadyCompleted: true,
+        registrationId: existingRegistration?.registrationId,
+        teamId: existingRegistration?.teamId,
+        finalRegistration: existingRegistration
       });
     }
 
@@ -184,8 +196,22 @@ const verifyPayment = async (req, res) => {
       teamId: registrationResult.teamId
     });
 
-    // ✅ REMOVED: All duplicate Google Sheets saving code
-    // The registration is already saved in RegistrationService.completeRegistration()
+    // ✅ CRITICAL: Trigger email and PDF delivery AFTER successful registration
+    try {
+      const EmailService = require('../services/emailService');
+      console.log('📧 Starting email delivery for:', registrationResult.registrationId);
+      
+      if (registrationResult.finalRegistration.registrationType === 'individual') {
+        await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
+      } else {
+        await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
+      }
+      
+      console.log('✅ Email delivery initiated successfully');
+    } catch (emailError) {
+      console.error('❌ Email delivery failed:', emailError);
+      // Don't fail the payment - email can be sent later via admin
+    }
 
     // Return success response
     res.json({
