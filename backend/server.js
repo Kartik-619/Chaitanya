@@ -40,20 +40,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🆘 UNHANDLED REJECTION at:', promise, 'reason:', reason);
 });
 
-// ==================== GRACEFUL SHUTDOWN ====================
-function gracefulShutdown() {
-  console.log('🛑 Received shutdown signal, shutting down gracefully...');
-  if (retryInterval) clearInterval(retryInterval);
-  if (backupInterval) clearInterval(backupInterval);
-  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  setTimeout(() => {
-    console.log('✅ Server shutdown complete');
-    process.exit(0);
-  }, 1000);
-}
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-
 // ==================== SERVER INITIALIZATION ====================
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -168,11 +154,3 @@ async function startServer() {
 
 // Start server
 startServer();
-
-// ==================== CLEANUP ON EXIT ====================
-process.on('exit', () => {
-  if (retryInterval) clearInterval(retryInterval);
-  if (backupInterval) clearInterval(backupInterval);
-  if (sessionCleanupInterval) clearInterval(sessionCleanupInterval);
-  console.log('🧹 All background services stopped');
-});
