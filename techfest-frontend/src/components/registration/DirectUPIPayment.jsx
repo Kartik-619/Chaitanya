@@ -5,6 +5,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [processing, setProcessing] = useState(false);
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [transactionId, setTransactionId] = useState('');
+  const [verificationAttempted, setVerificationAttempted] = useState(false);
 
   // Your UPI ID
   const upiId = 'dikshitjaswal1922@okicici';
@@ -33,6 +34,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     const newTransactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
     setTransactionId(newTransactionId);
     setPaymentInitiated(true);
+    setVerificationAttempted(false); // Reset verification lock
     
     // Store transaction for verification
     localStorage.setItem('lastUPITransaction', JSON.stringify({
@@ -45,11 +47,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   };
 
   const handleVerifyPayment = async () => {
+    // ✅ FIX: Prevent multiple verification calls
+    if (verificationAttempted) {
+      toast.error('Payment verification already in progress');
+      return;
+    }
+    
     if (!transactionId) {
       toast.error('Please generate QR code first');
       return;
     }
 
+    setVerificationAttempted(true);
     setProcessing(true);
     
     try {
@@ -59,7 +68,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         amount
       });
 
-      // FIXED: Proper backend call with all required fields
+      // ✅ FIX: Simplified backend call - removed unnecessary Razorpay fields
       const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
@@ -68,11 +77,8 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         body: JSON.stringify({
           sessionId: sessionId,
           upiTransactionId: transactionId,
-          amount: amount,
-          // Add these fields that backend might be expecting
-          razorpay_order_id: transactionId, // Fallback for old backend
-          razorpay_payment_id: `upi_${transactionId}`,
-          razorpay_signature: `sig_${transactionId}`
+          amount: amount
+          // ✅ REMOVED: Razorpay compatibility fields to prevent confusion
         }),
       });
 
@@ -86,7 +92,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       console.log('Verification result:', verifyResult);
       
       if (verifyResult.success) {
-        toast.success('Payment verified successfully!');
+        toast.success('Payment verified successfully! Registration completed!');
         
         // Clear stored transaction
         localStorage.removeItem('lastUPITransaction');
@@ -114,6 +120,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       
       toast.error(errorMessage);
       onPaymentFailure(error);
+      setVerificationAttempted(false); // Reset lock on error to allow retry
     } finally {
       setProcessing(false);
     }
@@ -234,6 +241,13 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               </div>
             </div>
           </div>
+
+          {/* Security Notice */}
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+            <p className="text-yellow-400 text-sm text-center">
+              🔒 <strong>Secure Payment:</strong> Your payment goes directly to Chaitanya 2025 official account
+            </p>
+          </div>
         </div>
       ) : (
         // Payment Verification Section
@@ -244,7 +258,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               <span className="font-semibold">Ready for Payment</span>
             </div>
             <p className="text-yellow-300 text-sm text-center">
-              Scan the QR code and complete payment
+              Scan the QR code and complete payment in your UPI app
             </p>
             <p className="text-xs text-yellow-400 text-center mt-2">
               Transaction ID: <code className="bg-black/30 px-2 py-1 rounded">{transactionId}</code>
@@ -253,7 +267,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
 
           <button
             onClick={handleVerifyPayment}
-            disabled={processing}
+            disabled={processing || verificationAttempted}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg flex items-center justify-center space-x-2"
           >
             {processing ? (
@@ -269,10 +283,19 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             )}
           </button>
 
+          {verificationAttempted && !processing && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+              <p className="text-blue-400 text-sm text-center">
+                ✅ Verification submitted! Please wait for confirmation...
+              </p>
+            </div>
+          )}
+
           <button
             onClick={() => {
               setPaymentInitiated(false);
               setTransactionId('');
+              setVerificationAttempted(false);
             }}
             className="w-full glass-input py-3 px-6 font-medium hover:bg-white/10 transition-colors rounded-lg text-sm"
           >
@@ -280,6 +303,30 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </button>
         </div>
       )}
+
+      {/* Supported UPI Apps */}
+      <div className="mt-6 pt-4 border-t border-gray-600">
+        <p className="text-center text-gray-400 text-sm mb-3">Supported UPI Apps</p>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { name: 'GPay', color: 'bg-blue-500' },
+            { name: 'PhonePe', color: 'bg-purple-600' },
+            { name: 'Paytm', color: 'bg-blue-600' },
+            { name: 'BHIM', color: 'bg-orange-500' }
+          ].map((app) => (
+            <div key={app.name} className={`${app.color} rounded-lg p-2 text-center text-white text-xs font-bold`}>
+              {app.name}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Help Section */}
+      <div className="mt-4 text-center">
+        <p className="text-xs text-gray-500">
+          Need help? Ensure you have a UPI app installed and sufficient balance.
+        </p>
+      </div>
     </div>
   );
 };
