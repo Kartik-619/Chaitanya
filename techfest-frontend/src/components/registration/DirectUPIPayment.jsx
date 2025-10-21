@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import QRCode from 'qrcode.react';
 
 const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailure }) => {
   const [processing, setProcessing] = useState(false);
@@ -20,8 +19,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     
     return {
       upiLink,
-      transactionId: newTransactionId,
-      qrValue: upiLink
+      transactionId: newTransactionId
     };
   };
 
@@ -128,7 +126,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     }
   }, []);
 
-  const { upiLink, qrValue } = generateUPIPayment();
+  // Copy UPI ID to clipboard
+  const copyUPIID = () => {
+    navigator.clipboard.writeText(upiId);
+    toast.success('UPI ID copied to clipboard!');
+  };
+
+  // Copy payment details
+  const copyPaymentDetails = () => {
+    const details = `UPI ID: ${upiId}\nAmount: ₹${amount}\nNote: Chaitanya 2025 Registration`;
+    navigator.clipboard.writeText(details);
+    toast.success('Payment details copied!');
+  };
 
   return (
     <div className="glass-card p-6 border-2 border-green-500/20">
@@ -137,7 +146,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           <span className="text-2xl">💳</span>
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Pay with UPI</h3>
-        <p className="text-gray-300">Instant payment - Everything auto-filled</p>
+        <p className="text-gray-300">Instant payment - Click to open UPI app</p>
       </div>
 
       {/* Payment Amount */}
@@ -147,23 +156,33 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         <p className="text-xs text-green-300 mt-1">✅ Exact amount auto-filled in UPI app</p>
       </div>
 
+      {/* UPI ID Display */}
+      <div className="bg-black/30 rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-gray-300">UPI ID:</span>
+          <div className="flex items-center space-x-2">
+            <code className="text-white font-mono bg-black/50 px-3 py-1 rounded border border-green-500/30">
+              {upiId}
+            </code>
+            <button 
+              onClick={copyUPIID}
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+        <button 
+          onClick={copyPaymentDetails}
+          className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 py-2 rounded text-sm border border-blue-500/30 transition-colors"
+        >
+          📋 Copy All Payment Details
+        </button>
+      </div>
+
       {!paymentInitiated ? (
         // Payment Initiation Section
         <div className="space-y-4">
-          {/* QR Code */}
-          <div className="text-center">
-            <div className="bg-white p-4 rounded-xl inline-block mb-3 border-2 border-green-500">
-              <QRCode 
-                value={qrValue} 
-                size={180}
-                includeMargin={true}
-              />
-            </div>
-            <p className="text-sm text-gray-300 mb-2">
-              Scan QR code with any UPI app
-            </p>
-          </div>
-
           {/* Pay Now Button */}
           <button
             onClick={handlePayNow}
@@ -178,26 +197,35 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <h4 className="font-semibold text-blue-400 mb-2 text-center">How to Pay:</h4>
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center space-x-2">
-                <span className="text-green-400">•</span>
+                <span className="text-green-400">1.</span>
                 <span>Click "Open UPI App" above</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-green-400">•</span>
-                <span>OR scan QR code with UPI app</span>
+                <span className="text-green-400">2.</span>
+                <span>Your UPI app will open automatically</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-green-400">•</span>
+                <span className="text-green-400">3.</span>
                 <span>Amount & UPI ID are auto-filled</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-green-400">•</span>
+                <span className="text-green-400">4.</span>
                 <span>Enter UPI PIN and complete payment</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-green-400">•</span>
-                <span>Return here and verify payment</span>
+                <span className="text-green-400">5.</span>
+                <span>Return here and click "Verify Payment"</span>
               </div>
             </div>
+          </div>
+
+          {/* Manual Payment Option */}
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+            <h4 className="font-semibold text-yellow-400 mb-2 text-center">Manual Payment:</h4>
+            <p className="text-yellow-300 text-sm text-center">
+              If UPI app doesn't open automatically, manually send ₹{amount} to:<br/>
+              <code className="bg-black/30 px-2 py-1 rounded mt-1 inline-block">{upiId}</code>
+            </p>
           </div>
         </div>
       ) : (
@@ -214,20 +242,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             </p>
             <p className="text-xs text-yellow-400 text-center mt-2">
               Transaction ID: <code className="bg-black/30 px-2 py-1 rounded">{transactionId}</code>
-            </p>
-          </div>
-
-          {/* QR Code (Still show for reference) */}
-          <div className="text-center">
-            <div className="bg-white p-3 rounded-xl inline-block mb-2 border border-green-500/30">
-              <QRCode 
-                value={qrValue} 
-                size={120}
-                includeMargin={true}
-              />
-            </div>
-            <p className="text-xs text-gray-400">
-              Still need to pay? Scan QR code above
             </p>
           </div>
 
