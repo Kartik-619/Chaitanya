@@ -78,7 +78,7 @@ process.on('SIGINT', gracefulShutdown);
 // ==================== SERVER INITIALIZATION ====================
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
 // 🚀 CRITICAL FIX: Trust proxy for Render deployment
 app.set('trust proxy', 1);
