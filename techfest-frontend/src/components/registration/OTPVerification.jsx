@@ -6,7 +6,7 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(60);
   const inputsRef = useRef([]);
-
+  
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => setTimer(prev => prev - 1), 1000);
