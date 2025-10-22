@@ -9,6 +9,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     teamMembers: [],
     isPremium: false 
   });
+  
   const [esportsGame, setEsportsGame] = useState('');
 
   const mainEvents = [
