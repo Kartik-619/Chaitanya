@@ -66,7 +66,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           sessionId: data.sessionId,
           prelimEvents: selectedEvents,
           isPremium: false,
-          needsAccommodation: true, // Always true now
+          needsAccommodation: true,
           totalAmount: calculatedAmount
         }),
       });
@@ -79,7 +79,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
             ...result.individualData,
             totalAmount: calculatedAmount,
             isPremium: false,
-            needsAccommodation: true // Always true
+            needsAccommodation: true
           }
         });
         nextStep();
@@ -92,23 +92,23 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
   };
 
   return (
-    <div className="glass-card p-8 animate-fade-in">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-2">
+    <div className="glass-card p-4 sm:p-6 md:p-8 animate-fade-in">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-2">
           Select Events
         </h2>
-        <p className="text-gray-300">Choose your individual events</p>
+        <p className="text-sm sm:text-base text-gray-300">Choose your individual events</p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* EVENTS GRID */}
         <div>
-          <h3 className="text-xl font-semibold text-white mb-4">Select Individual Events</h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Select Individual Events</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {prelimEvents.map((event) => (
               <label
                 key={event}
-                className={`glass-card p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
+                className={`glass-card p-3 sm:p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
                   selectedEvents.includes(event)
                     ? 'border-red-500 bg-red-500/10'
                     : 'border-transparent hover:border-red-500/50'
@@ -121,21 +121,21 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                   className="hidden"
                 />
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded border-2 flex items-center justify-center ${
                       selectedEvents.includes(event)
                         ? 'bg-red-500 border-red-500'
                         : 'border-gray-500'
                     }`}>
                       {selectedEvents.includes(event) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <div>
-                      <div className="font-semibold text-white">{event}</div>
-                      <div className="text-sm text-gray-300">₹{eventPrices[event]}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-white text-sm sm:text-base truncate">{event}</div>
+                      <div className="text-xs sm:text-sm text-gray-300">₹{eventPrices[event]}</div>
                     </div>
                   </div>
                 </div>
@@ -145,64 +145,64 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
         </div>
 
         {/* COMPULSORY Accommodation */}
-        <div className="glass-card p-6 border-2 border-green-500/30 bg-green-500/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                <span className="text-green-400 text-lg">🏨</span>
+        <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
+          <div className="flex items-center justify-between space-x-3">
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-green-400 text-sm sm:text-lg">🏨</span>
               </div>
-              <div>
-                <div className="font-semibold text-white text-lg">Accommodation - ₹600</div>
-                <div className="text-sm text-gray-300">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-white text-base sm:text-lg truncate">Accommodation - ₹600</div>
+                <div className="text-xs sm:text-sm text-gray-300 line-clamp-2">
                   3 days comfortable stay at campus hostel (Compulsory)
                 </div>
               </div>
             </div>
-            <div className="text-green-400 font-bold text-lg">₹600</div>
+            <div className="text-green-400 font-bold text-base sm:text-lg flex-shrink-0">₹600</div>
           </div>
         </div>
 
         {/* Selection Summary */}
-        <div className="glass-card p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
-          <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+        <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Order Summary</h3>
           
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {/* Individual Events */}
             {selectedEvents.map((event, index) => (
-              <div key={index} className="flex justify-between items-center text-sm">
-                <span className="text-gray-400 ml-2">• {event}</span>
-                <span className="text-white">₹{eventPrices[event]}</span>
+              <div key={index} className="flex justify-between items-center text-xs sm:text-sm">
+                <span className="text-gray-400 ml-2 truncate flex-1 mr-2">• {event}</span>
+                <span className="text-white flex-shrink-0">₹{eventPrices[event]}</span>
               </div>
             ))}
             
             {/* Compulsory Accommodation */}
             <div className="flex justify-between items-center border-t border-white/20 pt-2">
-              <span className="text-gray-300">Accommodation (₹600)</span>
+              <span className="text-gray-300 text-sm">Accommodation (₹600)</span>
               <span className="text-white font-medium">₹600</span>
             </div>
             
             {/* Total */}
             <div className="border-t border-white/20 pt-3 mt-3">
               <div className="flex justify-between items-center">
-                <span className="text-lg text-white font-semibold">Total Amount</span>
-                <span className="text-2xl text-red-400 font-bold">₹{calculateTotal()}</span>
+                <span className="text-base sm:text-lg text-white font-semibold">Total Amount</span>
+                <span className="text-xl sm:text-2xl text-red-400 font-bold">₹{calculateTotal()}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-4">
+        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             onClick={prevStep}
-            className="flex-1 glass-input py-3 font-medium hover:bg-white/10 transition-colors"
+            className="flex-1 glass-input py-3 font-medium hover:bg-white/10 transition-colors text-sm sm:text-base"
           >
             Back
           </button>
           <button
             onClick={handleSubmit}
             disabled={selectedEvents.length === 0}
-            className="flex-1 glass-button py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 glass-button py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             Continue to Review
           </button>
