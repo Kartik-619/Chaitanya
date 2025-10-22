@@ -85,7 +85,7 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
   };
 
   return (
-    <div className="glass-card p-8 animate-fade-in">
+    <div className="glass-card p-4 sm:p-6 md:p-8 animate-fade-in">
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={handlePaste}
-              className="glass-input w-14 h-14 text-center text-xl font-bold"
+              className="glass-input w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl font-bold flex-1 max-w-[50px]"
             />
           ))}
         </div>
