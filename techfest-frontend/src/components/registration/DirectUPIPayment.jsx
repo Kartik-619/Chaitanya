@@ -5,7 +5,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [processing, setProcessing] = useState(false);
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false); // NEW: Payment confirmation state
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
@@ -44,7 +44,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   }, [sessionId, amount, transactionId]);
 
   const handleVerifyPayment = async () => {
-    // NEW: Check if payment is confirmed
     if (!paymentConfirmed) {
       toast.error('Please confirm that you have completed the payment first');
       return;
@@ -108,15 +107,17 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         setIsCompleted(true);
         verificationInProgress.current = false;
         
-        toast.success('Payment verified successfully! Registration completed!');
+        toast.success('Payment received! Registration submitted successfully.');
         
         localStorage.removeItem('lastUPITransaction');
         
+        // Call onPaymentSuccess to move to next step
         onPaymentSuccess({
           upiTransactionId: transactionId,
           amount: amount,
-          status: 'completed',
-          registrationId: verifyResult.registrationId
+          status: 'under_verification',
+          registrationId: verifyResult.registrationId,
+          message: 'ID cards will be sent within 48 hours'
         });
         
       } else {
@@ -166,6 +167,8 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     toast.success('UPI ID copied to clipboard!');
   };
 
+  // If payment is completed, show success message but DON'T auto-redirect
+  // Let the parent component handle the redirect
   if (isCompleted) {
     return (
       <div className="glass-card p-4 sm:p-6 border-2 border-green-500/20">
@@ -173,20 +176,49 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
             <span className="text-xl sm:text-2xl">✅</span>
           </div>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">Payment Completed!</h3>
-          <p className="text-sm sm:text-base text-gray-300">Your registration was successful</p>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">
+            Payment Received!
+          </h3>
+          <p className="text-sm sm:text-base text-gray-300">
+            Your registration is successfully submitted
+          </p>
         </div>
         
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 sm:p-4 text-center">
-          <p className="text-green-400 font-semibold text-xs sm:text-sm break-all">Transaction ID: {transactionId}</p>
+          <p className="text-green-400 font-semibold text-xs sm:text-sm break-all">
+            Transaction ID: {transactionId}
+          </p>
           <p className="text-green-300 text-xs sm:text-sm mt-2">Amount: ₹{amount}</p>
-          <p className="text-green-300 text-xs sm:text-sm">Status: Completed</p>
+          <p className="text-green-300 text-xs sm:text-sm">
+            Status: <span className="text-yellow-400">Under Verification</span>
+          </p>
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-gray-400 text-xs sm:text-sm">
-            Please check your email for confirmation and ID card
+          <p className="text-yellow-400 text-sm font-semibold mb-2">
+            📧 ID cards will be sent to your email within 48 hours
           </p>
+          <p className="text-gray-400 text-xs">
+            We are manually verifying your payment. Keep your UPI transaction screenshot handy.
+          </p>
+          <p className="text-gray-400 text-xs mt-2">
+            Contact: chaitanyahptu@gmail.com if you face any issues.
+          </p>
+        </div>
+
+        {/* Continue Button */}
+        <div className="mt-6">
+          <button
+            onClick={() => onPaymentSuccess({
+              upiTransactionId: transactionId,
+              amount: amount,
+              status: 'completed',
+              registrationId: 'pending'
+            })}
+            className="w-full glass-button py-3 font-medium text-sm sm:text-base"
+          >
+            Continue to Confirmation
+          </button>
         </div>
       </div>
     );
@@ -283,6 +315,20 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         </div>
       </div>
 
+      {/* Manual Verification Warning */}
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+        <div className="flex items-center space-x-2 text-yellow-400 mb-2">
+          <span>⚠️</span>
+          <span className="font-semibold text-sm">Important Notice</span>
+        </div>
+        <p className="text-yellow-300 text-xs">
+          • Payments require manual verification<br/>
+          • Keep your UPI payment screenshot<br/>
+          • ID cards will be sent within 48 hours after verification<br/>
+          • Contact us if not received: chaitanyahptu@gmail.com
+        </p>
+      </div>
+
       {/* Verification Button */}
       <div className="space-y-3 sm:space-y-4">
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
@@ -298,7 +344,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </p>
         </div>
 
-        {/* Payment Confirmation Checkbox - NEW */}
+        {/* Payment Confirmation Checkbox */}
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
           <label className="flex items-start space-x-3 cursor-pointer">
             <input
