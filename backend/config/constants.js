@@ -43,7 +43,7 @@ const TEAM_SIZE_RULES = {
   "Dance": { min: 2, max: 6 },
   "Hackathon": { min: 3, max: 6 },
   "Accurate Prediction": { min: 2, max: 4 },
-  "E-sports": { min: 4, max: 4 }, // Fixed 4 members
+  "E-sports": { min: 4, max: 5 }, // Fixed 4 members
   "Polymath": { min: 2, max: 4 },
   "Reverse Engineering": { min: 2, max: 3 },
   "Retro Theming": { min: 2, max: 3 },
