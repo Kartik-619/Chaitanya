@@ -295,6 +295,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             onChange={(e) => setUpiTransactionId(e.target.value.toUpperCase())}
             placeholder="Enter UPI Transaction ID (e.g., 123456789012)"
             className="w-full glass-input px-3 py-2 text-white placeholder-gray-400 text-sm"
+            required
             disabled={timeRemaining > 0}
           />
           <div className="flex items-center space-x-2 text-purple-200 text-xs">
