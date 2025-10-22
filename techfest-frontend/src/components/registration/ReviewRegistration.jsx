@@ -23,7 +23,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     "Dance": 99,
     "Hackathon": 999,
     "Accurate Prediction": 999,
-    "E-sports": 999,
+    "E-sports": 799,
     "Polymath": 499,
     "Reverse Engineering": 199,
     "Retro Theming": 199,
@@ -101,7 +101,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
           };
         case 'E-sports':
           return {
-            base: 999,
+            base: 799,
             additional: 0,
             description: 'Fixed team price (4 members)'
           };

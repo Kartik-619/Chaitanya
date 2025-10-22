@@ -34,7 +34,7 @@ const EVENT_PRICES = {
   "Polymath_team": 499,
   
   // Fixed pricing
-  "E-sports_team": 999
+  "E-sports_team": 799
 };
 
 /**

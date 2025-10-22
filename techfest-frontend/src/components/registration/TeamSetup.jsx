@@ -156,7 +156,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
         total = 499 + Math.max(0, (teamData.teamSize - 2) * 249);
         break;
       case 'E-sports':
-        total = 999;
+        total = 799;
         break;
       case 'Singing':
       case 'Dance':
@@ -356,7 +356,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                 >
                   <div className="text-center">
                     <div className="font-semibold text-white text-sm sm:text-base">{game}</div>
-                    <div className="text-xs text-gray-300">₹999</div>
+                    <div className="text-xs text-gray-300">₹799</div>
                   </div>
                 </div>
               ))}
