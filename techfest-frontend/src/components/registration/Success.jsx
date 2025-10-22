@@ -14,7 +14,7 @@ const Success = ({ data }) => {
   const teamId = paymentResult.teamId || 
                 finalRegistration?.teamId || 
                 data.teamId;
-  
+
   const transactionId = paymentResult.paymentDetails?.transactionId ||
                        finalRegistration?.paymentDetails?.transactionId ||
                        paymentResult.paymentId ||
