@@ -99,6 +99,9 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
           Enter the 6-digit code sent to<br />
           <span className="text-white font-medium">{data.personalDetails?.email}</span>
         </p>
+        <p className="text-yellow-400 text-sm mt-2">
+          📧 <strong>Check your spam folder</strong> if you don't see the OTP email
+        </p>
       </div>
 
       <div className="space-y-6">
