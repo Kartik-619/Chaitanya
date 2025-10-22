@@ -70,7 +70,7 @@ class EmailService {
       "Dance Team": 99,
       "Hackathon Team": 999,
       "Accurate Prediction Team": 999,
-      "E-sports Team": 999,
+      "E-sports Team": 799,
       "Polymath Team": 499,
       "Reverse Engineering Team": 199,
       "Retro Theming Team": 199,
@@ -343,15 +343,15 @@ class EmailService {
   _generateConfirmationText(registrationData, name) {
     return `Dear ${name},
 
-Your registration for Chaitanya 2025 has been confirmed!
+We have received your application request. The Confirmation will be sent to you within next 48 hours.
 
 REGISTRATION DETAILS:
 Registration ID: ${registrationData.registrationId}
 ${registrationData.teamId ? `Team ID: ${registrationData.teamId}` : ''}
 
-Your official ID card will be sent to this email within the next few hours.
+Your official ID card will be sent to this email within the next few hours after the confirmation.
 
-If you don't receive it within 24 hours, please contact us at: chaitanyahptu@gmail.com
+If you don't receive it within 48 hours, please contact us at: chaitanyahptu@gmail.com
 
 Best regards,
 Chaitanya 2025 Team
