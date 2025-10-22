@@ -6,22 +6,17 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // ✅ STRONGER DUPLICATE PREVENTION
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
 
-  // Your UPI ID
-  const upiId = 'dikshitjaswal1922@okicici';
+  const upiId = '9816367020@axl';
   
-  // Generate transaction ID and QR code URL with EXACT amount
   const generateUPIPayment = () => {
     const transactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
     const note = `Chaitanya 2025 Registration - ${transactionId}`;
     
-    // UPI link with EXACT amount
     const upiLink = `upi://pay?pa=${upiId}&pn=Chaitanya%202025&am=${amount}&tn=${encodeURIComponent(note)}&cu=INR`;
     
-    // Generate QR code with exact amount embedded
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiLink)}`;
     
     return {
@@ -33,7 +28,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
 
   const { upiLink, transactionId, qrCodeUrl } = generateUPIPayment();
 
-  // Auto-store transaction when component loads
   useEffect(() => {
     localStorage.setItem('lastUPITransaction', JSON.stringify({
       transactionId: transactionId,
@@ -43,38 +37,31 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       initiated: true
     }));
 
-    // Cleanup on unmount
     return () => {
       isMounted.current = false;
     };
   }, [sessionId, amount, transactionId]);
 
-  // ✅ STRONGER DUPLICATE PREVENTION FUNCTION
   const handleVerifyPayment = async () => {
-    // Level 1: Check if already completed
     if (isCompleted) {
       toast.error('Payment already completed! Do not resubmit.');
       return;
     }
 
-    // Level 2: Check if verification already in progress
     if (verificationInProgress.current) {
       toast.error('Payment verification already in progress. Please wait...');
       return;
     }
 
-    // Level 3: Check state
     if (verificationAttempted) {
       toast.error('Payment verification already submitted.');
       return;
     }
 
-    // ✅ LOCK: Immediately set all flags to prevent duplicates
     verificationInProgress.current = true;
     setVerificationAttempted(true);
     setProcessing(true);
 
-    // ✅ DISABLE BUTTON IMMEDIATELY
     const verifyButton = document.querySelector('[data-verify-button]');
     if (verifyButton) {
       verifyButton.disabled = true;
@@ -83,7 +70,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     }
 
     try {
-      console.log('🔍 Verifying UPI payment....', {
+      console.log('🔍 Verifying UPI payment...', {
         sessionId,
         upiTransactionId: transactionId,
         amount
@@ -111,16 +98,13 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       console.log('Verification result:', verifyResult);
       
       if (verifyResult.success) {
-        // ✅ MARK AS COMPLETED - PREVENT ANY FURTHER ACTIONS
         setIsCompleted(true);
         verificationInProgress.current = false;
         
         toast.success('Payment verified successfully! Registration completed!');
         
-        // Clear stored transaction
         localStorage.removeItem('lastUPITransaction');
         
-        // ✅ Call success callback
         onPaymentSuccess({
           upiTransactionId: transactionId,
           amount: amount,
@@ -135,7 +119,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     } catch (error) {
       console.error('❌ Payment verification failed:', error);
       
-      // ✅ RESET FLAGS ON ERROR (allow retry)
       verificationInProgress.current = false;
       setVerificationAttempted(false);
       
@@ -148,7 +131,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         errorMessage = error.message || errorMessage;
       }
       
-      // ✅ SPECIFIC ERROR FOR DUPLICATES
       if (errorMessage.includes('already processed') || errorMessage.includes('already completed')) {
         setIsCompleted(true);
         toast.error('This payment was already processed successfully!');
@@ -162,7 +144,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         onPaymentFailure(error);
       }
       
-      // ✅ RE-ENABLE BUTTON ON ERROR
       if (verifyButton) {
         verifyButton.disabled = false;
         verifyButton.style.opacity = '1';
@@ -173,32 +154,30 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     }
   };
 
-  // Copy UPI ID to clipboard (hidden but available as backup)
   const copyUPIID = () => {
     navigator.clipboard.writeText(upiId);
     toast.success('UPI ID copied to clipboard!');
   };
 
-  // ✅ PREVENT ANY ACTION IF COMPLETED
   if (isCompleted) {
     return (
-      <div className="glass-card p-6 border-2 border-green-500/20">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">✅</span>
+      <div className="glass-card p-4 sm:p-6 border-2 border-green-500/20">
+        <div className="text-center mb-4 sm:mb-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <span className="text-xl sm:text-2xl">✅</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">Payment Completed!</h3>
-          <p className="text-gray-300">Your registration was successful</p>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">Payment Completed!</h3>
+          <p className="text-sm sm:text-base text-gray-300">Your registration was successful</p>
         </div>
         
-        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
-          <p className="text-green-400 font-semibold">Transaction ID: {transactionId}</p>
-          <p className="text-green-300 text-sm mt-2">Amount: ₹{amount}</p>
-          <p className="text-green-300 text-sm">Status: Completed</p>
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 sm:p-4 text-center">
+          <p className="text-green-400 font-semibold text-xs sm:text-sm break-all">Transaction ID: {transactionId}</p>
+          <p className="text-green-300 text-xs sm:text-sm mt-2">Amount: ₹{amount}</p>
+          <p className="text-green-300 text-xs sm:text-sm">Status: Completed</p>
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-xs sm:text-sm">
             Please check your email for confirmation and ID card
           </p>
         </div>
@@ -207,42 +186,42 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   }
 
   return (
-    <div className="glass-card p-6 border-2 border-green-500/20">
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl">💳</span>
+    <div className="glass-card p-4 sm:p-6 border-2 border-green-500/20">
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <span className="text-xl sm:text-2xl">💳</span>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">Pay with UPI</h3>
-        <p className="text-gray-300">Scan QR code with any UPI app</p>
+        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">Pay with UPI</h3>
+        <p className="text-sm sm:text-base text-gray-300">Scan QR code with any UPI app</p>
       </div>
 
-      {/* Payment Amount - HIGHLIGHTED & LOCKED */}
-      <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-4 mb-6 text-center border-2 border-green-500/30">
-        <p className="text-gray-300 text-sm mb-1">Amount to Pay</p>
-        <p className="text-4xl font-bold text-green-400">₹{amount}</p>
+      {/* Payment Amount */}
+      <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border-2 border-green-500/30">
+        <p className="text-gray-300 text-xs sm:text-sm mb-1">Amount to Pay</p>
+        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400">₹{amount}</p>
         <p className="text-xs text-green-300 mt-1">
           ✅ <strong>Auto-filled in QR</strong> - Do not change amount
         </p>
       </div>
 
       {/* Security Warning */}
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
         <div className="flex items-center justify-center space-x-2 text-red-400 mb-1">
-          <span>⚠️</span>
-          <span className="font-semibold">Important</span>
+          <span className="text-sm">⚠️</span>
+          <span className="font-semibold text-sm">Important</span>
         </div>
-        <p className="text-red-300 text-sm text-center">
+        <p className="text-red-300 text-xs sm:text-sm text-center">
           Pay <strong>exactly ₹{amount}</strong> as shown in QR code
         </p>
       </div>
 
-      {/* QR Code Section - ALWAYS VISIBLE */}
-      <div className="text-center mb-6">
-        <div className="bg-white p-6 rounded-2xl inline-block mb-4 border-4 border-green-500 shadow-2xl">
+      {/* QR Code Section */}
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="bg-white p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl inline-block mb-3 sm:mb-4 border-2 sm:border-4 border-green-500 shadow-lg">
           <img 
             src={qrCodeUrl} 
             alt="UPI Payment QR Code"
-            className="w-72 h-72 mx-auto"
+            className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto"
             onError={(e) => {
               console.error('QR code failed to load');
               e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`UPI:${upiId}&AMOUNT:${amount}&NOTE:Chaitanya2025`)}`;
@@ -250,18 +229,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           />
         </div>
         
-        <div className="space-y-2">
-          <p className="text-sm text-gray-300">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm text-gray-300">
             <strong>Scan with:</strong> Google Pay, PhonePe, Paytm, BHIM, or any UPI app
           </p>
-          <p className="text-xs text-green-400">
+          <p className="text-xs text-green-400 break-all">
             Amount: <strong>₹{amount}</strong> • Transaction: {transactionId}
           </p>
         </div>
       </div>
 
-      {/* Hidden UPI ID Backup (for support) */}
-      <div className="bg-black/20 rounded-lg p-3 mb-6 text-center">
+      {/* Hidden UPI ID Backup */}
+      <div className="bg-black/20 rounded-lg p-2 sm:p-3 mb-4 sm:mb-6 text-center">
         <button 
           onClick={copyUPIID}
           className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
@@ -271,44 +250,44 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       </div>
 
       {/* Payment Instructions */}
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
-        <h4 className="font-semibold text-blue-400 mb-3 text-center">How to Pay:</h4>
-        <div className="space-y-3 text-sm text-gray-300">
-          <div className="flex items-start space-x-3">
-            <span className="text-green-400 text-lg">1.</span>
+      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        <h4 className="font-semibold text-blue-400 mb-2 sm:mb-3 text-center text-sm sm:text-base">How to Pay:</h4>
+        <div className="space-y-2 text-xs sm:text-sm text-gray-300">
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">1.</span>
             <span>Open your UPI app</span>
           </div>
-          <div className="flex items-start space-x-3">
-            <span className="text-green-400 text-lg">2.</span>
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">2.</span>
             <span>Tap "Scan QR Code" and scan the code above</span>
           </div>
-          <div className="flex items-start space-x-3">
-            <span className="text-green-400 text-lg">3.</span>
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">3.</span>
             <span><strong>Amount ₹{amount} is auto-filled</strong> - Do not change it</span>
           </div>
-          <div className="flex items-start space-x-3">
-            <span className="text-green-400 text-lg">4.</span>
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">4.</span>
             <span>Complete payment in your UPI app</span>
           </div>
-          <div className="flex items-start space-x-3">
-            <span className="text-green-400 text-lg">5.</span>
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">5.</span>
             <span>Return here and click "I've Paid - Verify Now"</span>
           </div>
         </div>
       </div>
 
       {/* Verification Button */}
-      <div className="space-y-4">
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-center justify-center space-x-2 text-yellow-400 mb-2">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+          <div className="flex items-center justify-center space-x-2 text-yellow-400 mb-1 sm:mb-2">
             <span>⏳</span>
-            <span className="font-semibold">Ready for Payment</span>
+            <span className="font-semibold text-sm">Ready for Payment</span>
           </div>
-          <p className="text-yellow-300 text-sm text-center">
+          <p className="text-yellow-300 text-xs sm:text-sm text-center">
             Scan the QR code and complete payment in your UPI app first
           </p>
-          <p className="text-xs text-yellow-400 text-center mt-2">
-            Transaction ID: <code className="bg-black/30 px-2 py-1 rounded">{transactionId}</code>
+          <p className="text-xs text-yellow-400 text-center mt-2 break-all">
+            Transaction ID: <code className="bg-black/30 px-1 sm:px-2 py-1 rounded text-xs">{transactionId}</code>
           </p>
         </div>
 
@@ -316,11 +295,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           data-verify-button
           onClick={handleVerifyPayment}
           disabled={processing || verificationAttempted}
-          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg flex items-center justify-center space-x-2 shadow-lg"
+          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg flex items-center justify-center space-x-2 shadow-lg"
         >
           {processing ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               <span>Verifying Payment...</span>
             </>
           ) : (
@@ -332,8 +311,8 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         </button>
 
         {verificationAttempted && !processing && (
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-            <p className="text-blue-400 text-sm text-center">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3">
+            <p className="text-blue-400 text-xs sm:text-sm text-center">
               ✅ Verification submitted! Please wait for confirmation...
             </p>
           </div>
@@ -341,9 +320,9 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       </div>
 
       {/* Enhanced Security Features Display */}
-      <div className="mt-6 pt-4 border-t border-gray-600">
-        <h4 className="font-semibold text-white mb-3 text-center">Security Features</h4>
-        <div className="grid grid-cols-1 gap-2 text-sm">
+      <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-600">
+        <h4 className="font-semibold text-white mb-2 sm:mb-3 text-center text-sm sm:text-base">Security Features</h4>
+        <div className="grid grid-cols-1 gap-1 sm:gap-2 text-xs sm:text-sm">
           <div className="flex items-center space-x-2 text-green-400">
             <span>🔒</span>
             <span>Amount auto-filled in QR code</span>
