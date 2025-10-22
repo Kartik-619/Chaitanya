@@ -14,7 +14,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Singing",
     "Dancing"
   ];
-
+  
   const eventPrices = {
     "Integration Bee": 299,
     "Human vs AI": 299,
