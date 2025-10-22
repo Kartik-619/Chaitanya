@@ -315,6 +315,9 @@ const Success = ({ data }) => {
             <div>
               <span className="font-medium text-white">Confirmation Email:</span>
               <p className="text-sm">ID cards and confirmation has been sent to your email</p>
+              <p className="text-yellow-400 text-xs mt-1">
+                🔍 <strong>Check spam folder</strong> if not in inbox
+              </p>
             </div>
           </div>
           
