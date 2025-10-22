@@ -5,7 +5,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [processing, setProcessing] = useState(false);
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  
+
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
 
