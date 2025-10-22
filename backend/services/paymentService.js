@@ -50,7 +50,7 @@ async verifyUPIPayment(upiTransactionId, amount) {
     
     // Simulate automatic UPI verification
     // In production, integrate with UPI service provider
-    const isVerified = false; // Auto-verify for now
+    const isVerified = true; // Auto-verify for now
     
     if (isVerified) {
       return {
