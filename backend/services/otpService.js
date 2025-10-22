@@ -3,28 +3,25 @@
  * 
  * This service handles OTP (One-Time Password) generation and delivery:
  * - OTP generation and validation
- * - Email and SMS delivery systems
+ * - Email delivery via SendGrid API
  * - OTP expiry management
  * - Security verification for user authentication
- * 
- * 📧 DELIVERY METHODS:
- * - Email OTP with professional templates
- * - SMS OTP (placeholder for SMS service integration)
- * - Multi-channel verification for enhanced security
  */
 
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const { SESSION_CONFIG } = require('../config/constants');
+
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 class OTPService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.UNIVERSITY_EMAIL || 'chaitanyahptu@gmail.com',
-        pass: process.env.UNIVERSITY_EMAIL_PASSWORD
-      }
-    });
+    this.initialized = !!process.env.SENDGRID_API_KEY;
+    if (!this.initialized) {
+      console.warn('⚠️ SendGrid API key not found. OTP emails will not be sent.');
+    } else {
+      console.log('✅ SendGrid OTP Service Initialized');
+    }
   }
 
   /**
@@ -35,22 +32,31 @@ class OTPService {
   }
 
   /**
-   * Send OTP via email with professional template
+   * Send OTP via email using SendGrid API
    */
   async sendOTPEmail(email, otp) {
+    if (!this.initialized) {
+      console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
+      return true; // Return true for testing
+    }
+
     try {
-      const mailOptions = {
-        from: `"Chaitanya 2025" <${process.env.UNIVERSITY_EMAIL || 'chaitanyahptu@gmail.com'}>`,
+      const msg = {
         to: email,
-        subject: 'Chaitanya 2025 - OTP Verification',
+        from: {
+          email: 'chaitanyahptu@gmail.com',
+          name: 'Chaitanya 2025'
+        },
+        subject: 'Your Verification Code for Chaitanya 2025 Registration',
+        text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
         html: this.generateOTPEmailHTML(otp)
       };
 
-      await this.transporter.sendMail(mailOptions);
-      console.log(`✅ OTP email sent to: ${email}`);
+      await sgMail.send(msg);
+      console.log(`✅ OTP email sent to ${email}`);
       return true;
     } catch (error) {
-      console.error('❌ Error sending OTP email:', error);
+      console.error('❌ SendGrid error:', error.response?.body || error.message);
       return false;
     }
   }
@@ -62,7 +68,6 @@ class OTPService {
     try {
       // Placeholder for SMS integration
       console.log(`📱 SMS OTP for ${phone}: ${otp}`);
-      // Implement actual SMS service integration here (Twilio, etc.)
       return true;
     } catch (error) {
       console.error('❌ Error sending OTP SMS:', error);
@@ -151,6 +156,13 @@ class OTPService {
             <p>Best regards,<br>
             <strong>Chaitanya 2025 Team</strong><br>
             Himachal Pradesh Technical University</p>
+            <div style="font-size: 12px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+                <strong>Event Address:</strong><br>
+                Chaitanya 2025, HPTU<br>
+                Gandhi Chowk, Hamirpur<br>
+                Himachal Pradesh 177001<br>
+                <a href="mailto:chaitanyahptu@gmail.com" style="color: #666;">Contact Support</a>
+            </div>
         </div>
     </div>
 </body>

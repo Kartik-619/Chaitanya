@@ -52,8 +52,8 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/register/verify-otp', {
-        method: 'POST',
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/verify-otp', {
+      method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -98,6 +98,9 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
         <p className="text-gray-300">
           Enter the 6-digit code sent to<br />
           <span className="text-white font-medium">{data.personalDetails?.email}</span>
+        </p>
+        <p className="text-yellow-400 text-sm mt-2">
+          📧 <strong>Check your spam folder</strong> if you don't see the OTP email
         </p>
       </div>
 

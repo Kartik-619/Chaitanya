@@ -5,6 +5,7 @@ import Scroller from './Scroller';
 import EventModal from './EventModal';
 import { mainEvents, prelimEvents } from './eventData';
 import './EventSection.css';
+import Icon from '../icon';
 
 export default function EventSection() {
   const scrollerRef = useRef(null);
@@ -31,7 +32,7 @@ export default function EventSection() {
     console.log('Registering for event:', selectedEvent?.title);
     closeEvent();
     setTimeout(() => {
-      window.location.href = "http://localhost:3000";
+      window.location.href = "https://chaitanya-subdomain.vercel.app/";
     }, 350);
   };
 
@@ -54,7 +55,7 @@ export default function EventSection() {
         {/* Featured Events */}
         <div className="featured-events-header">
           <div className="sparkles-container">
-            <Sparkles className="sparkles-icon" />
+            <Icon/>
           </div>
           <h1 className="featured-title">
             Featured Events
@@ -86,9 +87,7 @@ export default function EventSection() {
                   <h3 className="main-event-title">{ev.title}</h3>
                   <p className="main-event-description">{ev.shortDesc}</p>
                   <div className="main-event-footer">
-                    <div className="prize-amount">
-                      <span>{ev.prize}</span>
-                    </div>
+                 
                     <button 
                       className="view-details-btn"
                       style={{ background: ev.color }}

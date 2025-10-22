@@ -72,7 +72,7 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
     try {
       console.log('📤 Sending registration data:', formData);
       
-      const response = await fetch('http://localhost:5000/api/register/start', {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

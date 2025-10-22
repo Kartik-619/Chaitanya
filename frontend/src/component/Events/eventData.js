@@ -9,7 +9,7 @@ export const mainEvents = [
     time: "Day-1(9:00 AM) - Day-2(6:00 PM)",
     venue: "Tech Hall A",
     participants: "-",
-    prize: "-",
+    
     image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800",
     color: "#FF6B9D",
     category: "Main Event",
@@ -31,7 +31,7 @@ export const mainEvents = [
     time: "10:00 AM - 6:00 PM",
     venue: "Data Science Lab",
     participants: "300+",
-    prize: "$30,000",
+   
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
     color: "#C084FC",
     category: "Main Event",
@@ -75,9 +75,9 @@ export const prelimEvents = {
       color: "#10B981",
       image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800",
       time: "10:00 AM - 3:00 PM",
-      venue: "Innovation Hall",
+      
       participants: "100+ Teams",
-      prize: "$8,000",
+      
       category: "Technical Event",
       highlights: [
         {
@@ -108,9 +108,9 @@ export const prelimEvents = {
       color: "#60A5FA",
       image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800",
       time: "2:00 PM - 5:00 PM",
-      venue: "Mathematics Hall",
+      
       participants: "100+",
-      prize: "$5,000",
+      
       category: "Technical Event",
       highlights: [
         {
@@ -141,9 +141,9 @@ export const prelimEvents = {
       color: "#8B5CF6",
       image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800",
       time: "10:00 AM - 1:00 PM",
-      venue: "Computer Lab 3",
+     
       participants: "60+",
-      prize: "$5,500",
+   
       category: "Technical Event",
       "highlights": [
         {
@@ -176,9 +176,9 @@ export const prelimEvents = {
       color: "#EC4899",
       image: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800",
       time: "2:00 PM - 6:00 PM",
-      venue: "Security Lab",
+      
       participants: "120+",
-      prize: "$6,000",
+      
       category: "Technical Event",
       highlights: [
         {
@@ -212,9 +212,9 @@ export const prelimEvents = {
       color: "#F59E0B",
       image: "https://images.unsplash.com/photo-1511765224389-37f0e77cf0eb?w=800",
       time: "3:00 PM - 5:00 PM",
-      venue: "Art Studio",
+    
       participants: "50+",
-      prize: "$3,000",
+
       category: "Non-Technical Event",
       highlights: [
         {
@@ -246,9 +246,9 @@ export const prelimEvents = {
       color: "#A78BFA",
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800",
       time: "3:00 PM - 4:00 PM",
-      venue: "AI Lab",
+      
       participants: "150+",
-      prize: "$7,000",
+     
       category: "Non-Technical Event",
       highlights: [
         {
@@ -280,9 +280,9 @@ export const prelimEvents = {
       color: "#C026D3",
       image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
       time: "11:00 AM - 1:00 PM",
-      venue: "Innovation Lab",
+      
       participants: "100+",
-      prize: "$5,000",
+      
       category: "Non-Technical Event",
 
       highlights: [

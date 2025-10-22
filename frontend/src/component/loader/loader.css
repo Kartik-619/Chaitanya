@@ -1,0 +1,180 @@
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0014 0%, #21023a 50%, #5c2986 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 1rem;
+  }
+  
+  .loader-container {
+    text-align: center;
+    color: white;
+    max-width: 90vw;
+  }
+  
+  .icon-loader {
+    background-image: url('/icon.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: clamp(80px, 25vw, 200px);
+    height: clamp(80px, 25vh, 200px);
+    margin: 0 auto 20px;
+    animation: pulse 2s infinite ease-in-out;
+    /* GSAP will handle rotation, CSS handles pulsing */
+  }
+  
+  @keyframes pulse {
+    0%, 100% { 
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% { 
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+  }
+  
+  /* Rest of your CSS remains exactly the same */
+  .loader-text {
+    font-size: clamp(1.2rem, 4vw, 2.5rem);
+    margin-bottom: 10px;
+    color: rgba(234, 220, 220, 0.8);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+  
+  .loader-title {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    margin-bottom: clamp(20px, 4vh, 30px);
+    background: linear-gradient(135deg, #f6f6f6, #e3e3e3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    line-height: 1.2;
+    word-wrap: break-word;
+  }
+  
+  .loading-bar {
+    width: clamp(150px, 50vw, 300px);
+    height: clamp(3px, 0.5vh, 4px);
+    background: #ffffff33;
+    border-radius: 2px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  
+  .loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #ececec, #e0aaff);
+    border-radius: 2px;
+    animation: loading 2s infinite ease-in-out;
+  }
+  
+  @keyframes loading {
+    0% { 
+      width: 0%;
+      transform: translateX(-100%);
+    }
+    50% {
+      width: 100%;
+      transform: translateX(0%);
+    }
+    100% {
+      width: 0%;
+      transform: translateX(100%);
+    }
+  }
+
+  /* All your responsive media queries remain exactly the same */
+  @media (max-width: 768px) {
+    .loader-container {
+      max-width: 95vw;
+    }
+    
+    .icon-loader {
+      width: clamp(60px, 30vw, 150px);
+      height: clamp(60px, 30vh, 150px);
+    }
+    
+    .loader-text {
+      font-size: clamp(1rem, 5vw, 1.8rem);
+    }
+    
+    .loader-title {
+      font-size: clamp(1.2rem, 6vw, 2rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .loader-overlay {
+      padding: 0.5rem;
+    }
+    
+    .icon-loader {
+      width: clamp(50px, 35vw, 120px);
+      height: clamp(50px, 35vh, 120px);
+      margin-bottom: 15px;
+    }
+    
+    .loader-text {
+      font-size: clamp(0.9rem, 6vw, 1.5rem);
+      margin-bottom: 8px;
+    }
+    
+    .loader-title {
+      font-size: clamp(1rem, 7vw, 1.8rem);
+      margin-bottom: 20px;
+    }
+    
+    .loading-bar {
+      width: clamp(120px, 60vw, 250px);
+    }
+  }
+
+  @media (max-width: 320px) {
+    .icon-loader {
+      width: 40vw;
+      height: 40vh;
+    }
+    
+    .loader-text {
+      font-size: 1rem;
+    }
+    
+    .loader-title {
+      font-size: 1.2rem;
+    }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    .loader-container {
+      transform: scale(0.8);
+    }
+    
+    .icon-loader {
+      width: clamp(40px, 20vw, 100px);
+      height: clamp(40px, 20vh, 100px);
+      margin-bottom: 10px;
+    }
+    
+    .loader-text,
+    .loader-title {
+      margin-bottom: 8px;
+    }
+  }
+
+  @media (min-height: 1000px) {
+    .icon-loader {
+      width: clamp(100px, 20vw, 250px);
+      height: clamp(100px, 20vh, 250px);
+    }
+  }

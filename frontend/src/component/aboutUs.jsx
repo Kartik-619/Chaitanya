@@ -5,9 +5,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import InfoContent from "./infoContent";
 import AboutContent from "./aboutContent";
 import EventsCarousel from "./eventOverview";
-import Sidebar from "./navbar";
+
 import "./about.css";
-import Social from "./socials";
+import Icon from "./icon";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,6 +29,12 @@ const About = forwardRef((props, ref) => {
   const SCROLL_THRESHOLD = 300;
   const COOLDOWN_PERIOD = 1200;
 
+  // Touch variables
+  const touchStartY = useRef(0);
+  const touchEndY = useRef(0);
+  const scrollAccumulator = useRef(0);
+  const lastScrollTime = useRef(0);
+
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
     getCurrentPage: () => currentIndex,
@@ -43,7 +49,6 @@ const About = forwardRef((props, ref) => {
       props.onPageChange(currentIndex);
     }
     
-    // Dispatch custom event for global listeners
     window.dispatchEvent(new CustomEvent('aboutPageChange', {
       detail: { currentPage: currentIndex, totalPages: contentComponents.length }
     }));
@@ -122,34 +127,66 @@ const About = forwardRef((props, ref) => {
     );
   };
 
+  // Touch event handlers
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e) => {
+    if (isAnimating) {
+      e.preventDefault();
+      return;
+    }
+    
+    touchEndY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    const deltaY = touchStartY.current - touchEndY.current;
+    const absDeltaY = Math.abs(deltaY);
+    
+    if (absDeltaY > 50) {
+      const direction = deltaY > 0 ? "down" : "up";
+      handleScroll(direction, absDeltaY);
+    }
+  };
+
+  const handleScroll = (direction, deltaY = 0) => {
+    const now = Date.now();
+    if (isAnimating || now - lastScrollTime.current < COOLDOWN_PERIOD) return;
+
+    scrollAccumulator.current += Math.abs(deltaY);
+
+    if (scrollAccumulator.current >= SCROLL_THRESHOLD) {
+      lastScrollTime.current = now;
+      scrollAccumulator.current = 0;
+      handlePageFlip(direction === "down" ? "forward" : "backward");
+    }
+  };
+
   useGSAP(
     () => {
-      let scrollAccumulator = 0;
-      let lastScrollTime = 0;
-
-      const handleScroll = (direction, deltaY = 0) => {
-        const now = Date.now();
-        if (isAnimating || now - lastScrollTime < COOLDOWN_PERIOD) return;
-
-        scrollAccumulator += Math.abs(deltaY);
-
-        if (scrollAccumulator >= SCROLL_THRESHOLD) {
-          lastScrollTime = now;
-          scrollAccumulator = 0;
-          handlePageFlip(direction === "down" ? "forward" : "backward");
-        }
-      };
-
       const handleWheel = (e) => {
-        
         const direction = e.deltaY > 0 ? "down" : "up";
         handleScroll(direction, Math.abs(e.deltaY));
       };
 
       const container = containerRef.current;
+      
+      // Add wheel event for desktop
       container.addEventListener("wheel", handleWheel, { passive: true });
+      
+      // Add touch events for mobile
+      container.addEventListener("touchstart", handleTouchStart, { passive: true });
+      container.addEventListener("touchmove", handleTouchMove, { passive: false });
+      container.addEventListener("touchend", handleTouchEnd, { passive: true });
 
-      return () => container.removeEventListener("wheel", handleWheel);
+      return () => {
+        container.removeEventListener("wheel", handleWheel);
+        container.removeEventListener("touchstart", handleTouchStart);
+        container.removeEventListener("touchmove", handleTouchMove);
+        container.removeEventListener("touchend", handleTouchEnd);
+      };
     },
     { scope: containerRef, dependencies: [currentIndex, isAnimating] }
   );
@@ -164,8 +201,9 @@ const About = forwardRef((props, ref) => {
       <div className="section-counter">
         {currentIndex + 1} / {contentComponents.length}
       </div>
-      <Sidebar />
-
+      
+      <Icon/>
+      
       <div className="book-container">
         <div ref={frontPageRef} className="page front-page" style={{ zIndex: 2 }}>
           <div className="page-content">{FrontComponent}</div>
@@ -176,10 +214,29 @@ const About = forwardRef((props, ref) => {
         </div>
       </div>
 
+      <div className="mobile-controls">
+        <button 
+          className="nav-button prev-button"
+          onClick={() => handlePageFlip("backward")}
+          disabled={isAnimating}
+          aria-label="Previous page"
+        >
+          ‹
+        </button>
+        <button 
+          className="nav-button next-button"
+          onClick={() => handlePageFlip("forward")}
+          disabled={isAnimating}
+          aria-label="Next page"
+        >
+          ›
+        </button>
+      </div>
+
       <div
         className={`page-corner ${flipDirection} ${isAnimating ? "visible" : ""}`}
       ></div>
-      <Social />
+     
       <div className="scroll-indicators">
         {contentComponents.map((_, index) => (
           <div
@@ -195,6 +252,7 @@ const About = forwardRef((props, ref) => {
             ? "Scroll down to continue" 
             : "Scroll to flip pages"
           }
+          <div className="mobile-hint">Swipe up/down or use buttons</div>
         </div>
       )}
       {isAnimating && <div className="scroll-protection-overlay"></div>}

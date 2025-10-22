@@ -1,24 +1,15 @@
 /**
- * 💳 PAYMENT CONTROLLER
+ * 💳 UPI PAYMENT CONTROLLER
  * 
- * This file handles all payment-related operations:
- * - Payment initialization and order creation
- * - Payment verification and confirmation
- * - Registration completion after successful payment
- * 
- * 🔄 PAYMENT FLOW:
- * 1. Initialize Payment → Create Razorpay order
- * 2. Verify Payment → Confirm payment success
- * 3. Complete Registration → Save data and send emails
+ * Handles UPI payment processing instead of Razorpay
+ * Same API structure for seamless replacement
  */
 
 const RegistrationService = require('../services/registrationService');
 const PaymentService = require('../services/paymentService');
-const GoogleSheetsService = require('../services/googleSheetsService'); 
-const EmailService = require('../services/emailService'); 
 
 /**
- * Initialize payment process by creating Razorpay order
+ * Initialize UPI payment process
  */
 const initializePayment = async (req, res) => {
   try {
@@ -51,7 +42,7 @@ const initializePayment = async (req, res) => {
       sessionId,
       amountReceived: amount,
       registrationType,
-      isPremium: registrationData.isPremium, // ✅ ADDED: Check premium status
+      isPremium: registrationData.isPremium,
       expectedAmount: amount
     });
 
@@ -69,7 +60,7 @@ const initializePayment = async (req, res) => {
       });
     }
 
-    // Initialize payment with Razorpay
+    // Initialize UPI payment
     const paymentResult = await PaymentService.initializePayment(
       sessionId, 
       amount, 
@@ -84,7 +75,7 @@ const initializePayment = async (req, res) => {
     res.json(paymentResult);
 
   } catch (error) {
-    console.error('Initialize payment error:', error);
+    console.error('Initialize UPI payment error:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -93,116 +84,151 @@ const initializePayment = async (req, res) => {
 };
 
 /**
- * Verify payment completion and complete registration process
+ * Verify UPI payment completion and complete registration process
  */
 const verifyPayment = async (req, res) => {
   try {
     const { 
       sessionId, 
-      razorpay_order_id, 
-      razorpay_payment_id, 
-      razorpay_signature 
+      upiTransactionId,
+      amount
     } = req.body;
 
-    if (!sessionId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    console.log('🔍 [PAYMENT DEBUG] Verification request:', {
+      sessionId,
+      upiTransactionId, 
+      amount
+    });
+
+    // ✅ FIX: Add validation for ALL required fields
+    if (!sessionId || !upiTransactionId || !amount) {
+      console.error('❌ Missing payment verification data:', {
+        sessionId: !!sessionId,
+        upiTransactionId: !!upiTransactionId,
+        amount: !!amount
+      });
       return res.status(400).json({
         success: false,
-        message: 'All payment details are required'
+        message: 'Missing payment verification data. Required: sessionId, upiTransactionId, amount'
       });
     }
 
-    // Verify payment with Razorpay
-    const verificationResult = await PaymentService.verifyPayment(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
+    // Get registration data from session
+    const registrationData = RegistrationService.getRegistrationSession(sessionId);
+    if (!registrationData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registration session not found'
+      });
+    }
+
+    console.log('🔍 [PAYMENT DEBUG] Session found:', {
+      registrationType: registrationData.registrationType,
+      totalAmount: registrationData.totalAmount,
+      expectedAmount: amount
+    });
+
+    // ✅ ENHANCED: Stronger duplicate payment check
+    if (registrationData.paymentStatus === 'completed') {
+      console.log('⚠️ Payment already completed for session:', sessionId);
+      
+      // ✅ ADD: Return existing registration data to prevent frontend errors
+      const existingRegistrations = Array.from(RegistrationService.completedRegistrations.values());
+      const existingRegistration = existingRegistrations.find(reg => 
+        reg.personalDetails?.email === registrationData.personalDetails?.email ||
+        reg.teamLeader?.email === registrationData.personalDetails?.email
+      );
+      
+      return res.json({
+        success: true,
+        message: 'Payment already processed successfully',
+        alreadyCompleted: true,
+        registrationId: existingRegistration?.registrationId,
+        teamId: existingRegistration?.teamId,
+        finalRegistration: existingRegistration
+      });
+    }
+
+    // Verify UPI payment automatically
+    const verificationResult = await PaymentService.verifyUPIPayment(
+      upiTransactionId,
+      amount
     );
+
+    console.log('🔍 [PAYMENT DEBUG] Verification result:', verificationResult);
 
     if (!verificationResult.success) {
       return res.status(400).json(verificationResult);
     }
 
-    // Complete registration process
+    // ✅ CRITICAL FIX: Complete registration with proper payment data
     const registrationResult = await RegistrationService.verifyAndCompleteRegistration(
       sessionId,
       { 
-        razorpay_order_id, 
-        razorpay_payment_id, 
-        razorpay_signature,
-        ...verificationResult
-      }
+        // UPI data
+        upiTransactionId: upiTransactionId,
+        paymentId: upiTransactionId,
+        orderId: `ORDER_${upiTransactionId}`,
+        signature: `SIG_${upiTransactionId}`,
+        
+        // Razorpay-compatible fields (for existing code)
+        razorpay_payment_id: upiTransactionId,
+        razorpay_order_id: `ORDER_${upiTransactionId}`,
+        razorpay_signature: `SIG_${upiTransactionId}`,
+        
+        // Payment details
+        status: 'completed',
+        paymentDetails: {
+          transactionId: upiTransactionId,
+          orderId: `ORDER_${upiTransactionId}`,
+          amount: amount,
+          currency: 'INR',
+          method: 'upi',
+          captured: true,
+          createdAt: new Date().toISOString()
+        }
+      },
+      'upi'
     );
 
-    console.log('🔍 [PAYMENT DEBUG] Final registration data:', JSON.stringify(registrationResult.finalRegistration, null, 2));
-    console.log('🔍 [PAYMENT DEBUG] Team leader prelim events:', registrationResult.finalRegistration.teamLeader?.prelimEvents);
+    console.log('🔍 [PAYMENT DEBUG] Registration completed:', {
+      registrationId: registrationResult.registrationId,
+      teamId: registrationResult.teamId
+    });
 
-    console.log('✅ Registration completed, now saving to Google Sheets and sending email...');
-
-    let sheetsResult = { success: false, message: 'Not attempted' };
-    let eventsResult = { success: false, message: 'Not attempted' };
-    let emailResult = { success: false, message: 'Not attempted' };
-
-    // 1. Save to main registration sheet
+    // ✅ CRITICAL: Trigger email and PDF delivery AFTER successful registration
     try {
-      console.log('💾 Saving to main registration sheet...');
-      sheetsResult = await GoogleSheetsService.saveRegistration(registrationResult.finalRegistration);
-      console.log('📊 Main sheet save result:', sheetsResult);
-    } catch (sheetsError) {
-      console.error('❌ Main sheet save failed:', sheetsError);
-      sheetsResult = { success: false, message: sheetsError.message };
-    }
-
-    // 2. Save to events sheet with AWAIT
-    try {
-      console.log('🎯 Saving to events sheet...');
-      console.log('🔍 Events sheet data check:', {
-        teamLeader: registrationResult.finalRegistration.teamLeader?.name,
-        leaderPrelimEvents: registrationResult.finalRegistration.teamLeader?.prelimEvents,
-        teamMembers: registrationResult.finalRegistration.teamMembers?.length
-      });
+      const EmailService = require('../services/emailService');
+      console.log('📧 Starting email delivery for:', registrationResult.registrationId);
       
-      eventsResult = await GoogleSheetsService.saveToEventsSheet(registrationResult.finalRegistration);
-      console.log('✅ Events sheet save result:', eventsResult);
-    } catch (eventsError) {
-      console.error('❌ Events sheet save failed:', eventsError);
-      console.error('❌ Events sheet error details:', eventsError.message);
-      eventsResult = { success: false, message: eventsError.message };
-    }
-
-    // 3. Send confirmation email
-    try {
-      console.log('📧 Sending confirmation email...');
       if (registrationResult.finalRegistration.registrationType === 'individual') {
-        emailResult = await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
+        await EmailService.sendIndividualConfirmation(registrationResult.finalRegistration);
       } else {
-        emailResult = await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
+        await EmailService.sendTeamConfirmation(registrationResult.finalRegistration);
       }
-      console.log('📧 Email send result:', emailResult);
+      
+      console.log('✅ Email delivery initiated successfully');
     } catch (emailError) {
-      console.error('❌ Email send failed:', emailError);
-      emailResult = { success: false, message: emailError.message };
+      console.error('❌ Email delivery failed:', emailError);
+      // Don't fail the payment - email can be sent later via admin
     }
 
-    //  Return all results for debugging
+    // Return success response
     res.json({
       success: true,
       registrationId: registrationResult.registrationId,
       teamId: registrationResult.teamId,
       finalRegistration: registrationResult.finalRegistration,
       paymentResult: verificationResult,
-      services: {
-        mainSheet: sheetsResult,
-        eventsSheet: eventsResult, 
-        email: emailResult
-      },
-      message: 'Payment verified and registration completed successfully'
+      message: 'UPI payment verified and registration completed successfully!'
     });
 
   } catch (error) {
-    console.error('Verify payment error:', error);
+    console.error('❌ Verify UPI payment error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
+      debug: 'Check server logs for detailed error information'
     });
   }
 };

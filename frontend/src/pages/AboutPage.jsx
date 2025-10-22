@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "./AboutPage.css";
 import Sidebar from "../component/navbar";
 import Social from "../component/socials";
+import Icon from "../component/icon";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -193,6 +194,7 @@ export default function AboutPage() {
 
       {/* Particle background */}
       <div className="particles"></div>
+      <Icon/>
 
       {/* Main Content */}
       <div className="about-content">

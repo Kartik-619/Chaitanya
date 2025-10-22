@@ -1,50 +1,73 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Hero from '../component/hero';
-import About from '../component/aboutUs'; // Fixed import name
+import About from '../component/aboutUs';
 import './home.css';
-
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Social from '../component/socials';
+import Sidebar from '../component/navbar';
+import Loader from '../component/loader/loader';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
-  const horizontalRef = useRef();
+  const aboutRef = useRef();
+  const [isLoading, setIsLoading] = useState(true);
 
   useGSAP(() => {
-    const sections = gsap.utils.toArray('.h-section');
+    if (isLoading) return;
 
-    const scrollTween = gsap.to(sections, {
-      xPercent: 560 * (sections.length - 1),
-      ease: 'none',
-      stagger:2,
-      delay:1,
-      scrollTrigger: {
-        trigger: horizontalRef.current,
-        pin: true,
-        scrub: 1,
-        snap: 1 / (sections.length - 1),
-        start: 'top top',
-        end: () =>
-          '+=' + (horizontalRef.current.scrollWidth - window.innerWidth),
-      },
-    });
+    // Simple animations for both sections
+    gsap.fromTo('.hero-section', 
+      { opacity: 0 },
+      { 
+        opacity: 1, 
+        duration: 1,
+      }
+    );
 
-    ScrollTrigger.refresh();
-    return () => scrollTween.kill();
+    gsap.fromTo('.about-section1', 
+      { opacity: 0, y: 100 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 1.5,
+        scrollTrigger: {
+          trigger: '.about-section1',
+          start: 'top 80%',
+          end: 'bottom 20%',
+          toggleActions: 'play none none reverse'
+        }
+      }
+    );
+  }, [isLoading]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <>
-      {/* Normal vertical scroll section */}
+      {/* Hero Section - Comes FIRST in the DOM */}
       <div className="hero-section">
         <Hero />
       </div>
-
-      {/* Horizontal scroll section */}
-      <div ref={horizontalRef} className="horizontal-wrapper">
-        <section className="h-section"><About /></section> {/* Fixed component name */}
+      
+      <Sidebar/>
+      <Social/>
+      
+      {/* About Section - Comes AFTER Hero in the DOM */}
+      <div className="about-container">
+        <About ref={aboutRef} />
       </div>
     </>
   );

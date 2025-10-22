@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import DirectUPIPayment from './DirectUPIPayment';
 
 const Payment = ({ data, updateData, nextStep, prevStep }) => {
-  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState('upi');
   const [processing, setProcessing] = useState(false);
 
   const paymentMethods = [
     {
-      id: 'razorpay',
-      name: 'Razorpay',
-      description: 'Pay with UPI, Card, Net Banking',
-      icon: '💳'
+      id: 'upi',
+      name: 'UPI Payment',
+      description: 'Pay with any UPI app - Google Pay, PhonePe, Paytm',
+      icon: '📱'
     }
   ];
 
@@ -63,105 +64,10 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
       return false;
     }
 
-    // ✅ ADDED: Validate that amount matches expected calculation
-    const expectedAmount = calculateExpectedAmount();
-    if (Math.abs(totalAmount - expectedAmount) > 1) { // Allow 1 rupee difference for rounding
-      console.warn('⚠️ Amount mismatch detected:', {
-        frontendTotal: totalAmount,
-        expectedTotal: expectedAmount,
-        difference: totalAmount - expectedAmount
-      });
-    }
-
     return true;
   };
 
-  // ✅ ADDED: Calculate expected amount to verify
-  const calculateExpectedAmount = () => {
-    if (data.registrationType === 'individual') {
-      const individualData = data.individualData || {};
-      const eventCost = individualData.prelimEvents?.reduce((total, event) => {
-        const prices = {
-          "Integration Bee": 299,
-          "Human vs AI": 299,
-          "Retro Theming": 199,
-          "Prompt Engineering": 199,
-          "Reverse Engineering": 199,
-          "Jack of Hearts": 399,
-          "Singing": 99,
-          "Dancing": 99
-        };
-        return total + (prices[event] || 0);
-      }, 0) || 0;
-      
-      const accommodation = 600;
-      const premium = individualData.isPremium ? 200 : 0;
-      
-      return eventCost + accommodation + premium;
-    } else {
-      const teamData = data.teamData || {};
-      const teamSize = teamData.teamSize || 1;
-      
-      // Calculate base event cost
-      let eventCost = 0;
-      switch (teamData.mainEvent) {
-        case 'Hackathon':
-          eventCost = 999 + Math.max(0, (teamSize - 3) * 249);
-          break;
-        case 'Accurate Prediction':
-          eventCost = 999 + Math.max(0, (teamSize - 2) * 249);
-          break;
-        case 'Polymath':
-          eventCost = 499 + Math.max(0, (teamSize - 2) * 249);
-          break;
-        case 'E-sports':
-          eventCost = 999;
-          break;
-        case 'Singing':
-        case 'Dance':
-          eventCost = 99 * teamSize;
-          break;
-        case 'Reverse Engineering':
-        case 'Retro Theming':
-        case 'Debate':
-          eventCost = 199 * teamSize;
-          break;
-        case 'Two Minute Manager':
-          eventCost = 149 * teamSize;
-          break;
-        default:
-          eventCost = 0;
-      }
-      
-      const accommodation = 600 * teamSize;
-      const premium = teamData.isPremium ? 200 : 0;
-      
-      return eventCost + accommodation + premium;
-    }
-  };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => {
-        console.log('✅ Razorpay SDK loaded');
-        resolve(true);
-      };
-      script.onerror = () => {
-        console.error('❌ Razorpay SDK failed to load');
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
-
-  const handlePayment = async () => {
+  const handleUPIPaymentSuccess = async (paymentData) => {
     if (!validatePayment()) {
       return;
     }
@@ -169,44 +75,28 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
     setProcessing(true);
 
     try {
-      console.log('🔍 Starting payment process...');
+      console.log('🔍 Starting UPI payment process...');
       console.log('Session ID:', data.sessionId);
       console.log('Total Amount to be paid:', totalAmount);
-      console.log('Registration Type:', data.registrationType);
 
-      // ✅ ADDED: Debug the amount being sent
-      const expectedAmount = calculateExpectedAmount();
-      console.log('🔍 Amount Verification:', {
-        frontendTotal: totalAmount,
-        expectedCalculation: expectedAmount,
-        difference: totalAmount - expectedAmount,
-        includesPremium: data.registrationType === 'individual' 
-          ? data.individualData?.isPremium 
-          : data.teamData?.isPremium
-      });
-
-      const orderResponse = await fetch('http://localhost:5000/api/payment/initialize-payment', {
+      // Verify UPI payment automatically
+      const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           sessionId: data.sessionId,
-          amount: totalAmount, // Make sure this is the correct amount
-          currency: "INR",
-          registrationType: data.registrationType,
-          // ✅ ADDED: Send premium flag to backend for verification
-          isPremium: data.registrationType === 'individual' 
-            ? data.individualData?.isPremium 
-            : data.teamData?.isPremium
+          upiTransactionId: paymentData.upiTransactionId,
+          amount: totalAmount
         }),
       });
 
-      if (!orderResponse.ok) {
-        const errorText = await orderResponse.text();
-        console.error('❌ Payment initialization failed:', orderResponse.status, errorText);
+      if (!verifyResponse.ok) {
+        const errorText = await verifyResponse.text();
+        console.error('❌ UPI payment verification failed:', verifyResponse.status, errorText);
         
-        let errorMessage = 'Payment initialization failed';
+        let errorMessage = 'UPI payment verification failed';
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.message || errorMessage;
@@ -219,199 +109,40 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
         return;
       }
 
-      const result = await orderResponse.json();
-      console.log('📋 Payment initialization response:', result);
-
-      if (!result.success) {
-        toast.error(result.message || 'Payment initialization failed');
-        setProcessing(false);
-        return;
-      }
-
-      // ✅ ADDED: Verify the amount in Razorpay order
-      console.log('🔍 Razorpay Order Amount Verification:', {
-        ourAmount: totalAmount,
-        razorpayAmount: result.order?.amount ? result.order.amount / 100 : 'unknown',
-        razorpayAmountInPaise: result.order?.amount,
-        matches: result.order?.amount === totalAmount * 100
-      });
-
-      // Check for different possible response structures
-      let razorpayKey, orderId, orderAmount;
-
-      if (result.key && result.order && result.order.id) {
-        razorpayKey = result.key;
-        orderId = result.order.id;
-        orderAmount = result.order.amount;
-        
-        // ✅ ADDED: Verify amount matches
-        if (orderAmount !== totalAmount * 100) {
-          console.error('❌ Amount mismatch with Razorpay:', {
-            ourAmount: totalAmount * 100,
-            razorpayAmount: orderAmount,
-            difference: (totalAmount * 100) - orderAmount
-          });
-          toast.error('Amount mismatch detected. Please try again.');
-          setProcessing(false);
-          return;
-        }
-      } else if (result.keyId && result.orderDetails && result.orderDetails.orderId) {
-        razorpayKey = result.keyId;
-        orderId = result.orderDetails.orderId;
-        orderAmount = result.orderDetails.amount;
-      } else if (result.razorpayKey && result.orderId) {
-        razorpayKey = result.razorpayKey;
-        orderId = result.orderId;
-        orderAmount = result.amount;
-      } else {
-        console.error('❌ Unknown response structure:', result);
-        toast.error('Invalid payment response from server');
-        setProcessing(false);
-        return;
-      }
-
-      // Process Razorpay payment with extracted data
-      await processRazorpayPayment({
-        razorpayKey,
-        orderId,
-        orderAmount
-      });
-
-    } catch (error) {
-      console.error('❌ Payment error:', error);
-      toast.error(error.message || 'Network error. Please try again.');
-      setProcessing(false);
-    }
-  };
-
-  const processRazorpayPayment = async (paymentData) => {
-    try {
-      // Load Razorpay script
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        toast.error('Payment gateway failed to load. Please refresh and try again.');
-        setProcessing(false);
-        return;
-      }
-
-      // Get user details
-      const userDetails = data.registrationType === 'individual' 
-        ? data.personalDetails 
-        : data.teamData?.teamLeader;
-
-      console.log('🎯 Payment data for Razorpay:', paymentData);
-      console.log('🎯 Expected amount in rupees:', totalAmount);
-
-      const options = {
-        key: paymentData.razorpayKey,
-        amount: paymentData.orderAmount,
-        currency: "INR",
-        name: "CHAITANYA 2025",
-        description: `Registration for ${data.registrationType} - ${totalAmount} INR`,
-        order_id: paymentData.orderId,
-        handler: async (response) => {
-          console.log('🔄 Payment handler called:', response);
-          await verifyPayment(response);
-        },
-        prefill: {
-          name: userDetails?.name || '',
-          email: userDetails?.email || '',
-          contact: userDetails?.phone || ''
-        },
-        theme: {
-          color: "#EF4444"
-        },
-        modal: {
-          ondismiss: () => {
-            console.log('Payment modal dismissed');
-            setProcessing(false);
-            toast.error('Payment cancelled');
-          }
-        },
-        notes: {
-          totalAmount: totalAmount.toString(),
-          includesPremium: (data.registrationType === 'individual' 
-            ? data.individualData?.isPremium 
-            : data.teamData?.isPremium).toString()
-        }
-      };
-
-      console.log('🎯 Razorpay options:', options);
-      
-      const razorpay = new window.Razorpay(options);
-      
-      razorpay.on('payment.failed', (response) => {
-        console.error('❌ Payment failed:', response.error);
-        let errorMsg = 'Payment failed';
-        if (response.error && response.error.description) {
-          errorMsg = `Payment failed: ${response.error.description}`;
-        }
-        toast.error(errorMsg);
-        setProcessing(false);
-      });
-
-      razorpay.open();
-
-    } catch (error) {
-      console.error('❌ Razorpay initialization error:', error);
-      toast.error('Failed to initialize payment gateway');
-      setProcessing(false);
-    }
-  };
-
-  const verifyPayment = async (razorpayResponse) => {
-    try {
-      setProcessing(true);
-      console.log('🔍 Verifying payment...', razorpayResponse);
-
-      const verifyResponse = await fetch('http://localhost:5000/api/payment/verify-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          razorpay_order_id: razorpayResponse.razorpay_order_id,
-          razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-          razorpay_signature: razorpayResponse.razorpay_signature,
-          sessionId: data.sessionId,
-          expectedAmount: totalAmount // ✅ Send expected amount for verification
-        }),
-      });
-
-      if (!verifyResponse.ok) {
-        const errorText = await verifyResponse.text();
-        console.error('❌ Payment verification failed:', verifyResponse.status, errorText);
-        throw new Error('Payment verification failed');
-      }
-
       const verifyResult = await verifyResponse.json();
-      console.log('📋 Verification result:', verifyResult);
+      console.log('📋 UPI verification result:', verifyResult);
 
       if (verifyResult.success) {
         updateData({
           paymentResult: verifyResult,
           registrationId: verifyResult.registrationId,
           teamId: verifyResult.teamId,
-          finalRegistration: verifyResult.registration,
-          transactionId: razorpayResponse.razorpay_payment_id,
+          finalRegistration: verifyResult.finalRegistration,
+          transactionId: paymentData.upiTransactionId,
           registrationComplete: true
         });
         
-        toast.success('Payment successful! Registration completed.');
+        toast.success('UPI payment successful! Registration completed.');
         
         setTimeout(() => {
           nextStep();
         }, 1500);
         
       } else {
-        throw new Error(verifyResult.message || 'Payment verification failed');
+        throw new Error(verifyResult.message || 'UPI payment verification failed');
       }
 
     } catch (error) {
-      console.error('❌ Verification error:', error);
-      toast.error(error.message || 'Payment verification failed. Please contact support.');
+      console.error('❌ UPI payment error:', error);
+      toast.error(error.message || 'UPI payment failed. Please try again.');
       setProcessing(false);
     }
+  };
+
+  const handleUPIPaymentFailure = (error) => {
+    console.error('UPI payment failed:', error);
+    toast.error('UPI payment initiation failed. Please try again.');
+    setProcessing(false);
   };
 
   // Get registration details for display
@@ -521,7 +252,7 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* Rest of the component remains the same */}
+        {/* UPI Payment Section */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-4">Select Payment Method</h3>
           <div className="space-y-3">
@@ -558,6 +289,18 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
               </div>
             ))}
           </div>
+
+          {/* UPI Payment Component */}
+          {paymentMethod === 'upi' && (
+            <div className="mt-6">
+             <DirectUPIPayment
+                amount={totalAmount}
+                sessionId={data.sessionId}
+                onPaymentSuccess={handleUPIPaymentSuccess}
+                onPaymentFailure={handleUPIPaymentFailure}
+              />
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -569,24 +312,10 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
           >
             Back to Review
           </button>
-          <button
-            onClick={handlePayment}
-            disabled={processing || totalAmount <= 0}
-            className="flex-1 glass-button py-3 px-6 font-medium disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center justify-center"
-          >
-            {processing ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                <span>Processing Payment...</span>
-              </div>
-            ) : (
-              `Pay ₹${totalAmount}`
-            )}
-          </button>
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default Payment;

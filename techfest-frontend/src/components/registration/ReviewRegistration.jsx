@@ -47,7 +47,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
       // Verify the amount before proceeding
       console.log('💰 Final amount being sent to payment:', totalAmount);
       
-      const response = await fetch('http://localhost:5000/api/register/review', {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/review', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

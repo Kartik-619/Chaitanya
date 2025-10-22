@@ -14,7 +14,7 @@ const Success = ({ data }) => {
   const teamId = paymentResult.teamId || 
                 finalRegistration?.teamId || 
                 data.teamId;
-  
+
   const transactionId = paymentResult.paymentDetails?.transactionId ||
                        finalRegistration?.paymentDetails?.transactionId ||
                        paymentResult.paymentId ||
@@ -74,7 +74,7 @@ const Success = ({ data }) => {
   };
 
   const handleBackToHome = () => {
-    window.location.href = "http://localhost:5173"; // Home frontend
+    window.location.href = "http://chaitanya-six.vercel.app/"; // Home frontend
   };
 
   const handleCopyRegistrationId = () => {
@@ -315,6 +315,9 @@ const Success = ({ data }) => {
             <div>
               <span className="font-medium text-white">Confirmation Email:</span>
               <p className="text-sm">ID cards and confirmation has been sent to your email</p>
+              <p className="text-yellow-400 text-xs mt-1">
+                🔍 <strong>Check spam folder</strong> if not in inbox
+              </p>
             </div>
           </div>
           

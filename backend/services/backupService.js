@@ -20,7 +20,9 @@ const path = require('path');
 class BackupService {
   constructor() {
     this.backupFile = path.join(__dirname, '../backups/sessions.json');
-    this.backupInterval = 60000;
+    this.failedRegistrationsFile = path.join(__dirname, '../backups/failed-registrations.json');
+    this.backupInterval = process.env.NODE_ENV === 'production' ? 300000 : 30000;
+    this.maxBackupFiles = 5;
     this.startBackup();
   }
 
@@ -54,7 +56,10 @@ class BackupService {
       }
       
       fs.writeFileSync(this.backupFile, JSON.stringify(backupData, null, 2));
-      console.log('💾 Sessions backed up to file');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('💾 Sessions backed up to file');
+      }
+
     } catch (error) {
       console.error('Backup failed:', error);
     }
