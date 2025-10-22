@@ -328,12 +328,13 @@ const ContactPage = () => {
                 <div className="contact-method-icon">📞</div>
                 <h3 className="contact-method-title">Direct Call</h3>
                 <p className="contact-method-value">+91 9816367020</p>
-                <p className="contact-method-label">Abhishek Pathania</p>
+                <p className="contact-method-label">Abhishek</p>
               </div>
               <div className="contact-method">
                 <div className="contact-method-icon">📧</div>
                 <h3 className="contact-method-title">Primary Email</h3>
                 <p className="contact-method-value">pro.advaitkaushal@gmail.com</p>
+                <p className="contact-method-value">pathaniaabhishek5555@gmail.com</p>
                 <p className="contact-method-label">Official Contact</p>
               </div>
             </div>
