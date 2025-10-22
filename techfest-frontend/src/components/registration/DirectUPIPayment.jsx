@@ -5,6 +5,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [processing, setProcessing] = useState(false);
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false); // NEW: Payment confirmation state
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
@@ -43,6 +44,12 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   }, [sessionId, amount, transactionId]);
 
   const handleVerifyPayment = async () => {
+    // NEW: Check if payment is confirmed
+    if (!paymentConfirmed) {
+      toast.error('Please confirm that you have completed the payment first');
+      return;
+    }
+
     if (isCompleted) {
       toast.error('Payment already completed! Do not resubmit.');
       return;
@@ -271,7 +278,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">5.</span>
-            <span>Return here and click "I've Paid - Verify Now"</span>
+            <span>Return here and confirm payment below</span>
           </div>
         </div>
       </div>
@@ -281,7 +288,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
           <div className="flex items-center justify-center space-x-2 text-yellow-400 mb-1 sm:mb-2">
             <span>⏳</span>
-            <span className="font-semibold text-sm">Ready for Payment</span>
+            <span className="font-semibold text-sm">Step 1: Complete Payment</span>
           </div>
           <p className="text-yellow-300 text-xs sm:text-sm text-center">
             Scan the QR code and complete payment in your UPI app first
@@ -291,10 +298,28 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </p>
         </div>
 
+        {/* Payment Confirmation Checkbox - NEW */}
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={paymentConfirmed}
+              onChange={(e) => setPaymentConfirmed(e.target.checked)}
+              className="w-4 h-4 mt-1 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+            />
+            <div>
+              <span className="font-semibold text-blue-400 text-sm">Step 2: Confirm Payment</span>
+              <p className="text-blue-300 text-xs mt-1">
+                ✅ I have successfully completed the payment of ₹{amount} in my UPI app
+              </p>
+            </div>
+          </label>
+        </div>
+
         <button
           data-verify-button
           onClick={handleVerifyPayment}
-          disabled={processing || verificationAttempted}
+          disabled={processing || verificationAttempted || !paymentConfirmed}
           className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg flex items-center justify-center space-x-2 shadow-lg"
         >
           {processing ? (
@@ -305,7 +330,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           ) : (
             <>
               <span>✅</span>
-              <span>I've Paid ₹{amount} - Verify Now</span>
+              <span>Step 3: Verify Payment Now</span>
             </>
           )}
         </button>
