@@ -6,29 +6,20 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(120); // 2 minutes in seconds
+  const [upiTransactionId, setUpiTransactionId] = useState(''); // NEW: User's actual UPI transaction ID
+  const [timeRemaining, setTimeRemaining] = useState(60); // 1 minute timer
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
 
-  const upiId = '9816367020@axl';
+  const ourUpiId = '9816367020@axl';
   
-  const generateUPIPayment = () => {
-    const transactionId = `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
-    const note = `Chaitanya 2025 Registration - ${transactionId}`;
-    
-    const upiLink = `upi://pay?pa=${upiId}&pn=Chaitanya%202025&am=${amount}&tn=${encodeURIComponent(note)}&cu=INR`;
-    
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiLink)}`;
-    
-    return {
-      upiLink,
-      transactionId,
-      qrCodeUrl
-    };
+  const generateTransactionReference = () => {
+    return `CHT${Date.now()}${Math.random().toString(36).substr(2, 6)}`.toUpperCase();
   };
 
-  const { upiLink, transactionId, qrCodeUrl } = generateUPIPayment();
+  const transactionReference = generateTransactionReference();
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${ourUpiId}&pn=Chaitanya%202025&am=${amount}&tn=Chaitanya2025&cu=INR`)}`;
 
   // Countdown timer
   useEffect(() => {
@@ -42,7 +33,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
 
   useEffect(() => {
     localStorage.setItem('lastUPITransaction', JSON.stringify({
-      transactionId: transactionId,
+      transactionReference: transactionReference,
       amount: amount,
       timestamp: Date.now(),
       sessionId: sessionId,
@@ -52,17 +43,27 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     return () => {
       isMounted.current = false;
     };
-  }, [sessionId, amount, transactionId]);
+  }, [sessionId, amount, transactionReference]);
 
   const handleVerifyPayment = async () => {
-    // Prevent verification if timer is still running
-    if (timeRemaining > 0) {
-      toast.error(`Please wait ${timeRemaining} seconds for payment processing`);
+    // Validate UPI Transaction ID
+    if (!upiTransactionId.trim()) {
+      toast.error('Please enter your UPI Transaction ID');
+      return;
+    }
+
+    if (upiTransactionId.length < 8) {
+      toast.error('Please enter a valid UPI Transaction ID (minimum 8 characters)');
       return;
     }
 
     if (!paymentConfirmed) {
       toast.error('Please confirm that you have completed the payment first');
+      return;
+    }
+
+    if (timeRemaining > 0) {
+      toast.error(`Please wait ${timeRemaining} seconds before verifying`);
       return;
     }
 
@@ -81,9 +82,9 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       return;
     }
 
-    // Add final confirmation
+    // Final confirmation
     const userConfirmed = window.confirm(
-      `⚠️ IMPORTANT: Only click OK if you have ACTUALLY paid ₹${amount} to UPI ID: ${upiId}\n\nIf you haven't paid, your registration will be invalid!`
+      `⚠️ FINAL CONFIRMATION:\n\n• Amount: ₹${amount}\n• UPI ID: ${ourUpiId}\n• Your Transaction ID: ${upiTransactionId}\n\nClick OK ONLY if you have actually paid!`
     );
 
     if (!userConfirmed) {
@@ -94,24 +95,15 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     setVerificationAttempted(true);
     setProcessing(true);
 
-    const verifyButton = document.querySelector('[data-verify-button]');
-    if (verifyButton) {
-      verifyButton.disabled = true;
-      verifyButton.style.opacity = '0.5';
-      verifyButton.style.cursor = 'not-allowed';
-    }
-
     try {
-      console.log('🔍 Verifying UPI payment...', {
+      console.log('🔍 Verifying UPI payment with user transaction ID...', {
         sessionId,
-        upiTransactionId: transactionId,
-        amount
+        userUpiTransactionId: upiTransactionId,
+        amount,
+        ourUpiId
       });
 
-      // Add artificial delay to simulate payment processing
-      toast.loading('Simulating payment verification...', { duration: 3000 });
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
+      // Send to backend with user's actual UPI transaction ID
       const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
@@ -119,8 +111,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         },
         body: JSON.stringify({
           sessionId: sessionId,
-          upiTransactionId: transactionId,
-          amount: amount
+          upiTransactionId: upiTransactionId, // User's actual UPI transaction ID
+          userProvidedUpiId: ourUpiId, // Which UPI they paid to
+          amount: amount,
+          transactionReference: transactionReference, // Our reference
+          manualVerificationRequired: true // Flag for manual verification
         }),
       });
 
@@ -137,16 +132,17 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         setIsCompleted(true);
         verificationInProgress.current = false;
         
-        toast.success('Payment verification submitted! ID cards will be sent after manual review.');
+        toast.success('Payment details submitted! We will verify against bank records.');
         
         localStorage.removeItem('lastUPITransaction');
         
         onPaymentSuccess({
-          upiTransactionId: transactionId,
+          userUpiTransactionId: upiTransactionId, // Store user's actual transaction ID
           amount: amount,
           status: 'pending_manual_verification',
           registrationId: verifyResult.registrationId,
-          message: 'Manual verification required - ID cards within 48 hours'
+          ourUpiId: ourUpiId,
+          message: 'Manual verification with bank records required'
         });
         
       } else {
@@ -168,31 +164,16 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         errorMessage = error.message || errorMessage;
       }
       
-      if (errorMessage.includes('already processed') || errorMessage.includes('already completed')) {
-        setIsCompleted(true);
-        toast.error('This payment was already processed successfully!');
-        onPaymentSuccess({
-          upiTransactionId: transactionId,
-          amount: amount,
-          status: 'already_completed'
-        });
-      } else {
-        toast.error(errorMessage);
-        onPaymentFailure(error);
-      }
+      toast.error(errorMessage);
+      onPaymentFailure(error);
       
-      if (verifyButton) {
-        verifyButton.disabled = false;
-        verifyButton.style.opacity = '1';
-        verifyButton.style.cursor = 'pointer';
-      }
     } finally {
       setProcessing(false);
     }
   };
 
   const copyUPIID = () => {
-    navigator.clipboard.writeText(upiId);
+    navigator.clipboard.writeText(ourUpiId);
     toast.success('UPI ID copied to clipboard!');
   };
 
@@ -204,32 +185,35 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <span className="text-xl sm:text-2xl">✅</span>
           </div>
           <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">
-            Verification Submitted!
+            Payment Details Submitted!
           </h3>
           <p className="text-sm sm:text-base text-gray-300">
-            Your payment verification is submitted for manual review
+            Your payment information has been recorded
           </p>
         </div>
         
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 sm:p-4 text-center">
           <p className="text-green-400 font-semibold text-xs sm:text-sm break-all">
-            Transaction ID: {transactionId}
+            Your UPI Transaction ID: {upiTransactionId}
           </p>
           <p className="text-green-300 text-xs sm:text-sm mt-2">Amount: ₹{amount}</p>
           <p className="text-green-300 text-xs sm:text-sm">
-            Status: <span className="text-yellow-400">Pending Manual Verification</span>
+            Paid to: <span className="text-blue-400">{ourUpiId}</span>
+          </p>
+          <p className="text-green-300 text-xs sm:text-sm mt-2">
+            Status: <span className="text-yellow-400">Pending Bank Verification</span>
           </p>
         </div>
 
         <div className="mt-4 text-center">
           <p className="text-yellow-400 text-sm font-semibold mb-2">
-            📧 ID cards will be sent to your email within 48 hours
+            📧 ID cards will be sent after bank verification
           </p>
           <p className="text-gray-400 text-xs">
-            We are manually verifying your payment against our bank records.
+            We will verify your transaction ID ({upiTransactionId}) against our bank records.
           </p>
           <p className="text-gray-400 text-xs mt-2">
-            Contact: chaitanyahptu@gmail.com if you face any issues.
+            Contact us if you provided wrong transaction ID: chaitanyahptu@gmail.com
           </p>
         </div>
 
@@ -237,7 +221,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         <div className="mt-6">
           <button
             onClick={() => onPaymentSuccess({
-              upiTransactionId: transactionId,
+              userUpiTransactionId: upiTransactionId,
               amount: amount,
               status: 'pending_verification',
               registrationId: 'pending'
@@ -258,7 +242,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           <span className="text-xl sm:text-2xl">💳</span>
         </div>
         <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">Pay with UPI</h3>
-        <p className="text-sm sm:text-base text-gray-300">Scan QR code with any UPI app</p>
+        <p className="text-sm sm:text-base text-gray-300">Scan QR code and enter your UPI Transaction ID</p>
       </div>
 
       {/* Payment Amount */}
@@ -266,18 +250,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         <p className="text-gray-300 text-xs sm:text-sm mb-1">Amount to Pay</p>
         <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400">₹{amount}</p>
         <p className="text-xs text-green-300 mt-1">
-          ✅ <strong>Auto-filled in QR</strong> - Do not change amount
-        </p>
-      </div>
-
-      {/* Security Warning */}
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
-        <div className="flex items-center justify-center space-x-2 text-red-400 mb-1">
-          <span className="text-sm">⚠️</span>
-          <span className="font-semibold text-sm">Important</span>
-        </div>
-        <p className="text-red-300 text-xs sm:text-sm text-center">
-          Pay <strong>exactly ₹{amount}</strong> as shown in QR code
+          Pay to: <strong>{ourUpiId}</strong>
         </p>
       </div>
 
@@ -290,7 +263,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto"
             onError={(e) => {
               console.error('QR code failed to load');
-              e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`UPI:${upiId}&AMOUNT:${amount}&NOTE:Chaitanya2025`)}`;
+              e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`UPI:${ourUpiId}&AMOUNT:${amount}&NOTE:Chaitanya2025`)}`;
             }}
           />
         </div>
@@ -300,83 +273,74 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <strong>Scan with:</strong> Google Pay, PhonePe, Paytm, BHIM, or any UPI app
           </p>
           <p className="text-xs text-green-400 break-all">
-            Amount: <strong>₹{amount}</strong> • Transaction: {transactionId}
+            UPI ID: <strong>{ourUpiId}</strong> • Amount: <strong>₹{amount}</strong>
           </p>
         </div>
       </div>
 
-      {/* Hidden UPI ID Backup */}
-      <div className="bg-black/20 rounded-lg p-2 sm:p-3 mb-4 sm:mb-6 text-center">
-        <button 
-          onClick={copyUPIID}
-          className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
-        >
-          📋 Click here if QR doesn't work
-        </button>
+      {/* NEW: UPI Transaction ID Input */}
+      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex items-center justify-center space-x-2 text-purple-400 mb-3">
+          <span className="text-lg">🔢</span>
+          <span className="font-semibold text-sm">Enter Your UPI Transaction ID</span>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block text-purple-300 text-sm font-medium mb-2">
+            After payment, enter the Transaction ID from your UPI app:
+          </label>
+          <input
+            type="text"
+            value={upiTransactionId}
+            onChange={(e) => setUpiTransactionId(e.target.value.toUpperCase())}
+            placeholder="Enter UPI Transaction ID (e.g., 123456789012)"
+            className="w-full glass-input px-3 py-2 text-white placeholder-gray-400 text-sm"
+            disabled={timeRemaining > 0}
+          />
+          <div className="flex items-center space-x-2 text-purple-200 text-xs">
+            <span>💡</span>
+            <span>Find this in your UPI app under "Transaction History"</span>
+          </div>
+          
+          {timeRemaining > 0 && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-2 mt-2">
+              <p className="text-yellow-300 text-xs text-center">
+                ⏰ Available in {timeRemaining} seconds (simulates payment processing)
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Payment Instructions */}
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-        <h4 className="font-semibold text-blue-400 mb-2 sm:mb-3 text-center text-sm sm:text-base">How to Pay:</h4>
+        <h4 className="font-semibold text-blue-400 mb-2 sm:mb-3 text-center text-sm sm:text-base">How to Pay & Verify:</h4>
         <div className="space-y-2 text-xs sm:text-sm text-gray-300">
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">1.</span>
-            <span>Open your UPI app</span>
+            <span>Scan QR code and pay ₹{amount} to <strong>{ourUpiId}</strong></span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">2.</span>
-            <span>Tap "Scan QR Code" and scan the code above</span>
+            <span>Go to your UPI app → Transaction History</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">3.</span>
-            <span><strong>Amount ₹{amount} is auto-filled</strong> - Do not change it</span>
+            <span>Find the transaction and copy the <strong>Transaction ID</strong></span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">4.</span>
-            <span>Complete payment in your UPI app</span>
+            <span>Enter the Transaction ID above</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">5.</span>
-            <span>Wait 2 minutes (simulates payment processing)</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-green-400 flex-shrink-0">6.</span>
-            <span>Return here and confirm payment below</span>
+            <span>Confirm and submit for verification</span>
           </div>
         </div>
       </div>
 
       {/* Verification Steps */}
       <div className="space-y-3 sm:space-y-4">
-        {/* Timer Display */}
-        {timeRemaining > 0 && (
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-            <div className="flex items-center justify-center space-x-2 text-purple-400 mb-2">
-              <span className="text-lg">⏰</span>
-              <span className="font-semibold text-sm">Payment Processing Timer</span>
-            </div>
-            <p className="text-purple-300 text-sm text-center">
-              Please wait <strong>{Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</strong> for payment to process
-            </p>
-            <p className="text-purple-200 text-xs text-center mt-1">
-              This simulates real payment processing time
-            </p>
-          </div>
-        )}
-
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
-          <div className="flex items-center justify-center space-x-2 text-yellow-400 mb-1 sm:mb-2">
-            <span>⏳</span>
-            <span className="font-semibold text-sm">Step 1: Complete Payment</span>
-          </div>
-          <p className="text-yellow-300 text-xs sm:text-sm text-center">
-            Scan the QR code and complete payment in your UPI app first
-          </p>
-          <p className="text-xs text-yellow-400 text-center mt-2 break-all">
-            Transaction ID: <code className="bg-black/30 px-1 sm:px-2 py-1 rounded text-xs">{transactionId}</code>
-          </p>
-        </div>
-
         {/* Payment Confirmation Checkbox */}
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
           <label className="flex items-start space-x-3 cursor-pointer">
@@ -385,32 +349,26 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               checked={paymentConfirmed}
               onChange={(e) => setPaymentConfirmed(e.target.checked)}
               className="w-4 h-4 mt-1 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
-              disabled={timeRemaining > 0}
+              disabled={timeRemaining > 0 || !upiTransactionId.trim()}
             />
             <div>
-              <span className="font-semibold text-blue-400 text-sm">Step 2: Confirm Payment</span>
+              <span className="font-semibold text-blue-400 text-sm">Confirm Payment</span>
               <p className="text-blue-300 text-xs mt-1">
-                ✅ I have successfully completed the payment of ₹{amount} in my UPI app
-                {timeRemaining > 0 && (
-                  <span className="text-yellow-400 block mt-1">
-                    (Available in {timeRemaining}s)
-                  </span>
-                )}
+                ✅ I have paid ₹{amount} to {ourUpiId} and entered the correct Transaction ID
               </p>
             </div>
           </label>
         </div>
 
         <button
-          data-verify-button
           onClick={handleVerifyPayment}
-          disabled={processing || verificationAttempted || !paymentConfirmed || timeRemaining > 0}
+          disabled={processing || verificationAttempted || !paymentConfirmed || !upiTransactionId.trim() || timeRemaining > 0}
           className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg flex items-center justify-center space-x-2 shadow-lg"
         >
           {processing ? (
             <>
               <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              <span>Verifying Payment...</span>
+              <span>Submitting Payment Details...</span>
             </>
           ) : timeRemaining > 0 ? (
             <>
@@ -420,31 +378,23 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           ) : (
             <>
               <span>✅</span>
-              <span>Step 3: Verify Payment Now</span>
+              <span>Submit for Manual Verification</span>
             </>
           )}
         </button>
-
-        {verificationAttempted && !processing && (
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3">
-            <p className="text-blue-400 text-xs sm:text-sm text-center">
-              ✅ Verification submitted! Please wait for confirmation...
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Manual Verification Warning */}
       <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-4">
         <div className="flex items-center space-x-2 text-yellow-400 mb-2">
           <span>⚠️</span>
-          <span className="font-semibold text-sm">Manual Verification Required</span>
+          <span className="font-semibold text-sm">Manual Bank Verification</span>
         </div>
         <p className="text-yellow-300 text-xs">
-          • All payments are manually verified against bank records<br/>
-          • ID cards will be sent within 48 hours after manual review<br/>
-          • Fake registrations will be deleted without ID cards<br/>
-          • Contact us if not received: chaitanyahptu@gmail.com
+          • We will verify your Transaction ID <strong>{upiTransactionId || '______'}</strong> against bank records<br/>
+          • ID cards will be sent within 24 hours after verification<br/>
+          • Fake or incorrect Transaction IDs will be rejected<br/>
+          • Contact: chaitanyahptu@gmail.com for issues
         </p>
       </div>
     </div>
