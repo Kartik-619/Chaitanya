@@ -6,6 +6,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(120); // 2 minutes in seconds
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
@@ -29,6 +30,16 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
 
   const { upiLink, transactionId, qrCodeUrl } = generateUPIPayment();
 
+  // Countdown timer
+  useEffect(() => {
+    if (timeRemaining > 0 && !isCompleted) {
+      const timer = setInterval(() => {
+        setTimeRemaining(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [timeRemaining, isCompleted]);
+
   useEffect(() => {
     localStorage.setItem('lastUPITransaction', JSON.stringify({
       transactionId: transactionId,
@@ -44,6 +55,12 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   }, [sessionId, amount, transactionId]);
 
   const handleVerifyPayment = async () => {
+    // Prevent verification if timer is still running
+    if (timeRemaining > 0) {
+      toast.error(`Please wait ${timeRemaining} seconds for payment processing`);
+      return;
+    }
+
     if (!paymentConfirmed) {
       toast.error('Please confirm that you have completed the payment first');
       return;
@@ -64,6 +81,15 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       return;
     }
 
+    // Add final confirmation
+    const userConfirmed = window.confirm(
+      `⚠️ IMPORTANT: Only click OK if you have ACTUALLY paid ₹${amount} to UPI ID: ${upiId}\n\nIf you haven't paid, your registration will be invalid!`
+    );
+
+    if (!userConfirmed) {
+      return;
+    }
+
     verificationInProgress.current = true;
     setVerificationAttempted(true);
     setProcessing(true);
@@ -81,6 +107,10 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         upiTransactionId: transactionId,
         amount
       });
+
+      // Add artificial delay to simulate payment processing
+      toast.loading('Simulating payment verification...', { duration: 3000 });
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
@@ -107,17 +137,16 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         setIsCompleted(true);
         verificationInProgress.current = false;
         
-        toast.success('Payment received! Registration submitted successfully.');
+        toast.success('Payment verification submitted! ID cards will be sent after manual review.');
         
         localStorage.removeItem('lastUPITransaction');
         
-        // Call onPaymentSuccess to move to next step
         onPaymentSuccess({
           upiTransactionId: transactionId,
           amount: amount,
-          status: 'under_verification',
+          status: 'pending_manual_verification',
           registrationId: verifyResult.registrationId,
-          message: 'ID cards will be sent within 48 hours'
+          message: 'Manual verification required - ID cards within 48 hours'
         });
         
       } else {
@@ -167,8 +196,6 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
     toast.success('UPI ID copied to clipboard!');
   };
 
-  // If payment is completed, show success message but DON'T auto-redirect
-  // Let the parent component handle the redirect
   if (isCompleted) {
     return (
       <div className="glass-card p-4 sm:p-6 border-2 border-green-500/20">
@@ -177,10 +204,10 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             <span className="text-xl sm:text-2xl">✅</span>
           </div>
           <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2">
-            Payment Received!
+            Verification Submitted!
           </h3>
           <p className="text-sm sm:text-base text-gray-300">
-            Your registration is successfully submitted
+            Your payment verification is submitted for manual review
           </p>
         </div>
         
@@ -190,7 +217,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </p>
           <p className="text-green-300 text-xs sm:text-sm mt-2">Amount: ₹{amount}</p>
           <p className="text-green-300 text-xs sm:text-sm">
-            Status: <span className="text-yellow-400">Under Verification</span>
+            Status: <span className="text-yellow-400">Pending Manual Verification</span>
           </p>
         </div>
 
@@ -199,7 +226,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             📧 ID cards will be sent to your email within 48 hours
           </p>
           <p className="text-gray-400 text-xs">
-            We are manually verifying your payment. Keep your UPI transaction screenshot handy.
+            We are manually verifying your payment against our bank records.
           </p>
           <p className="text-gray-400 text-xs mt-2">
             Contact: chaitanyahptu@gmail.com if you face any issues.
@@ -212,7 +239,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             onClick={() => onPaymentSuccess({
               upiTransactionId: transactionId,
               amount: amount,
-              status: 'completed',
+              status: 'pending_verification',
               registrationId: 'pending'
             })}
             className="w-full glass-button py-3 font-medium text-sm sm:text-base"
@@ -310,27 +337,33 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-green-400 flex-shrink-0">5.</span>
+            <span>Wait 2 minutes (simulates payment processing)</span>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-green-400 flex-shrink-0">6.</span>
             <span>Return here and confirm payment below</span>
           </div>
         </div>
       </div>
 
-      {/* Manual Verification Warning */}
-      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
-        <div className="flex items-center space-x-2 text-yellow-400 mb-2">
-          <span>⚠️</span>
-          <span className="font-semibold text-sm">Important Notice</span>
-        </div>
-        <p className="text-yellow-300 text-xs">
-          • Payments require manual verification<br/>
-          • Keep your UPI payment screenshot<br/>
-          • ID cards will be sent within 48 hours after verification<br/>
-          • Contact us if not received: chaitanyahptu@gmail.com
-        </p>
-      </div>
-
-      {/* Verification Button */}
+      {/* Verification Steps */}
       <div className="space-y-3 sm:space-y-4">
+        {/* Timer Display */}
+        {timeRemaining > 0 && (
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+            <div className="flex items-center justify-center space-x-2 text-purple-400 mb-2">
+              <span className="text-lg">⏰</span>
+              <span className="font-semibold text-sm">Payment Processing Timer</span>
+            </div>
+            <p className="text-purple-300 text-sm text-center">
+              Please wait <strong>{Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</strong> for payment to process
+            </p>
+            <p className="text-purple-200 text-xs text-center mt-1">
+              This simulates real payment processing time
+            </p>
+          </div>
+        )}
+
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
           <div className="flex items-center justify-center space-x-2 text-yellow-400 mb-1 sm:mb-2">
             <span>⏳</span>
@@ -352,11 +385,17 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
               checked={paymentConfirmed}
               onChange={(e) => setPaymentConfirmed(e.target.checked)}
               className="w-4 h-4 mt-1 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+              disabled={timeRemaining > 0}
             />
             <div>
               <span className="font-semibold text-blue-400 text-sm">Step 2: Confirm Payment</span>
               <p className="text-blue-300 text-xs mt-1">
                 ✅ I have successfully completed the payment of ₹{amount} in my UPI app
+                {timeRemaining > 0 && (
+                  <span className="text-yellow-400 block mt-1">
+                    (Available in {timeRemaining}s)
+                  </span>
+                )}
               </p>
             </div>
           </label>
@@ -365,13 +404,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         <button
           data-verify-button
           onClick={handleVerifyPayment}
-          disabled={processing || verificationAttempted || !paymentConfirmed}
+          disabled={processing || verificationAttempted || !paymentConfirmed || timeRemaining > 0}
           className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg flex items-center justify-center space-x-2 shadow-lg"
         >
           {processing ? (
             <>
               <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               <span>Verifying Payment...</span>
+            </>
+          ) : timeRemaining > 0 ? (
+            <>
+              <span>⏰</span>
+              <span>Wait {timeRemaining}s to Verify</span>
             </>
           ) : (
             <>
@@ -390,27 +434,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         )}
       </div>
 
-      {/* Enhanced Security Features Display */}
-      <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-600">
-        <h4 className="font-semibold text-white mb-2 sm:mb-3 text-center text-sm sm:text-base">Security Features</h4>
-        <div className="grid grid-cols-1 gap-1 sm:gap-2 text-xs sm:text-sm">
-          <div className="flex items-center space-x-2 text-green-400">
-            <span>🔒</span>
-            <span>Amount auto-filled in QR code</span>
-          </div>
-          <div className="flex items-center space-x-2 text-green-400">
-            <span>🔒</span>
-            <span>Backend amount verification</span>
-          </div>
-          <div className="flex items-center space-x-2 text-green-400">
-            <span>🔒</span>
-            <span>Unique transaction tracking</span>
-          </div>
-          <div className="flex items-center space-x-2 text-green-400">
-            <span>🔒</span>
-            <span>Real-time payment confirmation</span>
-          </div>
+      {/* Manual Verification Warning */}
+      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-4">
+        <div className="flex items-center space-x-2 text-yellow-400 mb-2">
+          <span>⚠️</span>
+          <span className="font-semibold text-sm">Manual Verification Required</span>
         </div>
+        <p className="text-yellow-300 text-xs">
+          • All payments are manually verified against bank records<br/>
+          • ID cards will be sent within 48 hours after manual review<br/>
+          • Fake registrations will be deleted without ID cards<br/>
+          • Contact us if not received: chaitanyahptu@gmail.com
+        </p>
       </div>
     </div>
   );
