@@ -65,7 +65,7 @@ const Success = ({ data }) => {
   };
 
   const handleBackToHome = () => {
-    window.location.href = "https://chattanya-subdomain.vercel.app/";
+    window.location.href = "https://chaitanyahptu.tech/";
   };
 
   const handleCopyRegistrationId = () => {
