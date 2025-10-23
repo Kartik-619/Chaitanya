@@ -11,7 +11,8 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
-
+  const successCallbackFired = useRef(false);
+  
   const ourUpiId = '9816367020@axl';
   
   const generateTransactionReference = () => {
@@ -136,14 +137,18 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
         
         localStorage.removeItem('lastUPITransaction');
         
-        onPaymentSuccess({
-          userUpiTransactionId: upiTransactionId, // Store user's actual transaction ID
-          amount: amount,
-          status: 'pending_manual_verification',
-          registrationId: verifyResult.registrationId,
-          ourUpiId: ourUpiId,
-          message: 'Manual verification with bank records required'
-        });
+        // ✅ ONLY CALL onPaymentSuccess ONCE
+        if (!successCallbackFired.current) {
+          successCallbackFired.current = true;
+          onPaymentSuccess({
+            userUpiTransactionId: upiTransactionId,
+            amount: amount,
+            status: 'pending_manual_verification',
+            registrationId: verifyResult.registrationId,
+            ourUpiId: ourUpiId,
+            message: 'Manual verification with bank records required'
+          });
+        }
         
       } else {
         throw new Error(verifyResult.message || 'Payment verification failed');
