@@ -216,20 +216,19 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
             Contact us if you provided wrong transaction ID: chaitanyahptu@gmail.com
           </p>
         </div>
-
-        {/* Continue Button */}
-        <div className="mt-6">
+        {/* ✅ HOME SCREEN BUTTON */}
+        <div className="mt-6 text-center">
           <button
-            onClick={() => onPaymentSuccess({
-              userUpiTransactionId: upiTransactionId,
-              amount: amount,
-              status: 'pending_verification',
-              registrationId: 'pending'
-            })}
-            className="w-full glass-button py-3 font-medium text-sm sm:text-base"
+            onClick={() => window.location.href = 'https://chaitanyahptu.tech/'}
+            className="w-full glass-button py-3 font-medium text-sm sm:text-base flex items-center justify-center space-x-2 hover:scale-105 transition-transform"
           >
-            Continue to Confirmation
+            <span>🏠</span>
+            <span>Back to Home Screen</span>
           </button>
+          
+          <p className="text-gray-400 text-xs mt-3">
+            You will receive ID cards via email within 24 hours after verification
+          </p>
         </div>
       </div>
     );
