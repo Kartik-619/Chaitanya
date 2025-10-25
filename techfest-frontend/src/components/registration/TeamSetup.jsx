@@ -163,7 +163,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
       total = 99 * teamData.teamSize; // WAS: 199 per person
       break;
     case 'Two Minute Manager':
-      total = 149 * teamData.teamSize; // SAME but per person
+      total = 99 * teamData.teamSize; // SAME but per person
       break;
     default:
       total = 0;
