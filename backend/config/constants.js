@@ -39,14 +39,12 @@ const SHEETS_CONFIG = {
 
 // Team size rules for each team event
 const TEAM_SIZE_RULES = {
-  "Singing": { min: 2, max: 4 },
-  "Dance": { min: 2, max: 6 },
-  "Hackathon": { min: 4, max: 6 },
+  "Singing": { min: 2, max: 10 },
+  "Dance": { min: 2, max: 10 },
+  "Hackathon": { min: 2, max: 4 },
   "Accurate Prediction": { min: 2, max: 4 },
-  "E-sports": { min: 4, max: 5 }, // Fixed 4 members
+  "E-sports": { min: 4, max: 4 }, // Fixed 4 members
   "Polymath": { min: 2, max: 4 },
-  "Reverse Engineering": { min: 2, max: 3 },
-  "Retro Theming": { min: 2, max: 3 },
   "Debate": { min: 2, max: 2 }, // Fixed 2 members
   "Two Minute Manager": { min: 2, max: 2 } // Fixed 2 members
 };
@@ -66,7 +64,7 @@ const EVENT_CONFIG = {
     "Jack of Hearts",
     "Singing",
     "Dancing",
-    "Two Minute Manager"
+    "Project Bazaar"
   ],
   
   // Team events
@@ -77,10 +75,8 @@ const EVENT_CONFIG = {
     "Accurate Prediction",
     "E-sports",
     "Polymath",
-    "Reverse Engineering", 
-    "Retro Theming",
     "Debate",
-   
+    "Two Minute Manager"
   ],
   
   // Premium settings
