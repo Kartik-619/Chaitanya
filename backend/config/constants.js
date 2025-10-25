@@ -41,7 +41,7 @@ const SHEETS_CONFIG = {
 const TEAM_SIZE_RULES = {
   "Singing": { min: 2, max: 4 },
   "Dance": { min: 2, max: 6 },
-  "Hackathon": { min: 3, max: 6 },
+  "Hackathon": { min: 4, max: 6 },
   "Accurate Prediction": { min: 2, max: 4 },
   "E-sports": { min: 4, max: 5 }, // Fixed 4 members
   "Polymath": { min: 2, max: 4 },
@@ -65,7 +65,8 @@ const EVENT_CONFIG = {
     "Reverse Engineering",
     "Jack of Hearts",
     "Singing",
-    "Dancing"
+    "Dancing",
+    "Two Minute Manager"
   ],
   
   // Team events
@@ -79,7 +80,7 @@ const EVENT_CONFIG = {
     "Reverse Engineering", 
     "Retro Theming",
     "Debate",
-    "Two Minute Manager"
+   
   ],
   
   // Premium settings
