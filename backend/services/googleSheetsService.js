@@ -184,7 +184,7 @@ class GoogleSheetsService {
               JSON.stringify(reg.qrData || {}),      // S: QR Data
               reg.isPremium ? 'Yes' : 'No',                                  // T: Premium Status (team leader doesn't have premium)
               reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-              reg.esportsGame || 'N/A',              // V: E-sports Game (NEW)
+              reg.esportsGame || 'N/A',             // V: E-sports Game (NEW)
               reg.projectBazaar ? 'Yes' : 'No' 
             ]);
             
