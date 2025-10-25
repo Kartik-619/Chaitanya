@@ -10,31 +10,32 @@
 // Prices for all events
 const EVENT_PRICES = {
   // ==================== INDIVIDUAL EVENTS ====================
-  "Integration Bee": 299,
-  "Human vs AI": 299,
-  "Retro Theming": 199,
-  "Prompt Engineering": 199,
-  "Reverse Engineering": 199,
-  "Jack of Hearts": 399,
+  "Integration Bee": 99,
+  "Human vs AI": 99,
+  "Retro Theming": 99,
+  "Prompt Engineering": 99,
+  "Reverse Engineering": 99,
+  "Jack of Hearts": 99,
   "Singing": 99,
   "Dancing": 99,
+  "Project Bazaar" : 0,
 
   // ==================== TEAM EVENTS ====================
   // Per-person pricing
   "Singing_team": 99,
   "Dance_team": 99,
-  "Reverse Engineering_team": 199,
-  "Retro Theming_team": 199,
-  "Debate_team": 199,
-  "Two Minute Manager_team": 149,
+  "Reverse Engineering_team": 99,
+  "Retro Theming_team": 99,
+  "Debate_team": 99,
+  "Two Minute Manager_team": 99,
 
   // Base + additional pricing
-  "Hackathon_team": 999,
-  "Accurate Prediction_team": 999,
-  "Polymath_team": 499,
+  "Hackathon_team": 199,
+  "Accurate Prediction_team": 199,
+  "Polymath_team": 149,
   
   // Fixed pricing
-  "E-sports_team": 799
+  "E-sports_team": 149
 };
 
 /**
