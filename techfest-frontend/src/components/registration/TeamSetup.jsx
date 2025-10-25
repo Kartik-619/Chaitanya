@@ -11,7 +11,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   });
   
   const [esportsGame, setEsportsGame] = useState('');
-
+  const [projectBazaar, setProjectBazaar] = useState(false);
+  
   const mainEvents = [
     "Singing",
     "Dance", 
@@ -19,22 +20,18 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Accurate Prediction",
     "E-sports",
     "Polymath",
-    "Reverse Engineering",
-    "Retro Theming", 
     "Debate",
     "Two Minute Manager"
   ];
 
   // Team size rules
   const teamSizeRules = {
-    "Singing": { min: 2, max: 4 },
-    "Dance": { min: 2, max: 6 },
-    "Hackathon": { min: 3, max: 6 },
+    "Singing": { min: 2, max: 10 },
+    "Dance": { min: 2, max: 10 },
+    "Hackathon": { min: 2, max: 4 },
     "Accurate Prediction": { min: 2, max: 4 },
     "E-sports": { min: 4, max: 4 },
     "Polymath": { min: 2, max: 4 },
-    "Reverse Engineering": { min: 2, max: 3 },
-    "Retro Theming": { min: 2, max: 3 },
     "Debate": { min: 2, max: 2 },
     "Two Minute Manager": { min: 2, max: 2 }
   };
@@ -146,38 +143,31 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     
     // Base pricing logic
     switch (teamData.mainEvent) {
-      case 'Hackathon':
-        total = 999 + Math.max(0, (teamData.teamSize - 3) * 249);
-        break;
-      case 'Accurate Prediction':
-        total = 999 + Math.max(0, (teamData.teamSize - 2) * 249);
-        break;
-      case 'Polymath':
-        total = 499 + Math.max(0, (teamData.teamSize - 2) * 249);
-        break;
-      case 'E-sports':
-        total = 799;
-        break;
-      case 'Singing':
-      case 'Dance':
-      case 'Reverse Engineering':
-      case 'Retro Theming':
-      case 'Debate':
-      case 'Two Minute Manager':
-        // Per-person pricing
-        const basePrice = {
-          'Singing': 99,
-          'Dance': 99,
-          'Reverse Engineering': 199,
-          'Retro Theming': 199,
-          'Debate': 199,
-          'Two Minute Manager': 149
-        }[teamData.mainEvent] || 0;
-        total = basePrice * teamData.teamSize;
-        break;
-      default:
-        total = 0;
-    }
+    case 'Hackathon':
+      total = 199 * teamData.teamSize; // WAS: 999 + additional fees
+      break;
+    case 'Accurate Prediction':
+      total = 199 * teamData.teamSize; // WAS: 999 + additional fees
+      break;
+    case 'Polymath':
+      total = 149 * teamData.teamSize; // WAS: 499 + additional fees
+      break;
+    case 'E-sports':
+      total = 149 * teamData.teamSize; // WAS: 799 fixed
+      break;
+    case 'Singing':
+    case 'Dance':
+      total = 99 * teamData.teamSize; // SAME but per person
+      break;
+    case 'Debate':
+      total = 99 * teamData.teamSize; // WAS: 199 per person
+      break;
+    case 'Two Minute Manager':
+      total = 149 * teamData.teamSize; // SAME but per person
+      break;
+    default:
+      total = 0;
+  }
 
     // Add accommodation (compulsory)
     total += 600 * teamData.teamSize;
@@ -186,16 +176,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     if (teamData.isPremium) {
       total += 200;
     }
-
-    // ✅ ADDED: Debug logging for frontend calculation
-    console.log('💰 Frontend Team Total Calculation:', {
-      baseEvent: total - (600 * teamData.teamSize) - (teamData.isPremium ? 200 : 0),
-      accommodation: 600 * teamData.teamSize,
-      premium: teamData.isPremium ? 200 : 0,
-      total: total,
-      isPremium: teamData.isPremium
-    });
-
+    
     return total;
   };
 
@@ -212,6 +193,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
       isPremium: teamData.isPremium,
       premiumAmount: teamData.isPremium ? 200 : 0,
       accommodation: 600 * teamData.teamSize,
+      projectBazaar: projectBazaar,
       totalAmount: totalAmount
     });
 
@@ -230,6 +212,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           esportsGame: esportsGame,
           needsAccommodation: true,
           isPremium: teamData.isPremium, // ✅ CRITICAL: Send premium flag to backend
+          projectBazaar: projectBazaar,
           totalAmount: totalAmount
         }),
       });
@@ -356,7 +339,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                 >
                   <div className="text-center">
                     <div className="font-semibold text-white text-sm sm:text-base">{game}</div>
-                    <div className="text-xs text-gray-300">₹799</div>
+                    <div className="text-xs text-gray-300">₹149 per person</div>
                   </div>
                 </div>
               ))}
@@ -368,6 +351,33 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
             )}
           </div>
         )}
+    
+        {/* Project Bazaar - Free Team Event */}
+        <div className="glass-card p-4 sm:p-6 border-2 border-purple-500/30 bg-purple-500/5">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={projectBazaar}
+              onChange={(e) => setProjectBazaar(e.target.checked)}
+              className="w-5 h-5 mt-1 text-purple-600 bg-gray-800 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🎨</span>
+                  <div>
+                    <div className="font-bold text-white text-lg">Project Bazaar</div>
+                    <div className="text-purple-300 font-medium">Free Team Event</div>
+                  </div>
+                </div>
+                <div className="text-green-400 font-bold text-lg">FREE</div>
+              </div>
+              <div className="text-purple-200 text-sm">
+                Showcase your innovative projects and compete for prizes. Perfect for tech enthusiasts and creators!
+              </div>
+            </div>
+          </label>
+        </div>    
 
         {/* Team Leader Section */}
         <div className="glass-card p-4 sm:p-6 border border-yellow-500/20 bg-yellow-500/5">
@@ -615,6 +625,12 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               {teamData.isPremium && (
                 <div className="text-xs text-green-400 mt-2 text-center">
                   ✅ Premium package included - Access to all individual events
+                </div>
+              )}
+              {projectBazaar && (
+                <div className="flex justify-between bg-purple-500/10 p-2 sm:p-3 rounded border border-purple-500/30">
+                  <span className="text-purple-300 font-semibold">Project Bazaar</span>
+                  <span className="text-green-400 font-bold">FREE</span>
                 </div>
               )}
             </div>
