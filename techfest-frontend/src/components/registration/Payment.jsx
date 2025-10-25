@@ -75,66 +75,26 @@ const Payment = ({ data, updateData, nextStep, prevStep }) => {
     setProcessing(true);
 
     try {
-      console.log('🔍 Starting UPI payment process...');
-      console.log('Session ID:', data.sessionId);
-      console.log('Total Amount to be paid:', totalAmount);
-
-      // Verify UPI payment automatically
-      const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId: data.sessionId,
-          upiTransactionId: paymentData.upiTransactionId,
-          amount: totalAmount
-        }),
+      console.log('✅ Payment successful, updating registration data...');
+      console.log('📋 Payment Data:', paymentData);
+      
+      // ✅ NO MORE DUPLICATE API CALL - payment is already verified in DirectUPIPayment
+      updateData({
+        paymentResult: paymentData,
+        registrationId: paymentData.registrationId,
+        transactionId: paymentData.userUpiTransactionId,
+        registrationComplete: true
       });
-
-      if (!verifyResponse.ok) {
-        const errorText = await verifyResponse.text();
-        console.error('❌ UPI payment verification failed:', verifyResponse.status, errorText);
-        
-        let errorMessage = 'UPI payment verification failed';
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
-        }
-        
-        toast.error(errorMessage);
-        setProcessing(false);
-        return;
-      }
-
-      const verifyResult = await verifyResponse.json();
-      console.log('📋 UPI verification result:', verifyResult);
-
-      if (verifyResult.success) {
-        updateData({
-          paymentResult: verifyResult,
-          registrationId: verifyResult.registrationId,
-          teamId: verifyResult.teamId,
-          finalRegistration: verifyResult.finalRegistration,
-          transactionId: paymentData.upiTransactionId,
-          registrationComplete: true
-        });
-        
-        toast.success('UPI payment successful! Registration completed.');
-        
-        setTimeout(() => {
-          nextStep();
-        }, 1500);
-        
-      } else {
-        throw new Error(verifyResult.message || 'UPI payment verification failed');
-      }
-
+      
+      toast.success('Payment details submitted! Registration completed.');
+      
+      setTimeout(() => {
+        nextStep();
+      }, 1500);
+      
     } catch (error) {
-      console.error('❌ UPI payment error:', error);
-      toast.error(error.message || 'UPI payment failed. Please try again.');
+      console.error('❌ Registration update error:', error);
+      toast.error('Registration update failed. Please contact support.');
       setProcessing(false);
     }
   };
