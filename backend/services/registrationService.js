@@ -615,6 +615,7 @@ class RegistrationService {
       esportsGame: session.teamData.esportsGame,
       isPremium: isPremium,
       needsAccommodation: needsAccommodation,
+      projectBazaar: session.teamData.projectBazaar,
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
