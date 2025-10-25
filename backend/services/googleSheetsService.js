@@ -469,7 +469,7 @@ class GoogleSheetsService {
         JSON.stringify(registrationData.qrData || {}),
         registrationData.isPremium ? 'Yes' : 'No', // Team leader doesn't have premium
         registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
-        registrationData.esportsGame || 'N/A' // E-sports game,
+        registrationData.esportsGame || 'N/A', // E-sports game
         registrationData.projectBazaar ? 'Yes' : 'No' 
       ]);
 
