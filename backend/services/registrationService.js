@@ -303,7 +303,7 @@ class RegistrationService {
   /**
    * Setup team details with validation and member management
    */
-  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false) {
+  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false, projectBazaar = false) {
     const session = this.registrationSessions.get(sessionId);
     if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
     if (session.registrationType !== 'team') throw new Error('Invalid registration type');
@@ -316,7 +316,8 @@ class RegistrationService {
       leaderPrelimEvents: leaderPrelimEvents,
       esportsGame,
       needsAccommodation,
-      isPremium
+      isPremium,
+      projectBazaar
     });
 
     // Validate main event
@@ -367,7 +368,8 @@ class RegistrationService {
         prelimEvents: leaderPrelimEvents || [] 
       },
       teamSize: totalTeamSize,
-      esportsGame: esportsGame
+      esportsGame: esportsGame,
+      projectBazaar: projectBazaar 
     };
     session.totalAmount = totalAmount;
     session.needsAccommodation = needsAccommodation;
@@ -385,7 +387,8 @@ class RegistrationService {
       esportsGame: session.teamData.esportsGame,
       totalAmount: session.totalAmount,
       needsAccommodation: session.needsAccommodation,
-      isPremium: session.isPremium 
+      isPremium: session.isPremium,
+      projectBazaar: session.teamData.projectBazaar
     };
   }
 
