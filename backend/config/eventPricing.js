@@ -24,8 +24,6 @@ const EVENT_PRICES = {
   // Per-person pricing
   "Singing_team": 99,
   "Dance_team": 99,
-  "Reverse Engineering_team": 99,
-  "Retro Theming_team": 99,
   "Debate_team": 99,
   "Two Minute Manager_team": 99,
 
