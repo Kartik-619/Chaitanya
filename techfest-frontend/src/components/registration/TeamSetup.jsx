@@ -225,7 +225,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
             ...result.teamData,
             totalAmount: totalAmount,
             isPremium: teamData.isPremium, // ✅ Ensure premium flag is stored
-            needsAccommodation: true
+            needsAccommodation: true,
+            projectBazaar: projectBazaar
           }
         });
         nextStep();
