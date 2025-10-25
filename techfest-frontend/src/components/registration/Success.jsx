@@ -244,6 +244,16 @@ const Success = ({ data }) => {
             </div>
           </div>
 
+          {/* ADD PROJECT BAZAAR SECTION HERE */}
+          {registrationData?.projectBazaar && (
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-2 mt-2">
+              <div className="flex items-center">
+                <span className="text-purple-400 mr-2">🎨</span>
+                <span className="text-purple-300 font-semibold">Project Bazaar (Free Team Event)</span>
+              </div>
+            </div>
+          )}
+
           {/* Accommodation Info */}
           {hasAccommodation && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3">
