@@ -245,7 +245,7 @@ const Success = ({ data }) => {
           </div>
 
           {/* ADD PROJECT BAZAAR SECTION HERE */}
-          {registrationData?.projectBazaar && (
+          {data?.projectBazaar && (
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-2 mt-2">
               <div className="flex items-center">
                 <span className="text-purple-400 mr-2">🎨</span>
