@@ -7,28 +7,27 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
 
   // Event prices for display - UPDATED
   const eventPrices = {
-    "Integration Bee": 299,
-    "Human vs AI": 299,
-    "Retro Theming": 199,
-    "Prompt Engineering": 199,
-    "Reverse Engineering": 199,
-    "Jack of Hearts": 399,
+    "Integration Bee": 99,
+    "Human vs AI": 99,
+    "Retro Theming": 99,
+    "Prompt Engineering": 99,
+    "Reverse Engineering": 99,
+    "Jack of Hearts": 99,
     "Singing": 99,
-    "Dancing": 99
+    "Dancing": 99,
+    "Project Bazaar": 0
   };
 
   // Team event base prices
   const teamEventPrices = {
     "Singing": 99,
     "Dance": 99,
-    "Hackathon": 999,
-    "Accurate Prediction": 999,
-    "E-sports": 799,
-    "Polymath": 499,
-    "Reverse Engineering": 199,
-    "Retro Theming": 199,
-    "Debate": 199,
-    "Two Minute Manager": 149
+    "Hackathon": 199,
+    "Accurate Prediction": 199,
+    "E-sports": 149,
+    "Polymath": 149,
+    "Debate": 99,
+    "Two Minute Manager": 99
   };
 
   // Calculate total amount based on actual stored data
@@ -80,39 +79,11 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
       const basePrice = teamEventPrices[registrationData.mainEvent] || 0;
       const teamSize = registrationData.teamSize || 1;
       
-      switch (registrationData.mainEvent) {
-        case 'Hackathon':
-          return {
-            base: 999,
-            additional: Math.max(0, (teamSize - 3)) * 249,
-            description: `Base (3 members): ₹999 + Additional (${Math.max(0, (teamSize - 3))} members × ₹249)`
-          };
-        case 'Accurate Prediction':
-          return {
-            base: 999,
-            additional: Math.max(0, (teamSize - 2)) * 249,
-            description: `Base (2 members): ₹999 + Additional (${Math.max(0, (teamSize - 2))} members × ₹249)`
-          };
-        case 'Polymath':
-          return {
-            base: 499,
-            additional: Math.max(0, (teamSize - 2)) * 249,
-            description: `Base (2 members): ₹499 + Additional (${Math.max(0, (teamSize - 2))} members × ₹249)`
-          };
-        case 'E-sports':
-          return {
-            base: 799,
-            additional: 0,
-            description: 'Fixed team price (4 members)'
-          };
-        default:
-          // Per-person pricing
-          return {
-            base: basePrice * teamSize,
-            additional: 0,
-            description: `${teamSize} members × ₹${basePrice}`
-          };
-      }
+      return {
+        base: basePrice * teamSize,
+        additional: 0,
+        description: `${teamSize} members × ₹${basePrice}`
+      };
     }
     return null;
   };
@@ -312,6 +283,18 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
             )}
 
             {/* Team Registration Breakdown */}
+            {registrationData?.projectBazaar && (
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 mt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-purple-400">🎨</span>
+                    <span className="text-purple-300 font-semibold">Project Bazaar</span>
+                  </div>
+                  <span className="text-green-400 font-bold">Free</span>
+                </div>
+              </div>
+            )}
+            
             {!isIndividual && teamBreakdown && (
               <>
                 <div className="flex justify-between items-center text-sm">

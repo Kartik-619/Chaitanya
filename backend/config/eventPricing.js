@@ -90,31 +90,29 @@ function calculateTeamTotal(mainEvent, teamSize, esportsGame = null) {
   // Handle different pricing models
   switch (mainEvent) {
     case 'Hackathon':
-      // ₹999 for 3 people + ₹249 per additional person
-      total = basePrice + Math.max(0, (teamSize - 3) * 249);
+      // CHANGE THIS: from complex calculation to simple per-person
+      total = basePrice * teamSize; // 199 × teamSize
       break;
       
     case 'Accurate Prediction':
-      // ₹999 for 2 people + ₹249 per additional person
-      total = basePrice + Math.max(0, (teamSize - 2) * 249);
+      // CHANGE THIS
+      total = basePrice * teamSize; // 199 × teamSize
       break;
       
     case 'Polymath':
-      // ₹499 for 2 people + ₹249 per additional person
-      total = basePrice + Math.max(0, (teamSize - 2) * 249);
+      // CHANGE THIS  
+      total = basePrice * teamSize; // 149 × teamSize
       break;
       
     case 'E-sports':
-      // Fixed ₹999 regardless of team size (4 members fixed)
-      total = basePrice;
+      // CHANGE THIS
+      total = basePrice * teamSize; // 149 × 4 (fixed 4 members)
       break;
       
     default:
-      // Per-person pricing for other events
       total = basePrice * teamSize;
   }
   
-  console.log('💰 Team total calculated:', total);
   return total;
 }
 

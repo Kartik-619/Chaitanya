@@ -26,8 +26,8 @@ class GoogleSheetsService {
 
     // Google Sheets configuration from environment
     this.spreadsheetId = SHEETS_CONFIG.SPREADSHEET_ID;
-    this.range = SHEETS_CONFIG.RANGE; // Main registrations sheet range (Columns A-S)
-    this.eventsRange = SHEETS_CONFIG.EVENTS_RANGE; // Events participation sheet range (Columns A-J)
+    this.range = 'Registrations!A:W'; // Main registrations sheet range (Columns A-S)
+    this.eventsRange = 'Events Participation!A:M'; // Events participation sheet range (Columns A-J)
     this.sheets = null; // Google Sheets API client
     this.initialized = false; // Track if Sheets API is ready
     
@@ -184,7 +184,8 @@ class GoogleSheetsService {
               JSON.stringify(reg.qrData || {}),      // S: QR Data
               reg.isPremium ? 'Yes' : 'No',                                  // T: Premium Status (team leader doesn't have premium)
               reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-              reg.esportsGame || 'N/A'               // V: E-sports Game (NEW)
+              reg.esportsGame || 'N/A',             // V: E-sports Game (NEW)
+              reg.projectBazaar ? 'Yes' : 'No' 
             ]);
             
             // Team Members rows (each member gets their own row)
@@ -213,7 +214,8 @@ class GoogleSheetsService {
                 JSON.stringify(reg.qrData || {}),    // S: QR Data
                 reg.isPremium ? 'Yes' : 'No',                                // T: Premium Status
                 reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-                reg.esportsGame || 'N/A'             // V: E-sports Game
+                reg.esportsGame || 'N/A',             // V: E-sports Game
+                reg.projectBazaar ? 'Yes' : 'No' 
               ]);
             });
           }
@@ -360,7 +362,8 @@ class GoogleSheetsService {
             qrData: row[18] ? JSON.parse(row[18]) : null,
             isPremium: row[19] === 'Yes', // Column T
             needsAccommodation: row[20] === 'Yes', // Column U
-            esportsGame: row[21] || null // Column V
+            esportsGame: row[21] || null, // Column V
+            projectBazaar: row[22] === 'Yes'
           };
 
           console.log(`📝 Processed ${registrationType} registration ${index + 1}:`, personalDetails.name);
@@ -396,6 +399,7 @@ class GoogleSheetsService {
   async saveRegistration(registrationData) {
   try {
     console.log('💾 [SHEETS DEBUG] Starting saveRegistration for:', registrationData.registrationId);
+    console.log('💾 [PROJECT BAZAAR DEBUG] Project Bazaar value:', registrationData.projectBazaar);
     
     const initialized = await this.ensureInitialized();
     if (!initialized) {
@@ -438,7 +442,8 @@ class GoogleSheetsService {
         registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
         JSON.stringify(registrationData.qrData || {}),
         registrationData.isPremium ? 'Yes' : 'No', // Premium status
-        registrationData.needsAccommodation ? 'Yes' : 'No' // Accommodation
+        registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
+        registrationData.projectBazaar ? 'Yes' : 'No' 
       ]);
     } else {
       // Team registration
@@ -464,7 +469,8 @@ class GoogleSheetsService {
         JSON.stringify(registrationData.qrData || {}),
         registrationData.isPremium ? 'Yes' : 'No', // Team leader doesn't have premium
         registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
-        registrationData.esportsGame || 'N/A' // E-sports game
+        registrationData.esportsGame || 'N/A', // E-sports game
+        registrationData.projectBazaar ? 'Yes' : 'No' 
       ]);
 
       if (registrationData.teamMembers && registrationData.teamMembers.length > 0) {
@@ -492,7 +498,8 @@ class GoogleSheetsService {
               JSON.stringify(registrationData.qrData || {}),
               registrationData.isPremium ? 'Yes' : 'No', // Members don't have premium
               registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
-              registrationData.esportsGame || 'N/A' // E-sports game
+              registrationData.esportsGame || 'N/A', // E-sports game
+              registrationData.projectBazaar ? 'Yes' : 'No' 
             ]);
           });
         }
@@ -504,7 +511,7 @@ class GoogleSheetsService {
     console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
     const response = await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.spreadsheetId,
-      range: this.range,
+      range: 'Registrations!A:W',
       valueInputOption: 'RAW',
       resource: {
         values: values
@@ -582,7 +589,8 @@ class GoogleSheetsService {
               '',                              // I: Day 2 Timestamp (empty initially)
               '',                              // J: Day 3 Timestamp (empty initially)
               registrationData.isPremium ? 'Yes' : 'No', // K: Premium Status (NEW)
-              registrationData.esportsGame || 'N/A'
+              registrationData.esportsGame || 'N/A',
+              registrationData.projectBazaar ? 'Yes' : 'No'
             ]);
             console.log(`✅ Added prelim event for individual: ${event}`);
           });
@@ -605,7 +613,8 @@ class GoogleSheetsService {
             '',                                 // I: Day 2 Timestamp
             '',                                 // J: Day 3 Timestamp
             registrationData.isPremium ? 'Yes' : 'No' ,                              // K: Premium Status
-            registrationData.esportsGame || 'N/A'
+            registrationData.esportsGame || 'N/A',
+            registrationData.projectBazaar ? 'Yes' : 'No'
           ]);
           console.log(`✅ Added MAIN event for leader: ${registrationData.mainEvent}`);
           
@@ -623,7 +632,8 @@ class GoogleSheetsService {
               '',                                 // I: Day 2 Timestamp
               '',                                 // J: Day 3 Timestamp
               registrationData.isPremium ? 'Yes' : 'No', // ✅ K: Premium Status - USE ACTUAL VALUE            
-              registrationData.esportsGame || 'N/A'
+              registrationData.esportsGame || 'N/A',
+              registrationData.projectBazaar ? 'Yes' : 'No' 
             ]);
             console.log(`✅ Added PRELIM event for leader: ${event}`);
           });
@@ -649,7 +659,8 @@ class GoogleSheetsService {
                 '',                               // I: Day 2 Timestamp
                 '',                               // J: Day 3 Timestamp
                 registrationData.isPremium ? 'Yes' : 'No', // ✅ K: Premium Status - USE ACTUAL VALUE              
-                registrationData.esportsGame || 'N/A'   
+                registrationData.esportsGame || 'N/A' ,
+                registrationData.projectBazaar ? 'Yes' : 'No' 
               ]);
               console.log(`✅ Added MAIN event for member ${member.name}: ${registrationData.mainEvent}`);
 
@@ -667,7 +678,8 @@ class GoogleSheetsService {
                   '',                             // I: Day 2 Timestamp
                   '',                             // J: Day 3 Timestamp
                   registrationData.isPremium ? 'Yes' : 'No' ,                           // K: Premium Status
-                  registrationData.esportsGame || 'N/A'
+                  registrationData.esportsGame || 'N/A',
+                  registrationData.projectBazaar ? 'Yes' : 'No' 
                 ]);
                 console.log(`✅ Added PRELIM event for member ${member.name}: ${event}`);
               });
@@ -680,7 +692,7 @@ class GoogleSheetsService {
           console.log(`📊 Saving ${eventValues.length} event records to Events sheet`);
           await this.sheets.spreadsheets.values.append({
             spreadsheetId: this.spreadsheetId,
-            range: this.eventsRange,
+            range: 'Events Participation!A:M',
             valueInputOption: 'RAW',
             resource: { values: eventValues },
           });

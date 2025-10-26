@@ -185,7 +185,8 @@ class RegistrationController {
         teamSize,
         esportsGame = null,
         needsAccommodation = false,
-        isPremium = false // ✅ ADDED: Premium parameter
+        isPremium = false, 
+        projectBazaar = false
       } = req.body;
       
       console.log('🔍 [ROUTE DEBUG] Team setup request:', {
@@ -197,7 +198,8 @@ class RegistrationController {
         leaderPrelimEvents,
         esportsGame,
         needsAccommodation,
-        isPremium // ✅ ADDED: Log premium status
+        isPremium,
+        projectBazaar
       });
 
       if (!sessionId || !teamName || !mainEvent || !teamSize) {
@@ -255,7 +257,8 @@ class RegistrationController {
         teamSize,
         esportsGame,
         needsAccommodation,
-        isPremium // ✅ ADDED: Pass premium flag
+        isPremium,
+        projectBazaar
       );
 
       console.log('✅ [ROUTE DEBUG] Team setup completed:', {
@@ -265,6 +268,7 @@ class RegistrationController {
         teamSize: teamData.teamSize,
         esportsGame: teamData.esportsGame,
         isPremium: teamData.isPremium, // ✅ ADDED: Log premium status
+        projectBazaar: teamData.projectBazaar,
         totalAmount: teamData.totalAmount
       });
 
@@ -282,7 +286,8 @@ class RegistrationController {
           esportsGame: teamData.esportsGame,
           totalAmount: teamData.totalAmount,
           needsAccommodation: teamData.needsAccommodation,
-          isPremium: teamData.isPremium // ✅ ADDED: Return premium status
+          isPremium: teamData.isPremium, 
+          projectBazaar: teamData.projectBazaar
         }
       });
 

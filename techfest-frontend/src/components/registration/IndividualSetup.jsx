@@ -12,18 +12,20 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Reverse Engineering",
     "Jack of Hearts",
     "Singing",
-    "Dancing"
+    "Dancing",
+    "Project Bazaar"
   ];
   
   const eventPrices = {
-    "Integration Bee": 299,
-    "Human vs AI": 299,
-    "Retro Theming": 199,
-    "Prompt Engineering": 199,
-    "Reverse Engineering": 199,
-    "Jack of Hearts": 399,
+    "Integration Bee": 99,
+    "Human vs AI": 99,
+    "Retro Theming": 99,
+    "Prompt Engineering": 99,
+    "Reverse Engineering": 99,
+    "Jack of Hearts": 99,
     "Singing": 99,
-    "Dancing": 99
+    "Dancing": 99,
+    "Project Bazaar": 0       
   };
 
   const toggleEvent = (eventName) => {

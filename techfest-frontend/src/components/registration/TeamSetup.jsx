@@ -11,7 +11,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   });
   
   const [esportsGame, setEsportsGame] = useState('');
-
+  const [projectBazaar, setProjectBazaar] = useState(false);
+  
   const mainEvents = [
     "Singing",
     "Dance", 
@@ -19,24 +20,36 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Accurate Prediction",
     "E-sports",
     "Polymath",
-    "Reverse Engineering",
-    "Retro Theming", 
     "Debate",
     "Two Minute Manager"
   ];
 
   // Team size rules
   const teamSizeRules = {
-    "Singing": { min: 2, max: 4 },
-    "Dance": { min: 2, max: 6 },
-    "Hackathon": { min: 3, max: 6 },
+    "Singing": { min: 2, max: 10 },
+    "Dance": { min: 2, max: 10 },
+    "Hackathon": { min: 2, max: 4 },
     "Accurate Prediction": { min: 2, max: 4 },
     "E-sports": { min: 4, max: 4 },
     "Polymath": { min: 2, max: 4 },
-    "Reverse Engineering": { min: 2, max: 3 },
-    "Retro Theming": { min: 2, max: 3 },
     "Debate": { min: 2, max: 2 },
     "Two Minute Manager": { min: 2, max: 2 }
+  };
+
+  // Event pricing
+  const eventPricing = {
+    "Hackathon": 199,
+    "Accurate Prediction": 199,
+    "Polymath": 149,
+    "E-sports": 149,
+    "Singing": 99,
+    "Dance": 99,
+    "Debate": 99,
+    "Two Minute Manager": 99
+  };
+
+  const getEventFee = () => {
+    return eventPricing[teamData.mainEvent] || 0;
   };
 
   const handleTeamChange = (field, value) => {
@@ -147,33 +160,22 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     // Base pricing logic
     switch (teamData.mainEvent) {
       case 'Hackathon':
-        total = 999 + Math.max(0, (teamData.teamSize - 3) * 249);
+        total = 199 * teamData.teamSize;
         break;
       case 'Accurate Prediction':
-        total = 999 + Math.max(0, (teamData.teamSize - 2) * 249);
+        total = 199 * teamData.teamSize;
         break;
       case 'Polymath':
-        total = 499 + Math.max(0, (teamData.teamSize - 2) * 249);
+        total = 149 * teamData.teamSize;
         break;
       case 'E-sports':
-        total = 799;
+        total = 149 * teamData.teamSize;
         break;
       case 'Singing':
       case 'Dance':
-      case 'Reverse Engineering':
-      case 'Retro Theming':
       case 'Debate':
       case 'Two Minute Manager':
-        // Per-person pricing
-        const basePrice = {
-          'Singing': 99,
-          'Dance': 99,
-          'Reverse Engineering': 199,
-          'Retro Theming': 199,
-          'Debate': 199,
-          'Two Minute Manager': 149
-        }[teamData.mainEvent] || 0;
-        total = basePrice * teamData.teamSize;
+        total = 99 * teamData.teamSize;
         break;
       default:
         total = 0;
@@ -186,16 +188,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     if (teamData.isPremium) {
       total += 200;
     }
-
-    // ✅ ADDED: Debug logging for frontend calculation
-    console.log('💰 Frontend Team Total Calculation:', {
-      baseEvent: total - (600 * teamData.teamSize) - (teamData.isPremium ? 200 : 0),
-      accommodation: 600 * teamData.teamSize,
-      premium: teamData.isPremium ? 200 : 0,
-      total: total,
-      isPremium: teamData.isPremium
-    });
-
+    
     return total;
   };
 
@@ -212,6 +205,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
       isPremium: teamData.isPremium,
       premiumAmount: teamData.isPremium ? 200 : 0,
       accommodation: 600 * teamData.teamSize,
+      projectBazaar: projectBazaar,
       totalAmount: totalAmount
     });
 
@@ -229,7 +223,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           teamSize: teamData.teamSize,
           esportsGame: esportsGame,
           needsAccommodation: true,
-          isPremium: teamData.isPremium, // ✅ CRITICAL: Send premium flag to backend
+          isPremium: teamData.isPremium,
+          projectBazaar: projectBazaar,
           totalAmount: totalAmount
         }),
       });
@@ -241,8 +236,9 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           teamData: {
             ...result.teamData,
             totalAmount: totalAmount,
-            isPremium: teamData.isPremium, // ✅ Ensure premium flag is stored
-            needsAccommodation: true
+            isPremium: teamData.isPremium,
+            needsAccommodation: true,
+            projectBazaar: projectBazaar
           }
         });
         nextStep();
@@ -263,6 +259,10 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
       options.push(i);
     }
     return options;
+  };
+
+  const getIndividualEventFee = () => {
+    return eventPricing[teamData.mainEvent] || 0;
   };
 
   return (
@@ -356,7 +356,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                 >
                   <div className="text-center">
                     <div className="font-semibold text-white text-sm sm:text-base">{game}</div>
-                    <div className="text-xs text-gray-300">₹799</div>
+                    <div className="text-xs text-gray-300">₹149 per person</div>
                   </div>
                 </div>
               ))}
@@ -368,6 +368,33 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
             )}
           </div>
         )}
+    
+        {/* Project Bazaar - Free Team Event */}
+        <div className="glass-card p-4 sm:p-6 border-2 border-purple-500/30 bg-purple-500/5">
+          <label className="flex items-start space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={projectBazaar}
+              onChange={(e) => setProjectBazaar(e.target.checked)}
+              className="w-5 h-5 mt-1 text-purple-600 bg-gray-800 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🎨</span>
+                  <div>
+                    <div className="font-bold text-white text-lg">Project Bazaar</div>
+                    <div className="text-purple-300 font-medium">Free Team Event</div>
+                  </div>
+                </div>
+                <div className="text-green-400 font-bold text-lg">FREE</div>
+              </div>
+              <div className="text-purple-200 text-sm">
+                Showcase your innovative projects and compete for prizes. Perfect for tech enthusiasts and creators!
+              </div>
+            </div>
+          </label>
+        </div>    
 
         {/* Team Leader Section */}
         <div className="glass-card p-4 sm:p-6 border border-yellow-500/20 bg-yellow-500/5">
@@ -480,7 +507,56 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         )}
 
-        {/* Premium Package Option - MOBILE FIXED */}
+        {/* Individual Member Pricing Breakdown */}
+        {teamData.mainEvent && (
+          <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
+              Individual Member Pricing
+            </h3>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {/* Team Leader */}
+              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                <div>
+                  <div className="font-semibold text-white">Team Leader (You)</div>
+                  <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                  <div className="text-xs text-gray-300">
+                    ₹{getIndividualEventFee()} + ₹600
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Members */}
+              {teamData.teamMembers.map((_, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b border-white/10">
+                  <div>
+                    <div className="font-semibold text-white">Team Member {index + 1}</div>
+                    <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                    <div className="text-xs text-gray-300">
+                      ₹{getIndividualEventFee()} + ₹600
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Total Individual */}
+              <div className="flex justify-between items-center pt-3 border-t border-white/20">
+                <div className="font-bold text-white">Sub-total ({teamData.teamSize} members)</div>
+                <div className="font-bold text-green-400">
+                  ₹{(getIndividualEventFee() + 600) * teamData.teamSize}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Premium Package Option */}
         <div className="glass-card p-4 sm:p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
           <label className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 cursor-pointer group">
             <div className="flex items-center sm:items-start space-x-3 sm:space-x-0 sm:flex-col sm:space-y-2">
@@ -492,7 +568,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               />
               <div className="sm:text-center">
                 <div className="text-yellow-400 font-bold text-lg sm:text-xl">₹200</div>
-                <div className="text-yellow-300 text-xs">Premium Pass</div>
+                <div className="text-yellow-300 text-xs">One-time for team</div>
               </div>
             </div>
             
@@ -547,7 +623,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           </label>
         </div>
 
-        {/* COMPULSORY Accommodation - MOBILE FIXED */}
+        {/* COMPULSORY Accommodation - Updated with Food & Stay details */}
         <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -556,10 +632,13 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg">
-                  Accommodation - ₹600 per person
+                  Accommodation Package - ₹600 per person
                 </div>
                 <div className="text-xs sm:text-sm text-gray-300 leading-tight">
-                  3 days comfortable stay for all {teamData.teamSize} team members 
+                  Includes 3 days comfortable stay + food for all {teamData.teamSize} team members
+                </div>
+                <div className="text-xs text-green-400 mt-1">
+                  🍛 Food & 🛌 Stay included for entire event duration
                 </div>
               </div>
             </div>
@@ -569,54 +648,74 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* Team Summary */}
+        {/* Final Team Summary */}
         <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 text-center">Team Registration Summary</h3>
-          <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Main Event:</span>
-              <span className="text-white text-right">{teamData.mainEvent || 'Not selected'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Team Size:</span>
-              <span className="text-white">{teamData.teamSize} members</span>
-            </div>
-            {esportsGame && (
-              <div className="flex justify-between">
-                <span className="text-gray-300">E-sports Game:</span>
-                <span className="text-white">{esportsGame}</span>
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 text-center">Final Registration Summary</h3>
+          
+          <div className="space-y-3 sm:space-y-4">
+            {/* Individual Breakdown Summary */}
+            <div className="bg-black/20 rounded-lg p-3 sm:p-4 border border-white/10">
+              <div className="text-center text-white font-semibold mb-2 text-sm sm:text-base">
+                Individual Member Totals ({teamData.teamSize} members)
               </div>
-            )}
-            {teamData.mainEvent && (
-              <div className="flex justify-between border-t border-white/20 pt-2">
-                <span className="text-gray-300">
-                  {teamData.mainEvent} ({teamData.teamSize} members)
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                <div className="text-center">
+                  <div className="text-gray-300">Event Fee</div>
+                  <div className="text-white font-semibold">₹{getIndividualEventFee()} × {teamData.teamSize}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-gray-300">Accommodation</div>
+                  <div className="text-white font-semibold">₹600 × {teamData.teamSize}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 sm:space-y-3 text-sm">
+              <div className="flex justify-between border-b border-white/10 pb-2">
+                <span className="text-gray-300">Team Members Sub-total:</span>
                 <span className="text-white font-medium">
-                  ₹{calculateTeamTotal() - (600 * teamData.teamSize) - (teamData.isPremium ? 200 : 0)}
+                  ₹{(getIndividualEventFee() + 600) * teamData.teamSize}
                 </span>
               </div>
-            )}
-            {teamData.isPremium && (
-              <div className="flex justify-between bg-yellow-500/10 p-2 sm:p-3 rounded border border-yellow-500/30">
-                <span className="text-yellow-300 font-semibold">Premium Access Pass</span>
-                <span className="text-yellow-400 font-bold">₹200</span>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-white/20 pt-2">
-              <span className="text-gray-300">Accommodation ({teamData.teamSize} × ₹600):</span>
-              <span className="text-white font-medium">₹{600 * teamData.teamSize}</span>
-            </div>
-            <div className="border-t border-white/20 pt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-base sm:text-lg text-white font-semibold">Total Amount</span>
-                <span className="text-xl sm:text-2xl text-red-400 font-bold">₹{calculateTeamTotal()}</span>
-              </div>
+
               {teamData.isPremium && (
-                <div className="text-xs text-green-400 mt-2 text-center">
-                  ✅ Premium package included - Access to all individual events
+                <div className="flex justify-between bg-yellow-500/10 p-2 sm:p-3 rounded border border-yellow-500/30">
+                  <div>
+                    <div className="text-yellow-300 font-semibold">Premium Access Pass</div>
+                    <div className="text-yellow-400 text-xs">One-time for entire team</div>
+                  </div>
+                  <span className="text-yellow-400 font-bold text-lg">+ ₹200</span>
                 </div>
               )}
+
+              {projectBazaar && (
+                <div className="flex justify-between bg-purple-500/10 p-2 sm:p-3 rounded border border-purple-500/30">
+                  <div>
+                    <div className="text-purple-300 font-semibold">Project Bazaar</div>
+                    <div className="text-purple-400 text-xs">Free team event</div>
+                  </div>
+                  <span className="text-green-400 font-bold text-lg">FREE</span>
+                </div>
+              )}
+
+              <div className="border-t border-white/20 pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-base sm:text-lg text-white font-semibold">Final Total Amount</span>
+                  <span className="text-xl sm:text-2xl text-red-400 font-bold">₹{calculateTeamTotal()}</span>
+                </div>
+                
+                {teamData.isPremium && (
+                  <div className="text-xs text-green-400 mt-2 text-center">
+                    ✅ Premium package included - Access to all individual events for all {teamData.teamSize} members
+                  </div>
+                )}
+                
+                {projectBazaar && (
+                  <div className="text-xs text-purple-400 mt-1 text-center">
+                    ✅ Project Bazaar included - Free team event registration
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
