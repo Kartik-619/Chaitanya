@@ -37,11 +37,11 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
   // Main animation sequence
   tl.to(".scroll", { opacity: 0, duration: 0.5 }, 0)
     .fromTo(".welcome", 
-      { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1, stagger: 0.1, delay: 1 }, 
+      { opacity: 0.3, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1.5, stagger: 0.1, delay: 0.2 }, 
       0.5
     )
-    .to(".castle", { scale: 1.05, duration: 1.5, delay: 2 }, 0.5)
+    .to(".castle", { scale: 1.05, duration: 1.8, delay: 0.5 }, 0.5)
     .to([cloudRefs.left1.current, cloudRefs.left2.current], {
       xPercent: -100,
       opacity: 0,
@@ -50,7 +50,7 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
     }, 1)
     .fromTo(".name", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1, delay: 2 }, 
+      { opacity: 1, y: 0, duration: 1.7, delay: 0.2 }, 
       0.5
     )
     .to([cloudRefs.right1.current, cloudRefs.right2.current], {
@@ -58,7 +58,7 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
       opacity: 0,
       duration: 2,
       
-      delay: 1
+      delay: 0.21
     }, 1);
 
   return tl;
