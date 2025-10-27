@@ -7,7 +7,7 @@ export const mainEvents = [
     shortDesc: "36-hour coding marathon",
     fullDesc: "Join us for an intense 36-hour hackathon where teams compete to create groundbreaking applications. Work with cutting-edge technologies and showcase your skills.",
     time: "Day-1(9:00 AM) - Day-2(6:00 PM)",
-    venue: "Tech Hall A",
+    venue: "Conference Hall (3rd Floor)",
     participants: "-",
     
     image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800",
@@ -15,17 +15,14 @@ export const mainEvents = [
     category: "Main Event",
     highlights: [{ "Team Structure": "Teams must have 2–5 members with diverse roles coding, design, presentation, etc." }, { "Project Requirements Originality": "Core code must be created during the 36-hour event; use of public libraries/frameworks is allowed" }, { " Pre-Built Components": "Open-source tools can be used, but no prior work or commercial code as the main submission." }, { "Submission": " Must include a live demo link, project description, and source code repository link submitted before the deadline." }, { " Code of Conduct": "Participants must maintain respect, fairness, and collaboration; any harassment, discrimination, or cheating leads to disqualification." }],
     schedule: [
-      { time: "9:00 AM", activity: "Registration & Team Formation" },
-      { time: "11:00 AM", activity: "Opening Ceremony" },
-      { time: "12:00 PM", activity: "Hacking Begins" },
-      { time: "6:00 PM", activity: "Dinner Break" },
-      { time: "12:00 AM", activity: "Midnight Snacks" },
-      { time: "6:00 PM", activity: "Submissions Close" }
+      { time: "6/11/2025", activity: "Opening Ceremony" },
+      { time: "7/11/2025", activity: "Project Submission" },
+     
     ]
   },
   {
     id: 'main-2',
-    title: "ACCURATE PREDICTIONS",
+    title: "Datathons",
     shortDesc: "AI prediction challenge",
     fullDesc: "Test your data science and machine learning skills in this prediction competition. Build models to solve real-world problems with accuracy.",
     time: "10:00 AM - 6:00 PM",
@@ -56,11 +53,8 @@ export const mainEvents = [
       }
     ],
     schedule: [
-      { time: "10:00 AM", activity: "Problem Statement Release" },
-      { time: "11:00 AM", activity: "Coding Begins" },
-      { time: "2:00 PM", activity: "Lunch Break" },
-      { time: "5:00 PM", activity: "Final Submissions" },
-      { time: "6:00 PM", activity: "Results & Awards" }
+      { time: "6/11/2025", activity: "Opening Ceremony" },
+      { time: "7/11/2025", activity: "Model Submission" },
     ]
   }
 ];
@@ -98,6 +92,10 @@ export const prelimEvents = {
         {
           "Code of Conduct": "Professionalism in presentation and interaction is expected; all projects must adhere to safety regulations and be safe for public viewing"
         }
+      ],
+      schedule: [
+        { time: "8/11/2025", activity: "First and final Round" },
+   
       ]
     },
     {
@@ -131,6 +129,10 @@ export const prelimEvents = {
         {
           "Code of Conduct": "High standard of academic integrity and sportsmanship expected; cheating or unprofessional behavior results in immediate disqualification; calculators, notes, textbooks, or electronic devices strictly prohibited"
         }
+      ], schedule: [
+        { time: "6/11/2025", activity: "First Round" },
+        { time: "7/11/2025", activity: "Second Round" },
+        { time: "8/11/2025", activity: "Final Round" },
       ]
     },
     {
@@ -164,6 +166,11 @@ export const prelimEvents = {
         {
           "Code of Conduct": "Strictly prohibited: sharing flags/solutions between teams, attacking competition infrastructure, bribery, or any form of cheating. Event Head reserves final authority on all rulings and disqualifications"
         }
+      ],
+      schedule: [
+        { time: "6/11/2025", activity: "First Round" },
+        { time: "7/11/2025", activity: "Second Round" },
+        { time: "8/11/2025", activity: "Final Round" },
       ]
 
       ,
@@ -199,7 +206,8 @@ export const prelimEvents = {
         {
           "Code of Conduct": "Standard CTF ethics: no brute-forcing, no DoS attacks, no sharing solutions between teams, adherence to responsible disclosure principles"
         }
-      ]
+      ],
+      schedule:[ { time: "6/11/2025", activity: "First and Final Round" }],
     }
   ],
 
@@ -245,7 +253,7 @@ export const prelimEvents = {
       fullDesc: "Compete with AI in creative and logical tasks. From writing to design, show that human imagination still reigns supreme!",
       color: "#A78BFA",
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800",
-      time: "3:00 PM - 4:00 PM",
+      time: "06/11/2025",
       
       participants: "150+",
      
@@ -279,7 +287,7 @@ export const prelimEvents = {
       fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
       color: "#C026D3",
       image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
-      time: "11:00 AM - 1:00 PM",
+      time: "07/11/2025",
       
       participants: "100+",
       
@@ -313,7 +321,7 @@ export const prelimEvents = {
       fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
       color: "#C026D3",
       image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
-      time: "11:00 AM - 1:00 PM",
+      time: "07/11/2025",
       venue: "HPTU Campus",
       category: "Non-Technical Event",
 
@@ -350,19 +358,22 @@ export const prelimEvents = {
       fullDesc: "Face off in popular titles like Valorant, CS:GO, and FIFA. Compete, strategize, and rise to the top of the leaderboard.",
       color: "#F97316",
       image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800",
-      time: "10:00 AM - 8:00 PM",
       venue: "Gaming Arena",
+      schedule:[ { time: "6/11/2025", activity: "First Round" },
+        {
+        time: "7/11/2025", activity: "Final Round"
+      }],
 
       category: "Other Activity"
     },
     {
       id: 'oa2',
-      title: "PolyMath – Escape Room",
+      title: "PolyMath Escape Room",
       desc: "Solve puzzles to escape",
       fullDesc: "Use your logic, math, and teamwork to solve puzzles in a thrilling escape room challenge.",
       color: "#0EA5E9",
       image: "https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800",
-      time: "10:00 AM - 2:00 PM",
+      time: "07/11/2025",
       venue: "Puzzle Hall",
 
       category: "Other Activity",
