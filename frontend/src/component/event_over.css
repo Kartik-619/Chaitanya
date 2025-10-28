@@ -1,188 +1,345 @@
 /* ===== EVENTS CAROUSEL STYLES ===== */
+
+/* Container Styles */
 .events-carousel-container {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  font-family: price-font,sans-serif;
+  padding: 4rem 2rem;
+  font-family: 'price-font', sans-serif;
+  background: transparent;
+  position: relative;
 }
 
+/* Typography */
 .carousel-description {
-  font-family: price-font,sans-serif;
-  font-size: 4rem;
+  font-family: 'price-font', sans-serif;
+  font-size: 2.5rem;
   color: var(--secondary-brown);
   text-align: center;
-  margin-bottom: 2rem;
-  
-}
-
-.carousel-wrapper {
-  width: 90%;
+  margin-bottom: 3rem;
+  line-height: 1.3;
   max-width: 800px;
 }
 
+/* Carousel Layout */
+.carousel-wrapper {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .event-card-container {
-  padding: 0.5rem;
-  outline: none;
+  padding: 1.5rem;
+  height: 100%;
+  width: 100%;
 }
 
-.event-card {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid var(--border-gold);
-  border-radius: 12px;
-  overflow: auto;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  height: 250px;
-  display: flex;
-  flex-direction: column;
-}
 
-.event-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
 
+/* Image Styles */
 .event-image {
   width: 100%;
-  height: 100%;
-  
-overflow-y: visible;
-overflow-x: hidden;
-  position: relative;
+
+  display: block;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f8f8f8;
 }
 
 .event-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
+  object-fit: scale-down;
+  transition: transform 0.4s ease;
 }
 
 .event-card:hover .event-img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
-.event-content {
-  padding: 0.5rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+/* Registration Button */
+.eve_reg {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 18px 40px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: 'price-font', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+  margin-top: 3rem;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
 }
 
-.event-title {
-  font-family: "price-font",sans-serif;
-  font-size: 4 rem;
-  color: rgba(0, 0, 0, 0.729);
-  margin-bottom: 0.5rem;
-  text-align: center;
-  font-weight: bold;
+.eve_reg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
 }
 
+.eve_reg:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
 
+.eve_reg:hover::before {
+  left: 100%;
+}
+
+.eve_reg:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+}
 
 /* Slick Carousel Customization */
-.slick-prev, .slick-next {
-  width: 40px;
-  height: 40px;
+.events-carousel-container .slick-prev,
+.events-carousel-container .slick-next {
+  width: 60px;
+  height: 60px;
   z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.slick-prev {
-  left: -45px;
+.events-carousel-container .slick-prev {
+  left: -70px;
 }
 
-.slick-next {
-  right: -45px;
+.events-carousel-container .slick-next {
+  right: -70px;
 }
 
-.slick-prev:before, .slick-next:before {
-  font-size: 40px;
+.events-carousel-container .slick-prev:hover,
+.events-carousel-container .slick-next:hover {
+  background: white;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.events-carousel-container .slick-prev:before,
+.events-carousel-container .slick-next:before {
+  font-size: 24px;
   color: var(--border-gold);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
-.slick-prev:hover:before, .slick-next:hover:before {
-  opacity: 1;
+.events-carousel-container .slick-dots {
+  bottom: -60px;
 }
 
-.slick-dots {
-  bottom: -40px;
-}
-
-.slick-dots li button:before {
+.events-carousel-container .slick-dots li button:before {
   font-size: 12px;
   color: var(--border-gold);
-  opacity: 0.5;
+  opacity: 0.4;
+  transition: all 0.3s ease;
 }
 
-.slick-dots li.slick-active button:before {
+.events-carousel-container .slick-dots li.slick-active button:before {
   opacity: 1;
   color: var(--dark-gold);
+  font-size: 14px;
 }
 
-/* Responsive Design */
+.events-carousel-container .slick-list {
+  margin: 0 -15px;
+}
+
+.events-carousel-container .slick-slide > div {
+  padding: 0 15px;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Large Desktop */
+@media (min-width: 1440px) {
+  .events-carousel-container {
+    padding: 5rem 2rem;
+  }
+  
+  .carousel-description {
+    font-size: 3rem;
+  }
+  
+  .event-card {
+    height: 650px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .events-carousel-container {
+    padding: 3rem 1.5rem;
+  }
+  
+  .carousel-description {
+    font-size: 2rem;
+  }
+  
+  .event-card {
+    height: 500px;
+  }
+  
+  .events-carousel-container .slick-prev {
+    left: -50px;
+  }
+  
+  .events-carousel-container .slick-next {
+    right: -50px;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
   .events-carousel-container {
-    padding: 0.5rem;
+    padding: 2rem 1rem;
+    min-height: 80vh;
+  }
+  
+  .carousel-description {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
   }
   
   .carousel-wrapper {
     width: 95%;
   }
   
+  .event-card-container {
+    padding: 1rem;
+  }
+  
   .event-card {
-    height: 250px;
+    height: 400px;
+    border-width: 2px;
   }
   
-  .event-image {
-    height: 120px;
-    object-fit: contain;
+  .eve_reg {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    margin-top: 2rem;
   }
   
-  .event-title {
-    font-size: 0.8rem;
+  .events-carousel-container .slick-prev,
+  .events-carousel-container .slick-next {
+    width: 50px;
+    height: 50px;
   }
   
-  .event-description {
-    font-size: 0.6rem;
+  .events-carousel-container .slick-prev {
+    left: -30px;
   }
   
-  .slick-prev {
-    left: -35px;
-  }
-  
-  .slick-next {
-    right: -35px;
-  }
-  
-  .slick-prev:before, .slick-next:before {
-    font-size: 30px;
+  .events-carousel-container .slick-next {
+    right: -30px;
   }
 }
 
+/* Small Mobile */
 @media (max-width: 480px) {
+  .events-carousel-container {
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .carousel-description {
+    font-size: 1.3rem;
+    padding: 0 0.5rem;
+  }
+  
   .event-card {
-    height: 20vh;
+    height: 350px;
+  }
+  
+  .event-card-container {
+    padding: 0.5rem;
+  }
+  
+  .eve_reg {
+    padding: 14px 28px;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+    min-width: 120px;
+  }
+  
+  .events-carousel-container .slick-prev {
+    left: -20px;
+  }
+  
+  .events-carousel-container .slick-next {
+    right: -20px;
+  }
+  
+  .events-carousel-container .slick-dots {
+    bottom: -50px;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+  .event-card {
+    height: 300px;
+  }
+  
+  .eve_reg {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== ACCESSIBILITY & PERFORMANCE ===== */
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .event-card,
+  .event-img,
+  .eve_reg,
+  .events-carousel-container .slick-prev,
+  .events-carousel-container .slick-next {
+    transition: none;
+  }
+  
+  .event-card:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .event-card {
+    border-width: 2px;
+    background: white;
+  }
+  
+  .eve_reg {
+    background: #004400;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .event-card {
+    background: rgba(30, 30, 30, 0.95);
+    border-color: #8b7355;
   }
   
   .event-image {
-    height: 100px;
-  }
-  
-  .event-content {
-    padding: 0.8rem;
-  }
-  
-  .slick-prev {
-    left: -25px;
-  }
-  
-  .slick-next {
-    right: -25px;
+    background: #1a1a1a;
   }
 }
