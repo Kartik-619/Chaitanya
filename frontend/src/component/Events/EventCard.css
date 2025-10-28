@@ -14,20 +14,15 @@
     /* Spacing between cards on smaller screens */
 }
 
-.event-card-container:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
 
-.event-card-container:hover .event-card-image {
-    transform: scale(1.1);
-}
 
-.event-card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.event-img {
+    width: 70vw;
+    height: 20vh;
+    position: relative;
+    object-fit: contain;
     transition: transform 0.7s ease;
+    margin-bottom: 15%;
 }
 
 .event-card-overlay {

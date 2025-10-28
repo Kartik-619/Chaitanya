@@ -63,9 +63,7 @@ export default function EventsCarousel() {
     <div className="events-carousel-container">
       <h1>Events & Activities</h1>
       <br/>
-      <p className="carousel-description">
-        Participate in the events and win the cash prize worth of <b className='red text-xl'>₹ 75000</b>
-      </p>
+     
       
       <div className="carousel-wrapper">
         <Slider {...settings}>
