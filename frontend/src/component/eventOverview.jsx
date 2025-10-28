@@ -22,6 +22,9 @@ export default function EventsCarousel() {
     { 
       img: "/images/events/i4.jpg",  
       title: "The Nexus Key"
+    },{
+      img: "/images/events/i5.jpg",  
+      title: "Prompt engineering"
     }
   ];
 
