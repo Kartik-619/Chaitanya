@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './NavHero.css';
-import Typewriter from '../typewriter';
+import './navHero.css';
 
 export default function NavHero() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
