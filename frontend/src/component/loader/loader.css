@@ -1,15 +1,24 @@
+@font-face {
+  font-family: "price-down";
+  src: url("/pricedown.off") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+.price-down{
+  font-family: "price-down", sans-serif;
+}
 .loader-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #0a0014 0%, #21023a 50%, #5c2986 100%);
+    background: linear-gradient(black);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "price-down", sans-serif;
     padding: 1rem;
   }
   
@@ -24,8 +33,8 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    width: clamp(80px, 25vw, 200px);
-    height: clamp(80px, 25vh, 200px);
+    width: clamp(80px, 25vw, 300px);
+    height: clamp(80px, 25vh, 300px);
     margin: 0 auto 20px;
     animation: pulse 2s infinite ease-in-out;
     /* GSAP will handle rotation, CSS handles pulsing */
@@ -46,38 +55,14 @@
   .loader-text {
     font-size: clamp(1.2rem, 4vw, 2.5rem);
     margin-bottom: 10px;
-    color: rgba(234, 220, 220, 0.8);
+    color: rgba(255, 255, 255, 0.8);
     font-weight: 500;
+    font-size: 8rem;
+    font-family: "price-down", sans-serif;
     line-height: 1.2;
   }
   
-  .loader-title {
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
-    margin-bottom: clamp(20px, 4vh, 30px);
-    background: linear-gradient(135deg, #f6f6f6, #e3e3e3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 700;
-    line-height: 1.2;
-    word-wrap: break-word;
-  }
-  
-  .loading-bar {
-    width: clamp(150px, 50vw, 300px);
-    height: clamp(3px, 0.5vh, 4px);
-    background: #ffffff33;
-    border-radius: 2px;
-    margin: 0 auto;
-    overflow: hidden;
-  }
-  
-  .loading-progress {
-    height: 100%;
-    background: linear-gradient(90deg, #ececec, #e0aaff);
-    border-radius: 2px;
-    animation: loading 2s infinite ease-in-out;
-  }
+ 
   
   @keyframes loading {
     0% { 

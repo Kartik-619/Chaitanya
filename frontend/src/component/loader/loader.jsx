@@ -1,6 +1,7 @@
 import './loader.css';
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import Typewriter from '../typewriter';
 
 const Loader = () => {
   const iconRef = useRef(null);
@@ -32,11 +33,9 @@ const Loader = () => {
     <div className="loader-overlay">
       <div className="loader-container">
         <div ref={iconRef} className="icon-loader"></div>
-        <h2 className="loader-text">Chaitanya 1.0</h2>      
-        <h1 className="loader-title">Wait until the site is loading...</h1>   
-        <div className="loading-bar">
-          <div className="loading-progress"></div>
-        </div>
+        <Typewriter className="loader-text" text='Chaitanya 1.0'></Typewriter>
+        
+      
       </div>
     </div>
   );
