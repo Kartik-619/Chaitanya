@@ -7,25 +7,27 @@ import {Link} from 'react-router-dom';
 
 export default function EventsCarousel() {
   const events = [
-    { 
-      img: "/images/events/I1.jpg", 
+    {
+      img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000000/I1_q5z0as.jpg",
       title: "Integration Bee"
     },
-    { 
-      img: "/images/events/I2.jpg", 
+    {
+      img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000001/i5_r4phcv.jpg",
       title: "Code Wars"
     },
-    { 
-      img: "/images/events/I3.jpg", 
+    {
+      img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000002/i4_e5e4co.jpg",
       title: "Under The Hood"
     },
-    { 
-      img: "/images/events/i4.jpg",  
+    {
+      img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000003/I2_phkhss.jpg",
       title: "The Nexus Key"
-    },{
-      img: "/images/events/i5.jpg",  
-      title: "Prompt engineering"
+    },
+    {
+      img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000004/I3_nr8paz.jpg",
+      title: "Prompt Engineering"
     }
+  
   ];
 
   const handleRegisterClick = () => {

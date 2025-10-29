@@ -97,15 +97,7 @@ export default function Sidebar() {
                   Register
                 </a>
               </li>
-              <li>
-                <Link
-                  to="/sponsor"
-                  onClick={() => setMenu(false)}
-                  className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
-                >
-                 Sponsor Us
-                </Link>
-              </li>
+              
               <li>
                 <Link
                   to="/about"

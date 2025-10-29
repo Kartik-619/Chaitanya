@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
-import Loader from './loader/loader'; // Import the loader
+import Loader from './loader/loader';
 
 const getOptimizedImageUrl = (publicId) => {
   return `https://res.cloudinary.com/dpe1pmwsv/image/upload/${publicId}`;
@@ -23,7 +23,8 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
     ".welcome",
     ".name", 
     ".castle",
-    ".scroll"
+    ".scroll",
+    ".reg_button"
   ]);
 
   const tl = gsap.timeline({
@@ -31,7 +32,7 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
   });
 
   // Initial setup - hide elements that will animate in
-  gsap.set([".welcome", ".name"], { opacity: 0, y: 50 });
+  gsap.set([".welcome", ".name", ".reg_button"], { opacity: 0, y: 50 });
   gsap.set(".scroll", { opacity: 1 });
 
   // Main animation sequence
@@ -46,20 +47,24 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
       xPercent: -100,
       opacity: 0,
       duration: 2,
-   
     }, 1)
+    // Name appears with the clouds animation
     .fromTo(".name", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1.7, delay: 0.2 }, 
-      0.5
+      { opacity: 1, y: 0, duration: 1.7 }, 
+      1.2
     )
     .to([cloudRefs.right1.current, cloudRefs.right2.current], {
       xPercent: 100,
       opacity: 0,
       duration: 2,
-      
-      delay: 0.21
-    }, 1);
+    }, 1)
+    // Register Button appears AFTER clouds start disappearing (midway through cloud animation)
+    .fromTo(".reg_button", 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1.5 }, 
+      1.8 // Start when clouds are halfway through their animation
+    );
 
   return tl;
 };
@@ -67,13 +72,13 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
 const setupStaticView = (cloudRefs) => {
   // Kill all animations and reset elements to visible state
   gsap.killTweensOf([
-    ".welcome", ".name", ".scroll", ".castle",
+    ".welcome", ".name", ".scroll", ".castle", ".reg_button",
     cloudRefs.left1.current, cloudRefs.left2.current,
     cloudRefs.right1.current, cloudRefs.right2.current
   ]);
   
   // Reset everything to default state but keep clouds visible for animation
-  gsap.set([".welcome", ".name", ".scroll", ".castle"], { 
+  gsap.set([".welcome", ".name", ".scroll", ".castle", ".reg_button"], { 
     opacity: 1,
     y: 0,
     x: 0,
@@ -93,7 +98,7 @@ const setupStaticView = (cloudRefs) => {
   });
 
   // Initial setup
-  gsap.set([".welcome", ".name"], { opacity: 0, y: 50 });
+  gsap.set([".welcome", ".name", ".reg_button"], { opacity: 0, y: 50 });
   gsap.set(".scroll", { opacity: 1 });
 
   // Same animation sequence for all devices
@@ -110,17 +115,54 @@ const setupStaticView = (cloudRefs) => {
       duration: 2,
       delay: 2
     }, 1)
+    // Name appears with the clouds animation
     .fromTo(".name", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1,  delay: 1.5 }, 
-      0.5
+      { opacity: 1, y: 0, duration: 1 }, 
+      2.5
     )
     .to([cloudRefs.right1.current, cloudRefs.right2.current], {
       xPercent: 100,
       opacity: 0,
       duration: 2,
       delay: 0.8
-    }, 1);
+    }, 1)
+    // Register Button appears AFTER clouds start disappearing
+    .fromTo(".reg_button", 
+      { opacity: 0, y: 50 }, 
+      { opacity: 1, y: 0, duration: 1.2 } // Start when clouds are partially gone
+    );
+
+  return tl;
+};
+
+// Simple button glow animation using class name
+const setupButtonGlow = () => {
+  // Kill any existing button animations
+  gsap.killTweensOf(".reg_button");
+  
+  const tl = gsap.timeline({ 
+    repeat: -1, // Infinite loop
+    yoyo: true, // Go back and forth
+    ease: "sine.inOut"
+  });
+
+  // Glow animation sequence
+  tl.to(".reg_button", {
+    boxShadow: "0 0 20px 8px rgba(34, 197, 94, 0.8)",
+    duration: 1.5,
+    ease: "sine.inOut"
+  })
+  .to(".reg_button", {
+    boxShadow: "0 0 30px 12px rgba(34, 197, 94, 0.9)",
+    duration: 1,
+    ease: "sine.inOut"
+  })
+  .to(".reg_button", {
+    boxShadow: "0 0 15px 5px rgba(34, 197, 94, 0.6)",
+    duration: 1.5,
+    ease: "sine.inOut"
+  });
 
   return tl;
 };
@@ -133,19 +175,23 @@ export default function Hero() {
     right1: useRef(),
     right2: useRef()
   };
+  
+  const handleRegister = () => {
+    window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
+  };
 
   const [deviceType, setDeviceType] = useState("desktop");
-  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [isLoading, setIsLoading] = useState(true);
   const animationTimeline = useRef();
+  const buttonAnimationTimeline = useRef();
 
-  // Image loading function
   const preloadImages = () => {
     const imageUrls = [
-      getOptimizedImageUrl('castle_rqfln4'),
-      getOptimizedImageUrl('cloudLeft_bsofo7'),
-      getOptimizedImageUrl('cloud_1_l2qd7g'),
-      getOptimizedImageUrl('cloud2_othzfm'),
-      getOptimizedImageUrl('cloud_right1_qibfp4')
+      getOptimizedImageUrl('castle_c7d5oc'),
+      getOptimizedImageUrl('cloudLeft_qxcpnl'),
+      getOptimizedImageUrl('cloud_1_ny9xmx'),
+      getOptimizedImageUrl('cloud2_k7nb4c'),
+      getOptimizedImageUrl('cloud_right1_lb7hcg')
     ];
 
     const promises = imageUrls.map(url => {
@@ -173,17 +219,14 @@ export default function Hero() {
     checkDevice();
     window.addEventListener('resize', checkDevice);
 
-    // Preload images and then hide loader
     preloadImages()
       .then(() => {
-        // Add a small delay for smooth transition
         setTimeout(() => {
           setIsLoading(false);
         }, 500);
       })
       .catch((error) => {
         console.error('Error loading images:', error);
-        // Still hide loader after a timeout even if some images fail
         setTimeout(() => setIsLoading(false), 3000);
       });
 
@@ -191,23 +234,27 @@ export default function Hero() {
   }, []);
 
   useGSAP(() => {
-    // Don't start animations if still loading
     if (isLoading) return;
 
-    // Kill existing timeline
     if (animationTimeline.current) {
       animationTimeline.current.kill();
     }
 
-    // Apply the same timeline animation to ALL devices
     if (deviceType === "desktop") {
       animationTimeline.current = setupDesktopAnimations(heroRef, cloudRefs);
     } else {
       animationTimeline.current = setupStaticView(cloudRefs);
     }
+
+    // Start button glow animation after main animations
+    setTimeout(() => {
+      if (buttonAnimationTimeline.current) {
+        buttonAnimationTimeline.current.kill();
+      }
+      buttonAnimationTimeline.current = setupButtonGlow();
+    }, 3000);
   }, { scope: heroRef, dependencies: [deviceType, isLoading] });
 
-  // Show loader while loading
   if (isLoading) {
     return <Loader />;
   }
@@ -230,7 +277,15 @@ export default function Hero() {
         <h1 className='welcome'>HPTU Presents</h1>
         <h1 className='name'>Chaitanya 1.0</h1>
       </div>
-
+    
+      {/* Simple button without ref */}
+      <button 
+        onClick={handleRegister}
+        className='reg_button'
+      >
+        Register Now
+      </button>
+    
       {/* Show scroll indicator on ALL devices */}
       <div className="scroll">
         <FontAwesomeIcon icon={faArrowDown} className="text-4xl text-white drop-shadow-lg" />

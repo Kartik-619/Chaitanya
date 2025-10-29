@@ -372,3 +372,9 @@ body {
       transform: scale(0.7);
   }
 }
+.reg_button{
+  background-color: green;
+  color: azure;
+  bottom: 5vh;
+  padding:0.9rem;
+}

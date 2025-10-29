@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const contentComponents = [
   { id: "info", component: <InfoContent /> },
-  { id: "about", component: <AboutContent /> },
+
   { id: "events", component: <EventsCarousel /> },
 ];
 
