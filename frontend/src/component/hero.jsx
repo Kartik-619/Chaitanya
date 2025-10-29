@@ -6,6 +6,7 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './hero.css';
 import Loader from './loader/loader';
+import NavHero from './navHero/navHero';
 
 const getOptimizedImageUrl = (publicId) => {
   return `https://res.cloudinary.com/dpe1pmwsv/image/upload/${publicId}`;
@@ -62,8 +63,16 @@ const setupDesktopAnimations = (heroRef, cloudRefs) => {
     // Register Button appears AFTER clouds start disappearing (midway through cloud animation)
     .fromTo(".reg_button", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1.5 }, 
-      1.8 // Start when clouds are halfway through their animation
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 1.5,
+        onComplete: () => {
+          // Ensure button is clickable after animation
+          document.querySelector('.reg_button').style.pointerEvents = 'auto';
+        }
+      }, 
+      1.8
     );
 
   return tl;
@@ -92,11 +101,12 @@ const setupStaticView = (cloudRefs) => {
     x: 0
   });
 
-  // Create timeline for static devices too
   const tl = gsap.timeline({
     defaults: { ease: "power2.inOut" }
   });
 
+  gsap.set(".reg_button", { scale: 1 });
+  
   // Initial setup
   gsap.set([".welcome", ".name", ".reg_button"], { opacity: 0, y: 50 });
   gsap.set(".scroll", { opacity: 1 });
@@ -130,7 +140,15 @@ const setupStaticView = (cloudRefs) => {
     // Register Button appears AFTER clouds start disappearing
     .fromTo(".reg_button", 
       { opacity: 0, y: 50 }, 
-      { opacity: 1, y: 0, duration: 1.2 } // Start when clouds are partially gone
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 1.2,
+        onComplete: () => {
+          // Ensure button is clickable after animation
+          document.querySelector('.reg_button').style.pointerEvents = 'auto';
+        }
+      }
     );
 
   return tl;
@@ -142,24 +160,24 @@ const setupButtonGlow = () => {
   gsap.killTweensOf(".reg_button");
   
   const tl = gsap.timeline({ 
-    repeat: -1, // Infinite loop
-    yoyo: true, // Go back and forth
+    repeat: -1,
+    yoyo: true,
     ease: "sine.inOut"
   });
 
-  // Glow animation sequence
+  // Use box-shadow instead of scale for glow effect to avoid click issues
   tl.to(".reg_button", {
-    boxShadow: "0 0 20px 8px rgba(34, 197, 94, 0.8)",
+    boxShadow: "0 0 20px 8px rgba(34, 197, 94, 0.6)",
     duration: 1.5,
     ease: "sine.inOut"
   })
   .to(".reg_button", {
-    boxShadow: "0 0 30px 12px rgba(34, 197, 94, 0.9)",
+    boxShadow: "0 0 30px 12px rgba(34, 197, 94, 0.8)",
     duration: 1,
     ease: "sine.inOut"
   })
   .to(".reg_button", {
-    boxShadow: "0 0 15px 5px rgba(34, 197, 94, 0.6)",
+    boxShadow: "0 0 15px 5px rgba(34, 197, 94, 0.4)",
     duration: 1.5,
     ease: "sine.inOut"
   });
@@ -169,6 +187,7 @@ const setupButtonGlow = () => {
 
 export default function Hero() {
   const heroRef = useRef();
+  const buttonRef = useRef(); // Add button ref back for direct access
   const cloudRefs = {
     left1: useRef(),
     left2: useRef(),
@@ -177,6 +196,7 @@ export default function Hero() {
   };
   
   const handleRegister = () => {
+    console.log('Register button clicked!'); // Debug log
     window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
   };
 
@@ -278,13 +298,8 @@ export default function Hero() {
         <h1 className='name'>Chaitanya 1.0</h1>
       </div>
     
-      {/* Simple button without ref */}
-      <button 
-        onClick={handleRegister}
-        className='reg_button'
-      >
-        Register Now
-      </button>
+      {/* Button with ref and inline styles to ensure clickability */}
+     <NavHero/>
     
       {/* Show scroll indicator on ALL devices */}
       <div className="scroll">

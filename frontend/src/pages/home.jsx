@@ -62,7 +62,7 @@ export default function Home() {
         <Hero />
       </div>
       
-      <Sidebar/>
+      
       <Social/>
       
       {/* About Section - Comes AFTER Hero in the DOM */}
