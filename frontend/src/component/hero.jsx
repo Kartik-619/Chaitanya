@@ -263,14 +263,14 @@ export default function Hero() {
     <div ref={heroRef} className={`hero ${deviceType}-layout`}>
       <div className="bg" />
 
-      <img src={getOptimizedImageUrl('castle_rqfln4')} alt="Castle" className="castle" />
+      <img src={getOptimizedImageUrl('castle_c7d5oc')} alt="Castle" className="castle" />
 
       {/* Show clouds on ALL devices now since animation works everywhere */}
       <>
-        <img ref={cloudRefs.left1} src={getOptimizedImageUrl('cloudLeft_bsofo7')} alt="Cloud Left" className="cloudLeft" />
-        <img ref={cloudRefs.left2} src={getOptimizedImageUrl('cloud_1_l2qd7g')} alt="Cloud 1" className="cloud1" />
-        <img ref={cloudRefs.right1} src={getOptimizedImageUrl('cloud2_othzfm')} alt="Cloud 2" className="cloud2" />
-        <img ref={cloudRefs.right2} src={getOptimizedImageUrl('cloud_right1_qibfp4')} alt="Cloud Right" className="cloudRight" />
+        <img ref={cloudRefs.left1} src={getOptimizedImageUrl('cloudLeft_qxcpnl')} alt="Cloud Left" className="cloudLeft" />
+        <img ref={cloudRefs.left2} src={getOptimizedImageUrl('cloud_1_ny9xmx')} alt="Cloud 1" className="cloud1" />
+        <img ref={cloudRefs.right1} src={getOptimizedImageUrl('cloud2_k7nb4c')} alt="Cloud 2" className="cloud2" />
+        <img ref={cloudRefs.right2} src={getOptimizedImageUrl('cloud_right1_lb7hcg')} alt="Cloud Right" className="cloudRight" />
       </>
 
       <div className="text-container price-font">
