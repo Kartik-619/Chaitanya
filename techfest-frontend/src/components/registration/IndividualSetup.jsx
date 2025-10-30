@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 
 const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
   const [selectedEvents, setSelectedEvents] = useState([]);
-  const [needsAccommodation, setNeedsAccommodation] = useState(false); // NEW: Default false
+  const [needsAccommodation, setNeedsAccommodation] = useState(false);
 
   const prelimEvents = [
     "Integration Bee",
@@ -74,7 +74,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           sessionId: data.sessionId,
           prelimEvents: selectedEvents,
           isPremium: false,
-          needsAccommodation: needsAccommodation, // NEW: Pass accommodation choice
+          needsAccommodation: needsAccommodation,
           totalAmount: calculatedAmount
         }),
       });
@@ -87,7 +87,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
             ...result.individualData,
             totalAmount: calculatedAmount,
             isPremium: false,
-            needsAccommodation: needsAccommodation // NEW: Store accommodation choice
+            needsAccommodation: needsAccommodation
           }
         });
         nextStep();
@@ -109,7 +109,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
       </div>
 
       <div className="space-y-4 sm:space-y-6">
-        {/* EVENTS GRID - UNCHANGED */}
+        {/* EVENTS GRID */}
         <div>
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Select Individual Events</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -152,7 +152,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* COMPULSORY Food - UPDATED */}
+        {/* COMPULSORY Food */}
         <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
           <div className="flex items-center justify-between space-x-3">
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
@@ -170,7 +170,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* OPTIONAL Accommodation - NEW */}
+        {/* OPTIONAL Accommodation - UPDATED TEXT */}
         <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
@@ -186,7 +186,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg truncate">Accommodation - ₹200</div>
                 <div className="text-xs sm:text-sm text-gray-300 line-clamp-2">
-                  3-day hostel stay (Optional - select if needed)
+                  3-day accommodation (Optional - select if needed)
                 </div>
               </div>
             </div>
@@ -194,7 +194,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           </label>
         </div>
 
-        {/* Selection Summary - UPDATED */}
+        {/* Selection Summary */}
         <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
           <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Order Summary</h3>
           
@@ -237,7 +237,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* Action Buttons - UNCHANGED */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             onClick={prevStep}
