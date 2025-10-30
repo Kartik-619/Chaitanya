@@ -6,7 +6,7 @@ class EmailService {
     // Initialize email transporter with connection pooling and rate limiting
     const { Resend } = require('resend');
   
-    // Initialize Resend
+    // Initialize Resend 
     if (process.env.RESEND_API_KEY) {
       this.resend = new Resend(process.env.RESEND_API_KEY);
       this.initialized = true;
