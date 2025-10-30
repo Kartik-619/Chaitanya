@@ -26,7 +26,7 @@ class GoogleSheetsService {
 
     // Google Sheets configuration from environment
     this.spreadsheetId = SHEETS_CONFIG.SPREADSHEET_ID;
-    this.range = 'Registrations!A:W'; // Main registrations sheet range (Columns A-S)
+    this.range = 'Registrations!A:X'; // Main registrations sheet range (Columns A-S)
     this.eventsRange = 'Events Participation!A:M'; // Events participation sheet range (Columns A-J)
     this.sheets = null; // Google Sheets API client
     this.initialized = false; // Track if Sheets API is ready
@@ -156,7 +156,10 @@ class GoogleSheetsService {
               reg.paymentDetails?.transactionDate,   // R: Payment Date
               JSON.stringify(reg.qrData || {}),      // S: QR Data (JSON string)
               reg.isPremium ? 'Yes' : 'No',          // T: Premium Status (NEW)
-              reg.needsAccommodation ? 'Yes' : 'No'  // U: Accommodation (NEW)
+              reg.needsAccommodation ? 'Yes' : 'No', // U
+              400,                                   // V: FOOD AMOUNT ₹400 (ADD THIS LINE)
+              reg.esportsGame || 'N/A',              // W
+              reg.projectBazaar ? 'Yes' : 'No'   
             ]);
           } else {
             // Team registration - multiple rows (leader + members)
@@ -183,8 +186,9 @@ class GoogleSheetsService {
               reg.paymentDetails?.transactionDate,   // R: Payment Date
               JSON.stringify(reg.qrData || {}),      // S: QR Data
               reg.isPremium ? 'Yes' : 'No',                                  // T: Premium Status (team leader doesn't have premium)
-              reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-              reg.esportsGame || 'N/A',             // V: E-sports Game (NEW)
+              reg.needsAccommodation ? 'Yes' : 'No', // U
+              400 * reg.teamSize,                    // V: FOOD AMOUNT ₹400 × team_size (ADD THIS)
+              reg.esportsGame || 'N/A',              // W
               reg.projectBazaar ? 'Yes' : 'No' 
             ]);
             
@@ -213,8 +217,9 @@ class GoogleSheetsService {
                 reg.paymentDetails?.transactionDate, // R: Payment Date
                 JSON.stringify(reg.qrData || {}),    // S: QR Data
                 reg.isPremium ? 'Yes' : 'No',                                // T: Premium Status
-                reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-                reg.esportsGame || 'N/A',             // V: E-sports Game
+                reg.needsAccommodation ? 'Yes' : 'No', // U
+                400,                                // V: FOOD AMOUNT ₹400 per member (ADD THIS)
+                reg.esportsGame || 'N/A',            // W
                 reg.projectBazaar ? 'Yes' : 'No' 
               ]);
             });
@@ -225,7 +230,7 @@ class GoogleSheetsService {
         // SINGLE API CALL for entire batch (saves 80% API calls)
         await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: this.range,
+          range: 'Registrations!A:X',
           valueInputOption: 'RAW', // Don't convert data types
           resource: { values }, // All batch data in one request
         });
@@ -362,8 +367,9 @@ class GoogleSheetsService {
             qrData: row[18] ? JSON.parse(row[18]) : null,
             isPremium: row[19] === 'Yes', // Column T
             needsAccommodation: row[20] === 'Yes', // Column U
-            esportsGame: row[21] || null, // Column V
-            projectBazaar: row[22] === 'Yes'
+            foodAmount: parseFloat(row[21]) || 0,  // NEW: Column V - Food Amount
+            esportsGame: row[22] || null,          // Column W (shifted from V)
+            projectBazaar: row[23] === 'Yes'       // Column X (shifted from W)
           };
 
           console.log(`📝 Processed ${registrationType} registration ${index + 1}:`, personalDetails.name);
@@ -399,7 +405,6 @@ class GoogleSheetsService {
   async saveRegistration(registrationData) {
   try {
     console.log('💾 [SHEETS DEBUG] Starting saveRegistration for:', registrationData.registrationId);
-    console.log('💾 [PROJECT BAZAAR DEBUG] Project Bazaar value:', registrationData.projectBazaar);
     
     const initialized = await this.ensureInitialized();
     if (!initialized) {
@@ -421,6 +426,8 @@ class GoogleSheetsService {
     let values = [];
     
     if (registrationData.registrationType === 'individual') {
+      const foodAmount = 400; 
+      
       values.push([
         registrationData.registrationId,
         registrationData.personalDetails.name,
@@ -442,7 +449,9 @@ class GoogleSheetsService {
         registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
         JSON.stringify(registrationData.qrData || {}),
         registrationData.isPremium ? 'Yes' : 'No', // Premium status
-        registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
+        registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
+        400,                                                // V: Food Amount ₹400 (NEW)
+        registrationData.esportsGame || 'N/A', 
         registrationData.projectBazaar ? 'Yes' : 'No' 
       ]);
     } else {
@@ -468,8 +477,9 @@ class GoogleSheetsService {
         registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
         JSON.stringify(registrationData.qrData || {}),
         registrationData.isPremium ? 'Yes' : 'No', // Team leader doesn't have premium
-        registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
-        registrationData.esportsGame || 'N/A', // E-sports game
+        registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
+        400 * registrationData.teamSize,                    // V: Food Amount ₹400 × team_size (NEW)
+        registrationData.esportsGame || 'N/A',
         registrationData.projectBazaar ? 'Yes' : 'No' 
       ]);
 
@@ -497,8 +507,9 @@ class GoogleSheetsService {
               registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
               JSON.stringify(registrationData.qrData || {}),
               registrationData.isPremium ? 'Yes' : 'No', // Members don't have premium
-              registrationData.needsAccommodation ? 'Yes' : 'No', // Accommodation
-              registrationData.esportsGame || 'N/A', // E-sports game
+              registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
+              400,                                // V: Food Amount ₹400 per member (NEW)
+              registrationData.esportsGame || 'N/A', // W: E-sports Game
               registrationData.projectBazaar ? 'Yes' : 'No' 
             ]);
           });
@@ -511,11 +522,9 @@ class GoogleSheetsService {
     console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
     const response = await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.spreadsheetId,
-      range: 'Registrations!A:W',
+      range: 'Registrations!A:X',
       valueInputOption: 'RAW',
-      resource: {
-        values: values
-      },
+      resource: { values },
     });
 
     console.log('✅ [SHEETS DEBUG] Successfully saved to Google Sheets:', response.data.updates.updatedRange);
