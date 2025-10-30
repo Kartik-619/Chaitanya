@@ -232,26 +232,31 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
         </div>
 
 
-        {/* Accommodation */}
-        {(registrationData?.needsAccommodation) && (
-          <div className="glass-card p-6 bg-blue-500/10 border-blue-500/30">
-            <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Accommodation Details
-            </h3>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-white font-medium">🏨 3-Day Accommodation</div>
-                <div className="text-sm text-gray-300">
-                  {isIndividual ? 'Single person stay' : `${registrationData?.teamSize} team members`}
-                </div>
-              </div>
-              <div className="text-blue-400 font-bold text-lg">
-                ₹{isIndividual ? 600 : 600 * (registrationData?.teamSize || 1)}
+        {/* Food Charge - COMPULSORY */}
+        <div className="flex justify-between items-center border-b border-white/10 pb-2">
+          <div>
+            <span className="text-gray-300">Food Package</span>
+            <div className="text-xs text-gray-400">
+              {isIndividual ? '1 person' : `${registrationData?.teamSize} members`} × ₹400
+            </div>
+          </div>
+          <span className="text-white font-medium">
+            ₹{isIndividual ? 400 : 400 * (registrationData?.teamSize || 1)}
+          </span>
+        </div>
+        
+        {/* Accommodation Charge - Only if selected */}
+        {registrationData?.needsAccommodation && (
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <div>
+              <span className="text-gray-300">Accommodation</span>
+              <div className="text-xs text-gray-400">
+                {isIndividual ? '1 person' : `${registrationData?.teamSize} members`} × ₹200
               </div>
             </div>
+            <span className="text-white font-medium">
+              ₹{isIndividual ? 200 : 200 * (registrationData?.teamSize || 1)}
+            </span>
           </div>
         )}
 
