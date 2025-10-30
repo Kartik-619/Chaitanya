@@ -4,25 +4,28 @@ const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 class EmailService {
   constructor() {
     // Initialize email transporter with connection pooling and rate limiting
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    this.initialized = !!process.env.SENDGRID_API_KEY;
+    const { Resend } = require('resend');
   
-    if (!this.initialized) {
-      console.warn('⚠️ SendGrid API key not found. Registration emails will not be sent.');
+    // Initialize Resend
+    if (process.env.RESEND_API_KEY) {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+      this.initialized = true;
+      console.log('✅ Resend Email Service Initialized');
     } else {
-      console.log('✅ SendGrid Email Service Initialized');
+      this.initialized = false;
+      console.warn('❌ Resend API key not found. Registration emails will not be sent.');
     }
-
+    
     // Rate limiting system
-    this.dailyEmailCount = 0;              // Track emails sent today
+    this.dailyEmailCount = 0;
+    this.MAX_EMAILS_PER_DAY = 90;             // Track emails sent today
     
     // Reset daily counter every 24 hours
     setInterval(() => {
       this.dailyEmailCount = 0;
       console.log('📧 Daily email counter reset to 0');
     }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
-
-    this.MAX_EMAILS_PER_DAY = 90;          
+      
 
     // Event pricing for amount calculations
     this.eventPrices = {
@@ -265,47 +268,48 @@ class EmailService {
    * Send confirmation email saying ID card will be sent within 48 hours
    */
   async sendQuickConfirmation(registrationData) {
-    try {
-      const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
-      const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
-      
-      if (!email) {
-        console.error('❌ No email address found for confirmation');
-        return { success: false, error: 'No email address provided' };
-      }
+  try {
+    const email = registrationData.personalDetails?.email || registrationData.teamLeader?.email;
+    const name = registrationData.personalDetails?.name || registrationData.teamLeader?.name;
+    
+    if (!email) {
+      console.error('❌ No email address found for confirmation');
+      return { success: false, error: 'No email address provided' };
+    }
 
-      if (!this.initialized) {
-        console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
-        return { success: true, quick: true, simulated: true };
-      }
+    if (!this.initialized) {
+      console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
+      return { success: true, quick: true, simulated: true };
+    }
 
-      // Check rate limiting
-      if (this.dailyEmailCount >= this.MAX_EMAILS_PER_DAY) {
-        console.warn('⚠️ Daily email limit reached, skipping email');
-        return { success: true, rateLimited: true };
-      }
+    // Check rate limiting
+    if (this.dailyEmailCount >= this.MAX_EMAILS_PER_DAY) {
+      console.warn('⚠️ Daily email limit reached, skipping email');
+      return { success: true, rateLimited: true };
+    }
 
-      const msg = {
-        to: email,
-        from: {
-          email: 'chaitanyahptu@gmail.com',
-          name: 'Chaitanya 2025'
-        },
-        subject: `Your Chaitanya 2025 Registration Confirmation`,
-        text: this._generateConfirmationText(registrationData, name),
-        html: this._generateConfirmationHTML(registrationData, name)
-      };
+    // 🚀 RESEND.COM - FAST EMAILS!
+    const { data, error } = await this.resend.emails.send({
+      from: 'Chaitanya 2025 <onboarding@resend.dev>',
+      to: email,
+      subject: `Your Chaitanya 2025 Registration Confirmation`,
+      html: this._generateConfirmationHTML(registrationData, name)
+    });
 
-      await sgMail.send(msg);
-      this.dailyEmailCount++;
-      console.log('✅ Confirmation email sent to:', email);
-      return { success: true, quick: true };
-
-    } catch (error) {
-      console.error('❌ Email failed:', error.message);
+    if (error) {
+      console.error('❌ Resend error:', error);
       return { success: false, error: error.message };
     }
+
+    this.dailyEmailCount++;
+    console.log(`✅ Confirmation email sent via Resend to ${email}`);
+    return { success: true, quick: true };
+
+  } catch (error) {
+    console.error('❌ Email failed:', error.message);
+    return { success: false, error: error.message };
   }
+}
 
   _generateConfirmationText(registrationData, name) {
     return `Dear ${name},
