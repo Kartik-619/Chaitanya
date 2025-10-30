@@ -31,7 +31,7 @@ const SHEETS_CONFIG = {
   SPREADSHEET_ID: process.env.SHEETS_SPREADSHEET_ID || '1wtmrbVRFW6pOj5bmEbQPFMiTpAlOpezFltS-yOfw7Zo',
   
   // Where to save registration data (Columns A to S)
-  RANGE: 'Registrations!A:V',
+  RANGE: 'Registrations!A:X',
   
   // Where to save event participation data
   EVENTS_RANGE: 'Events Participation!A:L'
