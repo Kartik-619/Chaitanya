@@ -1,26 +1,15 @@
-/**
- * 🔐 OTP SERVICE
- * 
- * This service handles OTP (One-Time Password) generation and delivery:
- * - OTP generation and validation
- * - Email delivery via SendGrid API
- * - OTP expiry management
- * - Security verification for user authentication
- */
-
-const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 const { SESSION_CONFIG } = require('../config/constants');
-
-// Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 class OTPService {
   constructor() {
-    this.initialized = !!process.env.SENDGRID_API_KEY;
-    if (!this.initialized) {
-      console.warn('⚠️ SendGrid API key not found. OTP emails will not be sent.');
+    if (process.env.RESEND_API_KEY) {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+      this.initialized = true;
+      console.log('✅ Resend OTP Service Initialized');
     } else {
-      console.log('✅ SendGrid OTP Service Initialized');
+      this.initialized = false;
+      console.warn('❌ Resend API key not found. OTP emails will not be sent.');
     }
   }
 
@@ -32,31 +21,32 @@ class OTPService {
   }
 
   /**
-   * Send OTP via email using SendGrid API
+   * Send OTP via email using Resend API
    */
   async sendOTPEmail(email, otp) {
     if (!this.initialized) {
-      console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
-      return true; // Return true for testing
+      console.log(`📧 [SIMULATED] OTP ${otp} for ${email}`);
+      return true;
     }
 
     try {
-      const msg = {
+      const { data, error } = await this.resend.emails.send({
+        from: 'Chaitanya 2025 <onboarding@resend.dev>',
         to: email,
-        from: {
-          email: 'chaitanyahptu@gmail.com',
-          name: 'Chaitanya 2025'
-        },
-        subject: 'Your Verification Code for Chaitanya 2025 Registration',
-        text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
-        html: this.generateOTPEmailHTML(otp)
-      };
+        subject: 'Your OTP for Chaitanya 2025 Registration',
+        html: this.generateOTPEmailHTML(otp),
+      });
 
-      await sgMail.send(msg);
-      console.log(`✅ OTP email sent to ${email}`);
+      if (error) {
+        console.error('❌ Resend error:', error);
+        return false;
+      }
+
+      console.log(`✅ OTP email sent via Resend to ${email}`);
       return true;
+
     } catch (error) {
-      console.error('❌ SendGrid error:', error.response?.body || error.message);
+      console.error('❌ Resend failed:', error);
       return false;
     }
   }
@@ -156,13 +146,6 @@ class OTPService {
             <p>Best regards,<br>
             <strong>Chaitanya 2025 Team</strong><br>
             Himachal Pradesh Technical University</p>
-            <div style="font-size: 12px; color: #666; margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
-                <strong>Event Address:</strong><br>
-                Chaitanya 2025, HPTU<br>
-                Gandhi Chowk, Hamirpur<br>
-                Himachal Pradesh 177001<br>
-                <a href="mailto:chaitanyahptu@gmail.com" style="color: #666;">Contact Support</a>
-            </div>
         </div>
     </div>
 </body>
