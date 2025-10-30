@@ -3,7 +3,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import './event_over.css';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export default function EventsCarousel() {
   const events = [
@@ -27,67 +27,61 @@ export default function EventsCarousel() {
       img: "https://res.cloudinary.com/dpe1pmwsv/image/upload/v1690000004/I3_nr8paz.jpg",
       title: "Prompt Engineering"
     }
-  
   ];
-
-  const handleRegisterClick = () => {
-    // Open the external link in a new tab
-    window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
-  };
 
   const settings = {
     dots: true,
     infinite: true,
-    speed: 500,
+    speed: 700,
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
     pauseOnHover: true,
     arrows: true,
+    fade: true,
+    cssEase: 'linear',
     responsive: [
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 1,
-        },
+          arrows: true,
+        }
       },
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: 1,
-        },
-      },
-    ],
+          arrows: false,
+          dots: true
+        }
+      }
+    ]
   };
 
   return (
     <div className="events-carousel-container">
-      <h1>Events & Activities</h1>
-      <br/>
-     
-      
-      <div className="carousel-wrapper">
+      <div className="carousel-content">
         <Slider {...settings}>
           {events.map((event, index) => (
-            <div key={index} className="event-card-container">
-            <Link to="/events">
-              <img
-                src={event.img}
-                alt={event.title}
-                className="event-img"
-              />
-            </Link>
-          </div>
-          
+            <div key={index} className="slide-item">
+              <div className="image-container">
+                <Link to="/events">
+                  <img
+                    src={event.img}
+                    alt={event.title}
+                    className="event-image"
+                  />
+                </Link>
+                <div className="event-title-overlay">
+                  <h3>{event.title}</h3>
+                </div>
+              </div>
+            </div>
           ))}
         </Slider>
       </div>
       
-      {/* Register Button - Now opens external link */}
-      <button className='eve_reg' onClick={handleRegisterClick}>
-        Register
-      </button>
+      
     </div>
   );
 }

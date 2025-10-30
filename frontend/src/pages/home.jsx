@@ -8,6 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Social from '../component/socials';
 import Sidebar from '../component/navbar';
 import Loader from '../component/loader/loader';
+import AboutNew from '../component/AboutNew';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -67,7 +68,7 @@ export default function Home() {
       
       {/* About Section - Comes AFTER Hero in the DOM */}
       <div className="about-container">
-        <About ref={aboutRef} />
+        <AboutNew ref={aboutRef} />
       </div>
     </>
   );

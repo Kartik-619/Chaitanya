@@ -1,0 +1,352 @@
+/* ===== GLOBAL STYLES ===== */
+@font-face {
+    font-family: "price-down";
+    src: url("/pricedown.off") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .about-container {
+    background-color: #000000;
+    min-height: 100vh;
+    width: 100%;
+    font-family: 'Arial', sans-serif;
+    color: #ffffff;
+    overflow-x: hidden;
+  }
+  
+  /* ===== HEADING ===== */
+  .events-heading {
+    text-align: center;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    font-family: "price-down", sans-serif;
+    margin: 2rem 0 3rem;
+    color: #ffffff;
+    padding: 0 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  /* ===== MAIN CONTENT WRAPPER ===== */
+  .content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: center;
+  }
+  
+  /* ===== CUSTOM CAROUSEL ===== */
+  .carousel-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .carousel {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  
+  .carousel-inner {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+  }
+  
+  .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+  
+  .slide.active {
+    opacity: 1;
+  }
+  
+  .image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .event-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  
+
+  
+  
+
+  /* ===== ACTION BUTTONS ===== */
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    right: 5%;
+    top:25%;
+    align-items: center;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .current-event {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .current-event h3 {
+    font-size:2.5rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+    font-family: "price-down", sans-serif;
+  }
+  .current-event h2 {
+    font-size: 1.9rem;
+    color: #fff;
+    font-family: "price-down", sans-serif;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+
+  .current-desc  h2{
+    font-size:2.5rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+    font-family: "price-down", sans-serif;
+    text-transform: uppercase;
+  }
+  .current-desc  h3{
+    font-size: 1.5rem;
+    color: #fff;
+    font-family:  sans-serif;
+    
+    margin-bottom: 0.5rem;
+  }
+
+  
+  .btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: "price-down", sans-serif;
+  }
+  
+  .view-btn {
+    background: linear-gradient(135deg, #e91e63, #c2185b);
+    color: white;
+  }
+  
+  .view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+  }
+  
+  .register-btn {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: white;
+  }
+  
+  .register-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  }
+  
+  /* ===== DESKTOP LAYOUT ===== */
+  @media (min-width: 1024px) {
+    .content-wrapper {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 4rem;
+      padding: 0 2rem;
+    }
+  
+    .carousel-container {
+      flex: 1;
+      max-width: none;
+      margin: 0;
+    }
+  
+    .action-buttons {
+      flex: 0 0 300px;
+      padding-top: 2rem;
+    }
+  
+    .events-heading {
+      margin: 3rem 0 4rem;
+    }
+  
+    .carousel-inner {
+      height: 600px;
+    }
+  
+    .current-event h2 {
+      font-size: 1.8rem;
+    }
+  }
+  
+  /* ===== LARGE DESKTOP ===== */
+  @media (min-width: 1440px) {
+    .content-wrapper {
+      gap: 5rem;
+      padding: 0 3rem;
+    }
+  
+    .action-buttons {
+      flex: 0 0 320px;
+    }
+  
+    .carousel-inner {
+      height: 650px;
+    }
+  }
+  
+  /* ===== TABLET ===== */
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .content-wrapper {
+      gap: 3rem;
+      padding: 0 1.5rem;
+    }
+  
+    .carousel-container {
+      max-width: 600px;
+    }
+  
+    .action-buttons {
+      flex-direction: row;
+      max-width: 500px;
+      gap: 1.5rem;
+    }
+  
+    .carousel-inner {
+      height: 450px;
+    }
+  
+    .current-event {
+      width: 100%;
+      margin-bottom: 0;
+    }
+  }
+  
+  /* ===== MOBILE ===== */
+  @media (max-width: 767px) {
+    .events-heading {
+      margin: 1.5rem 0 2rem;
+      font-size: 2.2rem;
+    }
+  
+    .content-wrapper {
+      gap: 2rem;
+      padding: 0 1rem;
+    }
+  
+    .carousel-inner {
+      height: 400px;
+    }
+  
+    .carousel-btn {
+      display: none;
+    }
+  
+    .carousel-dots {
+      bottom: 15px;
+    }
+  .current-desc{
+    display: none;
+  }
+    .title-overlay span {
+      font-size: 1.2rem;
+    }
+  }
+  
+  /* ===== SMALL MOBILE ===== */
+  @media (max-width: 480px) {
+    .events-heading {
+      margin: 1rem 0 1.5rem;
+      font-size: 1.8rem;
+    }
+    .current-desc{
+        display: none;
+      }
+    .content-wrapper {
+      gap: 1.5rem;
+      padding: 0 0.5rem;
+    }
+  
+    .carousel-inner {
+      height: 350px;
+    }
+  
+    .title-overlay {
+      padding: 0.8rem;
+    }
+  
+    .title-overlay span {
+      font-size: 1rem;
+    }
+  
+    .action-buttons {
+      max-width: 100%;
+      gap: 1rem;
+    }
+  
+    .btn {
+      padding: 0.8rem 1.2rem;
+      font-size: 0.9rem;
+    }
+  
+    .current-event h2 {
+      font-size: 1.3rem;
+    }
+  }
+  
+  /* ===== ACCESSIBILITY ===== */
+  .btn:focus,
+  .carousel-btn:focus,
+  .dot:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .slide,
+    .carousel-btn,
+    .btn {
+      transition: none;
+    }
+    
+    .carousel-btn:hover,
+    .btn:hover {
+      transform: none;
+    }
+  }

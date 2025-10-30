@@ -279,9 +279,23 @@ export const prelimEvents = {
         }
       ]
 
+    }, {
+      id: 'pnt3',
+      title: "E-sports",
+      desc: "Competitive gaming tournaments",
+      fullDesc: "Face off in popular titles like Valorant, CS:GO, and FIFA. Compete, strategize, and rise to the top of the leaderboard.",
+      color: "#F97316",
+      image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800",
+      venue: "Gaming Arena",
+      schedule:[ { time: "6/11/2025", activity: "First Round" },
+        {
+        time: "7/11/2025", activity: "Final Round"
+      }],
+
+      category: "Other Activity"
     },
     {
-      id: 'pnt3',
+      id: 'pnt4',
       title: "Prompt Engineering",
       desc: "Craft powerful AI prompts",
       fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
@@ -351,23 +365,9 @@ export const prelimEvents = {
   ],
 
   otherActivities: [
+   
     {
       id: 'oa1',
-      title: "E-sports",
-      desc: "Competitive gaming tournaments",
-      fullDesc: "Face off in popular titles like Valorant, CS:GO, and FIFA. Compete, strategize, and rise to the top of the leaderboard.",
-      color: "#F97316",
-      image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800",
-      venue: "Gaming Arena",
-      schedule:[ { time: "6/11/2025", activity: "First Round" },
-        {
-        time: "7/11/2025", activity: "Final Round"
-      }],
-
-      category: "Other Activity"
-    },
-    {
-      id: 'oa2',
       title: "PolyMath Escape Room",
       desc: "Solve puzzles to escape",
       fullDesc: "Use your logic, math, and teamwork to solve puzzles in a thrilling escape room challenge.",
@@ -400,7 +400,7 @@ export const prelimEvents = {
 
     },
     {
-      id: 'oa3',
+      id: 'oa2',
       title: "Cultural Night",
       desc: "Music, dance & creativity",
       fullDesc: "Experience the cultural side of the fest — dance, music, art, and more! A celebration of creativity and expression.",
@@ -410,7 +410,7 @@ export const prelimEvents = {
       highlights: ["Coming Soon..."]
     },
     {
-      id: 'oa4',
+      id: 'oa3',
       title: "Expos / Workshops",
       desc: "Tech expos & workshops",
       fullDesc: "Participate in hands-on workshops and explore innovation expos hosted by industry professionals and startups.",
@@ -421,7 +421,7 @@ export const prelimEvents = {
       highlights: ["Coming Soon..."]
     },
     {
-      id: 'oa5',
+      id: 'oa4',
       title: "Stand-Up Comedy Night",
       desc: "Laugh out loud performances",
       fullDesc: "Enjoy hilarious performances by talented comedians in an open-air theatre. A perfect way to unwind after technical events.",
