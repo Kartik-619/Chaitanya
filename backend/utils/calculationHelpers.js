@@ -23,63 +23,53 @@ const { EVENT_CONFIG } = require('../config/constants');
  * @returns {number} Total amount to pay
  */
 const calculateIndividualAmount = (prelimEvents, isPremium = false, needsAccommodation = false) => {
-  console.log('🧮 Calculating individual amount with premium:', isPremium, 'accommodation:', needsAccommodation);
+  console.log('🧮 Calculating individual amount - NEW PRICING');
   
-  // Get base event amount
   const baseAmount = calculateIndividualTotal(prelimEvents);
-  
   let total = baseAmount;
   
-  // Add premium fee if selected
+  // COMPULSORY food fee - ₹400 per person
+  total += 400;
+  console.log('💰 Added compulsory food fee: 400');
+  
+  // OPTIONAL accommodation - ₹200 per person
+  if (needsAccommodation) {
+    total += 200;
+    console.log('💰 Added optional accommodation: 200');
+  }
+  
+  // Premium fee
   if (isPremium) {
     total += EVENT_CONFIG.PREMIUM_FEE;
-    console.log('💰 Added premium fee:', EVENT_CONFIG.PREMIUM_FEE);
   }
   
-  // Add accommodation fee if needed
-  if (needsAccommodation) {
-    total += EVENT_CONFIG.ACCOMMODATION_FEE;
-    console.log('💰 Added accommodation fee:', EVENT_CONFIG.ACCOMMODATION_FEE);
-  }
-  
-  console.log('💰 Final individual amount:', total);
   return total;
 };
 
 /**
  * Calculate team registration amount with accommodation AND PREMIUM
  */
-const calculateTeamAmount = (mainEvent, teamSize, needsAccommodation = false, esportsGame = null, isPremium = false) => {
-  console.log('🧮 Calculating team amount:', { 
-    mainEvent, 
-    teamSize, 
-    needsAccommodation, 
-    esportsGame, 
-    isPremium 
-  });
+
+  const calculateTeamAmount = (mainEvent, teamSize, needsAccommodation = false, esportsGame = null, isPremium = false) => {
+  console.log('🧮 Calculating team amount - NEW PRICING');
   
-  // Get base team amount (event cost only)
   const baseAmount = calculateTeamTotal(mainEvent, teamSize, esportsGame);
-  
   let total = baseAmount;
   
-  // ✅ FIX: Always add accommodation (compulsory)
-  const accommodationTotal = 600 * teamSize; // ₹600 per person
-  total += accommodationTotal;
-  console.log('💰 Added accommodation for', teamSize, 'members:', accommodationTotal);
+  // COMPULSORY food for all team members
+  total += 400 * teamSize;
+  console.log('💰 Added compulsory food for', teamSize, 'members:', 400 * teamSize);
   
-  // ✅ FIX: Add premium fee if selected
-  if (isPremium) {
-    total += 200; // ₹200 premium fee
-    console.log('💰 Added premium fee: 200');
+  // OPTIONAL accommodation for all team members
+  if (needsAccommodation) {
+    total += 200 * teamSize;
+    console.log('💰 Added optional accommodation for', teamSize, 'members:', 200 * teamSize);
   }
   
-  console.log('💰 Final team amount breakdown:', {
-    baseEventAmount: baseAmount,
-    accommodation: accommodationTotal,
-    premium: isPremium ? 200 : 0,
-    total: total
-  });
+  // Premium fee
+  if (isPremium) {
+    total += 200;
+  }
   
   return total;
 };
