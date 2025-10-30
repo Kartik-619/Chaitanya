@@ -501,11 +501,11 @@ const handleSubmit = async () => {
           </div>
         )}
 
-        {/* Individual Member Pricing Breakdown */}
+        {/* Individual Member Pricing Breakdown - FIXED */}
         {teamData.mainEvent && (
           <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
-              Individual Member Pricing
+              Individual Member Breakdown
             </h3>
             
             <div className="space-y-3 sm:space-y-4">
@@ -513,42 +513,52 @@ const handleSubmit = async () => {
               <div className="flex justify-between items-center py-2 border-b border-white/10">
                 <div>
                   <div className="font-semibold text-white">Team Leader (You)</div>
-                  <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                  <div className="text-xs text-gray-300">
+                    Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                    {needsAccommodation && ' + Accommodation (₹200)'}
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                  <div className="font-bold text-white">
+                    ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                  </div>
                   <div className="text-xs text-gray-300">
-                    ₹{getIndividualEventFee()} + ₹600
+                    ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
                   </div>
                 </div>
               </div>
-
+        
               {/* Team Members */}
               {teamData.teamMembers.map((_, index) => (
                 <div key={index} className="flex justify-between items-center py-2 border-b border-white/10">
                   <div>
                     <div className="font-semibold text-white">Team Member {index + 1}</div>
-                    <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                    <div className="text-xs text-gray-300">
+                      Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                      {needsAccommodation && ' + Accommodation (₹200)'}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                    <div className="font-bold text-white">
+                      ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                    </div>
                     <div className="text-xs text-gray-300">
-                      ₹{getIndividualEventFee()} + ₹600
+                      ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
                     </div>
                   </div>
                 </div>
               ))}
-
+        
               {/* Total Individual */}
               <div className="flex justify-between items-center pt-3 border-t border-white/20">
                 <div className="font-bold text-white">Sub-total ({teamData.teamSize} members)</div>
                 <div className="font-bold text-green-400">
-                  ₹{(getIndividualEventFee() + 600) * teamData.teamSize}
+                  ₹{(getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
                 </div>
               </div>
             </div>
           </div>
-        )}
+        )} 
 
         {/* Premium Package Option */}
         <div className="glass-card p-4 sm:p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
@@ -639,7 +649,7 @@ const handleSubmit = async () => {
           </div>
         </div>
         
-        {/* OPTIONAL Accommodation for Team */}
+        {/* OPTIONAL Accommodation for Team - FIXED TEXT */}
         <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -672,20 +682,26 @@ const handleSubmit = async () => {
           <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 text-center">Final Registration Summary</h3>
           
           <div className="space-y-3 sm:space-y-4">
-            {/* Individual Breakdown Summary */}
+            {/* Individual Breakdown Summary - FIXED */}
             <div className="bg-black/20 rounded-lg p-3 sm:p-4 border border-white/10">
               <div className="text-center text-white font-semibold mb-2 text-sm sm:text-base">
                 Individual Member Totals ({teamData.teamSize} members)
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs sm:text-sm">
                 <div className="text-center">
                   <div className="text-gray-300">Event Fee</div>
                   <div className="text-white font-semibold">₹{getIndividualEventFee()} × {teamData.teamSize}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-gray-300">Accommodation</div>
-                  <div className="text-white font-semibold">₹600 × {teamData.teamSize}</div>
+                  <div className="text-gray-300">Food</div>
+                  <div className="text-white font-semibold">₹400 × {teamData.teamSize}</div>
                 </div>
+                {needsAccommodation && (
+                  <div className="text-center">
+                    <div className="text-gray-300">Accommodation</div>
+                    <div className="text-white font-semibold">₹200 × {teamData.teamSize}</div>
+                  </div>
+                )}
               </div>
             </div>
 
