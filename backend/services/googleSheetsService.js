@@ -428,59 +428,61 @@ class GoogleSheetsService {
     if (registrationData.registrationType === 'individual') {
       const foodAmount = 400; 
       
+      // INDIVIDUAL REGISTRATION - CORRECT COLUMN MAPPING
       values.push([
-        registrationData.registrationId,
-        registrationData.personalDetails.name,
-        registrationData.personalDetails.email,
-        registrationData.personalDetails.phone,
-        registrationData.personalDetails.college, // College from dropdown
-        'Individual',
-        1,
-        registrationData.totalAmount || 0,
-        'completed',
-        new Date().toISOString(),
-        JSON.stringify(registrationData.prelimEvents || []),
-        registrationData.personalDetails.name,
-        registrationData.personalDetails.email,
-        'Individual',
-        'Individual',
-        registrationData.paymentDetails?.method || 'razorpay',
-        registrationData.paymentDetails?.paymentId || '',
-        registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-        JSON.stringify(registrationData.qrData || {}),
-        registrationData.isPremium ? 'Yes' : 'No', // Premium status
-        registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
-        400,                                                // V: Food Amount ₹400 (NEW)
-        registrationData.esportsGame || 'N/A', 
-        registrationData.projectBazaar ? 'Yes' : 'No' 
+        registrationData.registrationId,                    // A: Registration ID
+        registrationData.personalDetails.name,              // B: Name
+        registrationData.personalDetails.email,             // C: Email
+        registrationData.personalDetails.phone,             // D: Phone
+        registrationData.personalDetails.college,           // E: College
+        'Individual',                                       // F: Main Event
+        1,                                                  // G: Team Size
+        registrationData.totalAmount || 0,                  // H: Amount
+        'completed',                                        // I: Payment Status
+        new Date().toISOString(),                           // J: Registration Date
+        JSON.stringify(registrationData.prelimEvents || []), // K: Prelim Events
+        registrationData.personalDetails.name,              // L: Team Leader Name
+        registrationData.personalDetails.email,             // M: Team Leader Email
+        'Individual',                                       // N: Team ID
+        'Individual',                                       // O: Team Name
+        registrationData.paymentDetails?.method || 'razorpay', // P: Payment Method
+        registrationData.paymentDetails?.paymentId || '',   // Q: Transaction ID
+        registrationData.paymentDetails?.transactionDate || new Date().toISOString(), // R: Payment Date
+        JSON.stringify(registrationData.qrData || {}),      // S: QR Data
+        registrationData.isPremium ? 'Yes' : 'No',          // T: Premium Status
+        registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+        400,                                                // V: Food Amount ₹400
+        registrationData.esportsGame || 'N/A',              // W: E-sports Game
+        registrationData.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
       ]);
     } else {
       // Team registration
+      // TEAM LEADER
       values.push([
-        registrationData.registrationId,
-        registrationData.teamLeader.name,
-        registrationData.teamLeader.email,
-        registrationData.teamLeader.phone,
-        registrationData.teamLeader.college, // College from dropdown
-        registrationData.mainEvent,
-        registrationData.teamSize, // Actual team size
-        registrationData.totalAmount || 0,
-        'completed',
-        new Date().toISOString(),
-        JSON.stringify(registrationData.teamLeader.prelimEvents || []),
-        registrationData.teamLeader.name,
-        registrationData.teamLeader.email,
-        registrationData.teamId,
-        registrationData.teamName,
-        registrationData.paymentDetails?.method || 'razorpay',
-        registrationData.paymentDetails?.paymentId || '',
-        registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-        JSON.stringify(registrationData.qrData || {}),
-        registrationData.isPremium ? 'Yes' : 'No', // Team leader doesn't have premium
-        registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
-        400 * registrationData.teamSize,                    // V: Food Amount ₹400 × team_size (NEW)
-        registrationData.esportsGame || 'N/A',
-        registrationData.projectBazaar ? 'Yes' : 'No' 
+        registrationData.registrationId,                    // A
+        registrationData.teamLeader.name,                   // B
+        registrationData.teamLeader.email,                  // C
+        registrationData.teamLeader.phone,                  // D
+        registrationData.teamLeader.college,                // E
+        registrationData.mainEvent,                         // F
+        registrationData.teamSize,                          // G
+        registrationData.totalAmount || 0,                  // H
+        'completed',                                        // I
+        new Date().toISOString(),                           // J
+        JSON.stringify(registrationData.teamLeader.prelimEvents || []), // K
+        registrationData.teamLeader.name,                   // L
+        registrationData.teamLeader.email,                  // M
+        registrationData.teamId,                            // N
+        registrationData.teamName,                          // O
+        registrationData.paymentDetails?.method || 'razorpay', // P
+        registrationData.paymentDetails?.paymentId || '',   // Q
+        registrationData.paymentDetails?.transactionDate || new Date().toISOString(), // R
+        JSON.stringify(registrationData.qrData || {}),      // S
+        registrationData.isPremium ? 'Yes' : 'No',          // T
+        registrationData.needsAccommodation ? 'Yes' : 'No', // U
+        400 * registrationData.teamSize,                    // V: Food Amount
+        registrationData.esportsGame || 'N/A',              // W
+        registrationData.projectBazaar ? 'Yes' : 'No'       // X
       ]);
 
       if (registrationData.teamMembers && registrationData.teamMembers.length > 0) {
