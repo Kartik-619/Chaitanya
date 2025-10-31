@@ -104,9 +104,6 @@ app.use((req, res, next) => {
 });
 app.use(express.static('public'));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
 // ==================== ROUTES ====================
 app.use('/api/payment', paymentRoutes);
 app.use('/api/register', registrationLimiter);
