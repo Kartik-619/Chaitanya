@@ -12,7 +12,7 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (data.personalDetails) {
+    if (data.personalDetails) { 
       setFormData(prev => ({
         ...prev,
         ...data.personalDetails
