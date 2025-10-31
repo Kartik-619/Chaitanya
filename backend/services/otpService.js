@@ -1,81 +1,76 @@
-/**
- * 🔐 OTP SERVICE
- * 
- * This service handles OTP (One-Time Password) generation and delivery:
- * - OTP generation and validation
- * - Email delivery via SendGrid API
- * - OTP expiry management
- * - Security verification for user authentication
- */
-
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 const { SESSION_CONFIG } = require('../config/constants');
 
-// Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Initialize Nodemailer transporter
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT, 10),
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    },
+});
 
 class OTPService {
-  constructor() {
-    this.initialized = !!process.env.SENDGRID_API_KEY;
-    if (!this.initialized) {
-      console.warn('⚠️ SendGrid API key not found. OTP emails will not be sent.');
-    } else {
-      console.log('✅ SendGrid OTP Service Initialized');
-    }
-  }
-
-  /**
-   * Generate random 6-digit OTP
-   */
-  generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  /**
-   * Send OTP via email using SendGrid API
-   */
-  async sendOTPEmail(email, otp) {
-    if (!this.initialized) {
-      console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
-      return true; // Return true for testing
+    constructor() {
+        this.initialized = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+        if (!this.initialized) {
+            console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
+        } else {
+            console.log('✅ Nodemailer OTP Service Initialized');
+        }
     }
 
-    try {
-      const msg = {
-        to: email,
-        from: {
-          email: 'chaitanyahptu@gmail.com',
-          name: 'Chaitanya 2025'
-        },
-        subject: 'Your Verification Code for Chaitanya 2025 Registration',
-        text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
-        html: this.generateOTPEmailHTML(otp),
-        // ✅ ADDED: Priority headers for faster delivery
-        headers: {
-          'Priority': 'Urgent',
-          'Importance': 'high',
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High'
-        },
-        categories: ['otp', 'verification'] // Helps email providers classify
-      };
-
-      await sgMail.send(msg);
-      console.log(`✅ OTP email sent to ${email}`);
-      return true;
-    } catch (error) {
-      console.error('❌ SendGrid error:', error.response?.body || error.message);
-      return false;
+    /**
+     * Generate random 6-digit OTP
+     */
+    generateOTP() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
-  }
 
+    /**
+     * Send OTP via email using Nodemailer
+     */
+    async sendOTPEmail(email, otp) {
+        if (!this.initialized) {
+            console.warn(📧 [SIMULATED] OTP ${otp} for ${email});
+            return true; // Return true for testing
+        }
+
+        try {
+            const mailOptions = {
+                from: {
+                    name: 'Chaitanya 2025',
+                    address: process.env.EMAIL_FROM 
+                },
+                to: email,
+                subject: 'Your Verification Code for Chaitanya 2025 Registration',
+                text: Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.,
+                html: this.generateOTPEmailHTML(otp),
+                // Priority headers
+                headers: {
+                    'Priority': 'Urgent',
+                    'Importance': 'high',
+                    'X-Priority': '1',
+                    'X-MSMail-Priority': 'High'
+                }
+            };
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log(✅ OTP email sent to ${email}, info.messageId);
+            return true;
+        } catch (error) {
+            console.error('❌ Nodemailer error:', error);
+            return false;
+        }
+    }
   /**
    * Send OTP via SMS (placeholder for SMS service integration)
    */
   async sendOTPSMS(phone, otp) {
     try {
       // Placeholder for SMS integration
-      console.log(`📱 SMS OTP for ${phone}: ${otp}`);
+      console.log(📱 SMS OTP for ${phone}: ${otp});
       return true;
     } catch (error) {
       console.error('❌ Error sending OTP SMS:', error);
@@ -90,14 +85,14 @@ class OTPService {
     try {
       const otp = this.generateOTP();
       
-      console.log(`🔐 Generated OTP for ${email}: ${otp}`);
+      console.log(🔐 Generated OTP for ${email}: ${otp});
       
       // ✅ ADDED: Track email send time for monitoring delays
       const emailStartTime = Date.now();
       const emailSent = await this.sendOTPEmail(email, otp);
       const emailTime = Date.now() - emailStartTime;
       
-      console.log(`📧 Email delivery attempt took ${emailTime}ms`);
+      console.log(📧 Email delivery attempt took ${emailTime}ms);
       
       // Send OTP via SMS (optional)
       const smsSent = await this.sendOTPSMS(phone, otp);
@@ -161,7 +156,7 @@ class OTPService {
         </div>
 
         <div class="warning">
-            <strong>⚠️ Security Notice:</strong> Do not share this OTP with anyone.
+            <strong>⚠ Security Notice:</strong> Do not share this OTP with anyone.
         </div>
 
         <p>If you didn't request this OTP, please ignore this email.</p>
