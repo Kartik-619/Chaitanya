@@ -33,7 +33,6 @@ class OTPService {
      */
     async sendOTPEmail(email, otp) {
         if (!this.initialized) {
-            console.warn( [SIMULATED] OTP ${otp} for ${email});
             return true; // Return true for testing
         }
 
