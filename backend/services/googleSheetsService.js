@@ -228,23 +228,11 @@ class GoogleSheetsService {
         } // ✅ CORRECTLY CLOSED THE FOR LOOP
         
         // SINGLE API CALL for entire batch (saves 80% API calls)
-                // 🎯 FIX: Use update with explicit range instead of append
-        const nextRowResponse = await this.sheets.spreadsheets.values.get({
+        await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: 'Registrations!A:A',
-        });
-        
-        const existingRows = nextRowResponse.data.values || [];
-        const nextRow = existingRows.length + 1;
-        const range = `Registrations!A${nextRow}:X${nextRow + values.length - 1}`;
-        
-        console.log(`📍 [BATCH] Saving to explicit range: ${range}`);
-        
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
-          range: range,
-          valueInputOption: 'RAW',
-          resource: { values },
+          range: 'Registrations!A:X',
+          valueInputOption: 'RAW', // Don't convert data types
+          resource: { values }, // All batch data in one request
         });
         
         console.log(`✅ Batch of ${batch.length} saved to Sheets`);
@@ -533,30 +521,17 @@ class GoogleSheetsService {
 
     console.log(`📊 [SHEETS DEBUG] Prepared ${values.length} rows for saving`);
 
-        // Save to Google Sheets
-        console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
-        
-        // 🎯 FIX: Use update with explicit range instead of append
-        // First get the next available row
-        const nextRowResponse = await this.sheets.spreadsheets.values.get({
-          spreadsheetId: this.spreadsheetId,
-          range: 'Registrations!A:A',
-        });
-        
-        const existingRows = nextRowResponse.data.values || [];
-        const nextRow = existingRows.length + 1;
-        const range = `Registrations!A${nextRow}:X${nextRow + values.length - 1}`;
-        
-        console.log(`📍 [SHEETS DEBUG] Saving to explicit range: ${range}`);
-        
-        const response = await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
-          range: range,
-          valueInputOption: 'RAW',
-          resource: { values },
-        });
+    // Save to Google Sheets
+    console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
+    const response = await this.sheets.spreadsheets.values.append({
+      spreadsheetId: this.spreadsheetId,
+      range: 'Registrations!A:X',
+      valueInputOption: 'RAW',
+      resource: { values },
+    });
 
-    console.log('✅ [SHEETS DEBUG] Successfully saved to Google Sheets:', response.data.updatedRange);
+    console.log('✅ [SHEETS DEBUG] Successfully saved to Google Sheets:', response.data.updates.updatedRange);
+    
     return {
       success: true,
       message: 'Registration saved to Google Sheets successfully',
