@@ -244,18 +244,31 @@ const Success = ({ data }) => {
             </div>
           </div>
 
+          {/* Food Info - COMPULSORY */}
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 sm:p-3 mb-3">
+            <div className="flex items-center">
+              <span className="text-green-400">🍛</span>
+              <span className="text-green-400 font-semibold text-sm ml-2">Food Package Included</span>
+            </div>
+            <div className="text-green-300 text-xs mt-1">✅ 3-day food package confirmed for all participants</div>
+          </div>
+          
           {/* Accommodation Info */}
-          {hasAccommodation && (
+          {hasAccommodation ? (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3">
               <div className="flex items-center">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span className="text-blue-400 font-semibold text-sm">Accommodation Booked</span>
+                <span className="text-blue-400">🏨</span>
+                <span className="text-blue-400 font-semibold text-sm ml-2">Accommodation Booked</span>
               </div>
-              <div className="text-blue-300 text-xs mt-1">
-                ✅ 3-day stay confirmed • ✅ Food included • ✅ Secure accommodation
+              <div className="text-blue-300 text-xs mt-1">✅ 3-day stay confirmed</div>
+            </div>
+          ) : (
+            <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-2 sm:p-3">
+              <div className="flex items-center">
+                <span className="text-gray-400">🚫</span>
+                <span className="text-gray-400 font-semibold text-sm ml-2">No Accommodation</span>
               </div>
+              <div className="text-gray-400 text-xs mt-1">Only food package included</div>
             </div>
           )}
 

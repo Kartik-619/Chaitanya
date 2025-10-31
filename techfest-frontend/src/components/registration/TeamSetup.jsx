@@ -12,7 +12,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   
   const [esportsGame, setEsportsGame] = useState('');
   const [projectBazaar, setProjectBazaar] = useState(false);
-  
+  const [needsAccommodation, setNeedsAccommodation] = useState(false); 
+
   const mainEvents = [
     "Singing",
     "Dance", 
@@ -155,100 +156,93 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   };
 
   const calculateTeamTotal = () => {
-    let total = 0;
-    
-    // Base pricing logic
-    switch (teamData.mainEvent) {
-      case 'Hackathon':
-        total = 199 * teamData.teamSize;
-        break;
-      case 'Accurate Prediction':
-        total = 199 * teamData.teamSize;
-        break;
-      case 'Polymath':
-        total = 149 * teamData.teamSize;
-        break;
-      case 'E-sports':
-        total = 149 * teamData.teamSize;
-        break;
-      case 'Singing':
-      case 'Dance':
-      case 'Debate':
-      case 'Two Minute Manager':
-        total = 99 * teamData.teamSize;
-        break;
-      default:
-        total = 0;
-    }
+  let total = 0;
+  
+  // Base pricing logic (unchanged)
+  switch (teamData.mainEvent) {
+    case 'Hackathon':
+      total = 199 * teamData.teamSize;
+      break;
+    case 'Accurate Prediction':
+      total = 199 * teamData.teamSize;
+      break;
+    case 'Polymath':
+      total = 149 * teamData.teamSize;
+      break;
+    case 'E-sports':
+      total = 149 * teamData.teamSize;
+      break;
+    case 'Singing':
+    case 'Dance':
+    case 'Debate':
+    case 'Two Minute Manager':
+      total = 99 * teamData.teamSize;
+      break;
+    default:
+      total = 0;
+  }
 
-    // Add accommodation (compulsory)
-    total += 600 * teamData.teamSize;
+  // COMPULSORY food for all team members
+  total += 400 * teamData.teamSize;
 
-    // Add premium if selected
-    if (teamData.isPremium) {
-      total += 200;
-    }
-    
-    return total;
-  };
+  // OPTIONAL accommodation for all team members
+  if (needsAccommodation) {
+    total += 200 * teamData.teamSize;
+  }
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+  // Add premium if selected
+  if (teamData.isPremium) {
+    total += 200;
+  }
+  
+  return total;
+};
 
-    const totalAmount = calculateTeamTotal();
-    
-    // ✅ ADDED: Enhanced debug logs
-    console.log('🎯 Final Team Amount Breakdown:', {
-      teamName: teamData.teamName,
-      teamSize: teamData.teamSize,
-      mainEvent: teamData.mainEvent,
-      isPremium: teamData.isPremium,
-      premiumAmount: teamData.isPremium ? 200 : 0,
-      accommodation: 600 * teamData.teamSize,
-      projectBazaar: projectBazaar,
-      totalAmount: totalAmount
+const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  const totalAmount = calculateTeamTotal();
+  
+  try {
+    const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sessionId: data.sessionId,
+        teamName: teamData.teamName,
+        mainEvent: teamData.mainEvent,
+        teamMembers: teamData.teamMembers,
+        teamSize: teamData.teamSize,
+        esportsGame: esportsGame,
+        needsAccommodation: needsAccommodation, // UPDATE: Pass the accommodation choice
+        isPremium: teamData.isPremium,
+        projectBazaar: projectBazaar,
+        totalAmount: totalAmount
+      }),
     });
 
-    try {
-      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId: data.sessionId,
-          teamName: teamData.teamName,
-          mainEvent: teamData.mainEvent,
-          teamMembers: teamData.teamMembers,
-          teamSize: teamData.teamSize,
-          esportsGame: esportsGame,
-          needsAccommodation: true,
+    const result = await response.json();
+
+    if (result.success) {
+      updateData({
+        teamData: {
+          ...result.teamData,
+          totalAmount: totalAmount,
           isPremium: teamData.isPremium,
-          projectBazaar: projectBazaar,
-          totalAmount: totalAmount
-        }),
+          needsAccommodation: needsAccommodation, // UPDATE: Store accommodation choice
+          projectBazaar: projectBazaar
+        }
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        updateData({
-          teamData: {
-            ...result.teamData,
-            totalAmount: totalAmount,
-            isPremium: teamData.isPremium,
-            needsAccommodation: true,
-            projectBazaar: projectBazaar
-          }
-        });
-        nextStep();
-      } else {
-        toast.error(result.message || 'Failed to setup team');
-      }
-    } catch (error) {
-      toast.error('Network error. Please try again.');
+      nextStep();
+    } else {
+      toast.error(result.message || 'Failed to setup team');
     }
-  };
+  } catch (error) {
+    toast.error('Network error. Please try again.');
+  }
+};
 
   const getTeamSizeOptions = () => {
     const currentRules = teamSizeRules[teamData.mainEvent];
@@ -507,11 +501,11 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         )}
 
-        {/* Individual Member Pricing Breakdown */}
+        {/* Individual Member Pricing Breakdown - FIXED */}
         {teamData.mainEvent && (
           <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
             <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
-              Individual Member Pricing
+              Individual Member Breakdown
             </h3>
             
             <div className="space-y-3 sm:space-y-4">
@@ -519,42 +513,52 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               <div className="flex justify-between items-center py-2 border-b border-white/10">
                 <div>
                   <div className="font-semibold text-white">Team Leader (You)</div>
-                  <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                  <div className="text-xs text-gray-300">
+                    Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                    {needsAccommodation && ' + Accommodation (₹200)'}
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                  <div className="font-bold text-white">
+                    ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                  </div>
                   <div className="text-xs text-gray-300">
-                    ₹{getIndividualEventFee()} + ₹600
+                    ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
                   </div>
                 </div>
               </div>
-
+        
               {/* Team Members */}
               {teamData.teamMembers.map((_, index) => (
                 <div key={index} className="flex justify-between items-center py-2 border-b border-white/10">
                   <div>
                     <div className="font-semibold text-white">Team Member {index + 1}</div>
-                    <div className="text-xs text-gray-300">Main Event + Accommodation</div>
+                    <div className="text-xs text-gray-300">
+                      Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                      {needsAccommodation && ' + Accommodation (₹200)'}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-white">₹{getIndividualEventFee() + 600}</div>
+                    <div className="font-bold text-white">
+                      ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                    </div>
                     <div className="text-xs text-gray-300">
-                      ₹{getIndividualEventFee()} + ₹600
+                      ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
                     </div>
                   </div>
                 </div>
               ))}
-
+        
               {/* Total Individual */}
               <div className="flex justify-between items-center pt-3 border-t border-white/20">
                 <div className="font-bold text-white">Sub-total ({teamData.teamSize} members)</div>
                 <div className="font-bold text-green-400">
-                  ₹{(getIndividualEventFee() + 600) * teamData.teamSize}
+                  ₹{(getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
                 </div>
               </div>
             </div>
           </div>
-        )}
+        )} 
 
         {/* Premium Package Option */}
         <div className="glass-card p-4 sm:p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
@@ -623,29 +627,54 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           </label>
         </div>
 
-        {/* COMPULSORY Accommodation - Updated with Food & Stay details */}
+        {/* COMPULSORY Food for Team */}
         <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-green-400 text-lg sm:text-xl">🏨</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-green-400 text-sm sm:text-lg">🍛</span>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg">
-                  Accommodation Package - ₹600 per person
+                  Food Package - ₹{400 * teamData.teamSize}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-300 leading-tight">
-                  Includes 3 days comfortable stay + food for all {teamData.teamSize} team members
-                </div>
-                <div className="text-xs text-green-400 mt-1">
-                  🍛 Food & 🛌 Stay included for entire event duration
+                <div className="text-xs sm:text-sm text-gray-300">
+                  {teamData.teamSize} members × ₹400 (Compulsory for all)
                 </div>
               </div>
             </div>
-            <div className="text-green-400 font-bold text-lg sm:text-xl text-right sm:text-left">
-              ₹{600 * teamData.teamSize}
+            <div className="text-green-400 font-bold text-base sm:text-lg">
+              ₹{400 * teamData.teamSize}
             </div>
           </div>
+        </div>
+        
+        {/* OPTIONAL Accommodation for Team - FIXED TEXT */}
+        <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
+          <label className="flex items-center justify-between cursor-pointer">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <input
+                type="checkbox"
+                checked={needsAccommodation}
+                onChange={(e) => setNeedsAccommodation(e.target.checked)}
+                className="w-5 h-5 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-blue-400 text-sm sm:text-lg">🏨</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-white text-base sm:text-lg">
+                  Accommodation - ₹{200 * teamData.teamSize}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-300">
+                  {teamData.teamSize} members × ₹200 (Optional - select if needed)
+                </div>
+              </div>
+            </div>
+            <div className="text-blue-400 font-bold text-base sm:text-lg">
+              ₹{200 * teamData.teamSize}
+            </div>
+          </label>
         </div>
 
         {/* Final Team Summary */}
@@ -653,20 +682,26 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
           <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 text-center">Final Registration Summary</h3>
           
           <div className="space-y-3 sm:space-y-4">
-            {/* Individual Breakdown Summary */}
+            {/* Individual Breakdown Summary - FIXED */}
             <div className="bg-black/20 rounded-lg p-3 sm:p-4 border border-white/10">
               <div className="text-center text-white font-semibold mb-2 text-sm sm:text-base">
                 Individual Member Totals ({teamData.teamSize} members)
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs sm:text-sm">
                 <div className="text-center">
                   <div className="text-gray-300">Event Fee</div>
                   <div className="text-white font-semibold">₹{getIndividualEventFee()} × {teamData.teamSize}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-gray-300">Accommodation</div>
-                  <div className="text-white font-semibold">₹600 × {teamData.teamSize}</div>
+                  <div className="text-gray-300">Food</div>
+                  <div className="text-white font-semibold">₹400 × {teamData.teamSize}</div>
                 </div>
+                {needsAccommodation && (
+                  <div className="text-center">
+                    <div className="text-gray-300">Accommodation</div>
+                    <div className="text-white font-semibold">₹200 × {teamData.teamSize}</div>
+                  </div>
+                )}
               </div>
             </div>
 

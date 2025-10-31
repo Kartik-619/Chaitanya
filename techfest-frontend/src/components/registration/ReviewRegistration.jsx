@@ -5,7 +5,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
   const isIndividual = data.registrationType === 'individual';
   const registrationData = isIndividual ? data.individualData : data.teamData;
 
-  // Event prices for display - UPDATED
+  // Event prices for display
   const eventPrices = {
     "Integration Bee": 99,
     "Human vs AI": 99,
@@ -43,7 +43,6 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
 
   const handleSubmit = async () => {
     try {
-      // Verify the amount before proceeding
       console.log('💰 Final amount being sent to payment:', totalAmount);
       
       const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/review', {
@@ -172,6 +171,22 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 </div>
               )}
 
+              {/* Individual Food & Accommodation */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Food Package</span>
+                    <span className="text-white font-medium">₹400</span>
+                  </div>
+                  {registrationData?.needsAccommodation && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300">Accommodation</span>
+                      <span className="text-white font-medium">₹200</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* All Events Included (Premium) */}
               {registrationData?.isPremium && (
                 <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
@@ -209,8 +224,8 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                   </div>
                 )}
               </div>
- 
-              {/* ✅ PREMIUM PACKAGE INFO FOR TEAMS */}
+
+              {/* Premium Package Info for Teams */}
               {registrationData?.isPremium && (
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                   <div className="flex justify-between items-center">
@@ -227,33 +242,22 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                   </div>
                 </div>
               )}
+
+              {/* Project Bazaar */}
+              {registrationData?.projectBazaar && (
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-purple-400">🎨</span>
+                      <span className="text-purple-300 font-semibold">Project Bazaar</span>
+                    </div>
+                    <span className="text-green-400 font-bold">Free</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-
-
-        {/* Accommodation */}
-        {(registrationData?.needsAccommodation) && (
-          <div className="glass-card p-6 bg-blue-500/10 border-blue-500/30">
-            <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Accommodation Details
-            </h3>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-white font-medium">🏨 3-Day Accommodation</div>
-                <div className="text-sm text-gray-300">
-                  {isIndividual ? 'Single person stay' : `${registrationData?.teamSize} team members`}
-                </div>
-              </div>
-              <div className="text-blue-400 font-bold text-lg">
-                ₹{isIndividual ? 600 : 600 * (registrationData?.teamSize || 1)}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Payment Summary */}
         <div className="glass-card p-6 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/30">
@@ -279,57 +283,74 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                     <span className="text-white">₹{eventPrices[event] || 0}</span>
                   </div>
                 ))}
+
+                {/* Food Charge */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Food Package</span>
+                  <span className="text-white">₹400</span>
+                </div>
+
+                {/* Accommodation Charge */}
+                {registrationData?.needsAccommodation && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">Accommodation</span>
+                    <span className="text-white">₹200</span>
+                  </div>
+                )}
               </>
             )}
 
             {/* Team Registration Breakdown */}
-            {registrationData?.projectBazaar && (
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 mt-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-purple-400">🎨</span>
-                    <span className="text-purple-300 font-semibold">Project Bazaar</span>
-                  </div>
-                  <span className="text-green-400 font-bold">Free</span>
-                </div>
-              </div>
-            )}
-            
             {!isIndividual && teamBreakdown && (
               <>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400">{registrationData?.mainEvent} Team</span>
                   <span className="text-white">₹{teamBreakdown.base}</span>
                 </div>
+                
+                {/* Food Breakdown */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400 ml-4">Food Package</span>
+                  <span className="text-white">₹{400 * (registrationData?.teamSize || 1)}</span>
+                </div>
+                
+                {/* Accommodation Breakdown */}
+                {registrationData?.needsAccommodation && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 ml-4">Accommodation</span>
+                    <span className="text-white">₹{200 * (registrationData?.teamSize || 1)}</span>
+                  </div>
+                )}
+                
                 {teamBreakdown.additional > 0 && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 ml-4">Additional members</span>
                     <span className="text-white">₹{teamBreakdown.additional}</span>
                   </div>
                 )}
-                {/*  ADDED PREMIUM PACKAGE IN TEAM BREAKDOWN */}
+                
+                {/* Premium Package */}
                 {registrationData?.isPremium && (
                   <div className="flex justify-between items-center text-sm bg-yellow-500/10 p-2 rounded">
                     <span className="text-yellow-400">Premium Package</span>
                     <span className="text-yellow-400 font-bold">₹200</span>
                   </div>
                 )}
+
+                {/* Project Bazaar */}
+                {registrationData?.projectBazaar && (
+                  <div className="flex justify-between items-center text-sm bg-purple-500/10 p-2 rounded">
+                    <span className="text-purple-400">Project Bazaar</span>
+                    <span className="text-green-400 font-bold">FREE</span>
+                  </div>
+                )}
+                
                 <div className="text-xs text-gray-400 text-center">
                   {teamBreakdown.description}
                 </div>
               </>
             )}
 
-            {/* Accommodation */}
-            {registrationData?.needsAccommodation && (
-              <div className="flex justify-between items-center border-t border-white/20 pt-2">
-                <span className="text-gray-300">Accommodation</span>
-                <span className="text-white font-medium">
-                  ₹{isIndividual ? 600 : 600 * (registrationData?.teamSize || 1)}
-                </span>
-              </div>
-            )}
-            
             {/* Total */}
             <div className="border-t border-white/20 pt-3 mt-3">
               <div className="flex justify-between items-center">
