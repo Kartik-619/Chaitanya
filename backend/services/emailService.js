@@ -1,27 +1,16 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 
 class EmailService {
   constructor() {
-    // Initialize Nodemailer transporter with connection pooling and rate limiting
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT, 10),
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      pool: true, // Enable connection pooling
-      maxConnections: 5,
-      maxMessages: 100
-    });
-
-    this.initialized = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    // Initialize email transporter with connection pooling and rate limiting
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    this.initialized = !!process.env.SENDGRID_API_KEY;
   
     if (!this.initialized) {
-      console.warn('⚠ SMTP configuration not found. Registration emails will not be sent.');
+      console.warn('⚠️ SendGrid API key not found. Registration emails will not be sent.');
     } else {
-      console.log('✅ Nodemailer Email Service Initialized');
+      console.log('✅ SendGrid Email Service Initialized');
     }
 
     // Rate limiting system
@@ -292,31 +281,24 @@ class EmailService {
 
       // Check rate limiting
       if (this.dailyEmailCount >= this.MAX_EMAILS_PER_DAY) {
-        console.warn('⚠ Daily email limit reached, skipping email');
+        console.warn('⚠️ Daily email limit reached, skipping email');
         return { success: true, rateLimited: true };
       }
 
-      const mailOptions = {
+      const msg = {
         to: email,
         from: {
-          name: 'Chaitanya 2025',
-          address: process.env.EMAIL_FROM || 'chaitanyahptu@gmail.com'
+          email: 'chaitanyahptu@gmail.com',
+          name: 'Chaitanya 2025'
         },
-        subject: 'Your Chaitanya 2025 Registration Confirmation',
+        subject: `Your Chaitanya 2025 Registration Confirmation`,
         text: this._generateConfirmationText(registrationData, name),
-        html: this._generateConfirmationHTML(registrationData, name),
-        // Priority headers
-        headers: {
-          'Priority': 'Urgent',
-          'Importance': 'high',
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High'
-        }
+        html: this._generateConfirmationHTML(registrationData, name)
       };
 
-      const info = await this.transporter.sendMail(mailOptions);
+      await sgMail.send(msg);
       this.dailyEmailCount++;
-      console.log('✅ Confirmation email sent to:', email, 'Message ID:', info.messageId);
+      console.log('✅ Confirmation email sent to:', email);
       return { success: true, quick: true };
 
     } catch (error) {
