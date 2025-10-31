@@ -113,7 +113,7 @@ class GoogleSheetsService {
     };
   }
 
-  /**
+    /**
    * Process the queue in batches to avoid API rate limits
    */
   async processQueue() {
@@ -140,13 +140,13 @@ class GoogleSheetsService {
               reg.personalDetails.name,              // B: Name
               reg.personalDetails.email,             // C: Email
               reg.personalDetails.phone,             // D: Phone
-              reg.personalDetails.college,           // E: College (NEW - from dropdown)
-              'Individual',                          // F: Main Event (Individual)
+              reg.personalDetails.college,           // E: College
+              'Individual',                          // F: Main Event
               1,                                     // G: Team Size
               reg.totalAmount,                       // H: Amount
               'completed',                           // I: Payment Status
               new Date().toISOString(),              // J: Registration Date
-              JSON.stringify(reg.prelimEvents || []), // K: Prelim Events (JSON string)
+              JSON.stringify(reg.prelimEvents || []), // K: Prelim Events
               reg.personalDetails.name,              // L: Team Leader Name
               reg.personalDetails.email,             // M: Team Leader Email
               'Individual',                          // N: Team ID
@@ -154,12 +154,12 @@ class GoogleSheetsService {
               reg.paymentDetails?.method,            // P: Payment Method
               reg.paymentDetails?.paymentId,         // Q: Transaction ID
               reg.paymentDetails?.transactionDate,   // R: Payment Date
-              JSON.stringify(reg.qrData || {}),      // S: QR Data (JSON string)
-              reg.isPremium ? 'Yes' : 'No',          // T: Premium Status (NEW)
-              reg.needsAccommodation ? 'Yes' : 'No', // U
-              400,                                   // V: FOOD AMOUNT ₹400 (ADD THIS LINE)
-              reg.esportsGame || 'N/A',              // W
-              reg.projectBazaar ? 'Yes' : 'No'   
+              JSON.stringify(reg.qrData || {}),      // S: QR Data
+              reg.isPremium ? 'Yes' : 'No',          // T: Premium Status
+              reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+              400,                                   // V: Food Amount ₹400
+              reg.esportsGame || 'N/A',              // W: E-sports Game
+              reg.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
             ]);
           } else {
             // Team registration - multiple rows (leader + members)
@@ -170,9 +170,9 @@ class GoogleSheetsService {
               reg.teamLeader.name,                   // B: Name
               reg.teamLeader.email,                  // C: Email
               reg.teamLeader.phone,                  // D: Phone
-              reg.teamLeader.college,                // E: College (NEW - from dropdown)
+              reg.teamLeader.college,                // E: College
               reg.mainEvent,                         // F: Main Event
-              reg.teamSize,                          // G: Team Size (NEW - actual team size)
+              reg.teamSize,                          // G: Team Size
               reg.totalAmount,                       // H: Amount
               'completed',                           // I: Payment Status
               new Date().toISOString(),              // J: Registration Date
@@ -185,47 +185,47 @@ class GoogleSheetsService {
               reg.paymentDetails?.paymentId,         // Q: Transaction ID
               reg.paymentDetails?.transactionDate,   // R: Payment Date
               JSON.stringify(reg.qrData || {}),      // S: QR Data
-              reg.isPremium ? 'Yes' : 'No',                                  // T: Premium Status (team leader doesn't have premium)
-              reg.needsAccommodation ? 'Yes' : 'No', // U
-              400 * reg.teamSize,                    // V: FOOD AMOUNT ₹400 × team_size (ADD THIS)
-              reg.esportsGame || 'N/A',              // W
-              reg.projectBazaar ? 'Yes' : 'No' 
+              reg.isPremium ? 'Yes' : 'No',          // T: Premium Status
+              reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+              400 * reg.teamSize,                    // V: Food Amount ₹400 × team_size
+              reg.esportsGame || 'N/A',              // W: E-sports Game
+              reg.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
             ]);
             
             // Team Members rows (each member gets their own row)
-          if (reg.teamMembers && reg.teamMembers.length > 0) {
-            reg.teamMembers.forEach((member, index) => {
-              const memberRegId = `${reg.registrationId}-M${index + 1}`;
-              values.push([
-                memberRegId,                         // A: Member Registration ID
-                member.name,                         // B: Name
-                member.email,                        // C: Email
-                member.phone,                        // D: Phone
-                member.college,                      // E: College (NEW - from dropdown)
-                reg.mainEvent,                       // F: Main Event
-                reg.teamSize,                        // G: Team Size
-                0,                                   // H: Amount (free for members)
-                'completed',                         // I: Payment Status
-                new Date().toISOString(),            // J: Registration Date
-                JSON.stringify(member.prelimEvents || []), // K: Prelim Events
-                reg.teamLeader.name,                 // L: Team Leader Name
-                reg.teamLeader.email,                // M: Team Leader Email
-                reg.teamId,                          // N: Team ID
-                reg.teamName,                        // O: Team Name
-                reg.paymentDetails?.method,          // P: Payment Method
-                reg.paymentDetails?.paymentId,       // Q: Transaction ID
-                reg.paymentDetails?.transactionDate, // R: Payment Date
-                JSON.stringify(reg.qrData || {}),    // S: QR Data
-                reg.isPremium ? 'Yes' : 'No',                                // T: Premium Status
-                reg.needsAccommodation ? 'Yes' : 'No', // U
-                400,                                // V: FOOD AMOUNT ₹400 per member (ADD THIS)
-                reg.esportsGame || 'N/A',            // W
-                reg.projectBazaar ? 'Yes' : 'No' 
-              ]);
-            });
+            if (reg.teamMembers && reg.teamMembers.length > 0) {
+              reg.teamMembers.forEach((member, index) => {
+                const memberRegId = `${reg.registrationId}-M${index + 1}`;
+                values.push([
+                  memberRegId,                         // A: Member Registration ID
+                  member.name,                         // B: Name
+                  member.email,                        // C: Email
+                  member.phone,                        // D: Phone
+                  member.college,                      // E: College
+                  reg.mainEvent,                       // F: Main Event
+                  reg.teamSize,                        // G: Team Size
+                  0,                                   // H: Amount (free for members)
+                  'completed',                         // I: Payment Status
+                  new Date().toISOString(),            // J: Registration Date
+                  JSON.stringify(member.prelimEvents || []), // K: Prelim Events
+                  reg.teamLeader.name,                 // L: Team Leader Name
+                  reg.teamLeader.email,                // M: Team Leader Email
+                  reg.teamId,                          // N: Team ID
+                  reg.teamName,                        // O: Team Name
+                  reg.paymentDetails?.method,          // P: Payment Method
+                  reg.paymentDetails?.paymentId,       // Q: Transaction ID
+                  reg.paymentDetails?.transactionDate, // R: Payment Date
+                  JSON.stringify(reg.qrData || {}),    // S: QR Data
+                  reg.isPremium ? 'Yes' : 'No',        // T: Premium Status
+                  reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+                  400,                                 // V: Food Amount ₹400 per member
+                  reg.esportsGame || 'N/A',            // W: E-sports Game
+                  reg.projectBazaar ? 'Yes' : 'No'     // X: Project Bazaar
+                ]);
+              });
+            }
           }
-        }
-      }
+        } // ✅ CORRECTLY CLOSED THE FOR LOOP
         
         // SINGLE API CALL for entire batch (saves 80% API calls)
         await this.sheets.spreadsheets.values.append({
