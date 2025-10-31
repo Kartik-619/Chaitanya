@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Icon from "./icon";
 import NavHero from "./navHero/navHero";
 import "./aboutNew.css";
+import { useNavigate } from 'react-router-dom';
+
 
 const AboutNew = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -42,6 +44,15 @@ const AboutNew = () => {
 
     }
   ];
+  const navigate = useNavigate();
+
+  const handleViewEvents = () => {
+    navigate('/events');
+  };
+
+  const handleRegisterClick = () => {
+    window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
+  };
 
   // Auto slide - uses the slideSpeed variable
   useEffect(() => {
@@ -98,8 +109,8 @@ const AboutNew = () => {
             <h2>Description</h2>
             <h3>{currDesc}</h3>
           </div>
-          <button className="btn view-btn">View All Events</button>
-          <button className="btn register-btn">Register Now</button>
+          <button className="btn view-btn" onClick={handleViewEvents}>View All Events</button>
+          <button className="btn register-btn" onClick={handleRegisterClick}>Register Now</button>
         </div>
       </div>
       
