@@ -2,20 +2,24 @@ const nodemailer = require('nodemailer');
 const { SESSION_CONFIG } = require('../config/constants');
 
 // Initialize Nodemailer transporter with better configuration
+const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 587;
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
-    secure: false, // Use TLS
+    port: smtpPort,
+    secure: smtpPort === 465, // Use SSL for port 465, TLS for 587
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
     },
-    connectionTimeout: 15000, // 15 seconds connection timeout
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
+    connectionTimeout: 30000, // Increased to 30 seconds for Render
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
     // Better error handling
-    logger: false,
-    debug: false
+    logger: process.env.NODE_ENV === 'development',
+    debug: process.env.NODE_ENV === 'development',
+    tls: {
+        rejectUnauthorized: false // Allow self-signed certificates (for some SMTP servers)
+    }
 });
 
 class OTPService {
@@ -67,10 +71,10 @@ class OTPService {
                 html: this.generateOTPEmailHTML(otp),
             };
 
-            // Add timeout to email sending
+            // Add timeout to email sending (increased to 30s for Render)
             const emailPromise = transporter.sendMail(mailOptions);
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Email timeout after 15s')), 15000);
+                setTimeout(() => reject(new Error('Email timeout after 30s')), 30000);
             });
 
             const info = await Promise.race([emailPromise, timeoutPromise]);
