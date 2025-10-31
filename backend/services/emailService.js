@@ -1,6 +1,6 @@
 const sgMail = require('@sendgrid/mail');
 const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
-
+ 
 class EmailService {
   constructor() {
     // Initialize email transporter with connection pooling and rate limiting
