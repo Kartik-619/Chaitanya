@@ -170,21 +170,32 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 // ==================== SERVER STARTUP ====================
 async function startServer() {
   try {
-    // Initialize Google Sheets
-    console.log('🔄 Initializing Google Sheets...');
-    const sheetsInit = await GoogleSheetsService.initialize();
-    console.log('📊 Sheets Initialized:', sheetsInit, '✅ Service Ready:', GoogleSheetsService.initialized);
-
-    // Restore backup sessions
-    console.log('💾 Initializing Backup Service...');
-    const restored = BackupService.restoreSessions();
-    console.log(restored ? '✅ Previous sessions restored from backup' : 'ℹ No previous sessions to restore');
-
-    // Start Express server
-    app.listen(PORT, '0.0.0.0', () => {
+    // CRITICAL: Start Express server FIRST to satisfy Render's port binding requirement
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log('🎉 All systems operational! Waiting for requests...');
+      console.log('✅ Port bound successfully - Render health check will pass');
     });
+
+    // Initialize services AFTER port is bound (non-blocking for Render)
+    console.log('🔄 Initializing background services...');
+    
+    // Restore backup sessions (fast, synchronous)
+    console.log('💾 Restoring backup sessions...');
+    const restored = BackupService.restoreSessions();
+    console.log(restored ? '✅ Previous sessions restored' : 'ℹ No previous sessions');
+
+    // Initialize Google Sheets (slow, but non-blocking now)
+    GoogleSheetsService.initialize()
+      .then(sheetsInit => {
+        console.log('📊 Google Sheets initialized:', sheetsInit);
+        console.log('✅ Service Ready:', GoogleSheetsService.initialized);
+      })
+      .catch(error => {
+        console.error('⚠️ Google Sheets initialization failed (non-critical):', error.message);
+        console.log('ℹ Server will continue without Google Sheets integration');
+      });
+
+    console.log('🎉 All systems operational! Waiting for requests...');
 
   } catch (error) {
     console.error('❌ Server startup failed:', error);
