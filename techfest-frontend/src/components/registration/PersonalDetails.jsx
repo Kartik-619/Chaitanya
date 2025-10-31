@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
- 
+  
 const PersonalDetails = ({ data, updateData, nextStep }) => {
   const [formData, setFormData] = useState({
     name: '',
