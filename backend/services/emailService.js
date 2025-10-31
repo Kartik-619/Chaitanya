@@ -146,9 +146,9 @@ class EmailService {
     const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
     
     if (registrationType === 'individual') {
-      return ${INDIVIDUAL_PREFIX}${sequenceNumber};
+      return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;  // ✅ Correct syntax
     } else {
-      return ${TEAM_PREFIX}${sequenceNumber};
+      return `${TEAM_PREFIX}${sequenceNumber}`;        // ✅ Correct syntax
     }
   }
 }
@@ -156,7 +156,7 @@ class EmailService {
    * Generate team member IDs (CH25-T1-M1, CH25-T1-M2, etc.)
    */
   generateTeamMemberID(teamId, memberIndex) {
-    return ${teamId}-M${memberIndex};
+    return `${teamId}-M${memberIndex}`;
   }
 
   /**
