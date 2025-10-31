@@ -329,7 +329,7 @@ export const prelimEvents = {
       ]
     },
     {
-      id: 'pnt4',
+      id: 'pnt5',
       title: "Jack oh Hearts",
       desc: "One Player is JOH and players must identify the JOH, the JOH must deceive players",
       fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
@@ -360,6 +360,74 @@ export const prelimEvents = {
         }
       ]
 
+    },{
+      id: 'pnt6',
+      title: "Two Minute Manager",
+      desc: "Create and Present your marketing strategy in a real time competetive environment. ",
+      fullDesc: "Showcase your skill in designing prompts that yield precise, creative AI outputs. Learn the emerging art of prompt crafting.",
+      color: "#C026D3",
+      image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
+      time: "07/11/2025",
+      venue: "HPTU Campus",
+      category: "Non-Technical Event",
+
+      
+        "highlights":[
+          {
+            "Team Structure": "Teams of 2 members work together to solve real-world business scenarios under time constraints. Each team receives a unique situation and must collaborate efficiently to deliver a concise solution."
+          },
+          {
+            "Project Requirements": "Participants engage in two rounds: 1) Solve an organizational problem from domains like HR, leadership, finance, or crisis management. 2) Develop a marketing strategy or idea for a product. Each round involves a 10-minute preparation followed by a 2-minute presentation."
+          },
+          {
+            "Originality": "Each team receives a unique scenario and must craft original, on-the-spot solutions without external aids. Use of phones or laptops is strictly prohibited."
+          },
+          {
+            "Submission": "Two-stage live presentation: 1) Organizational problem-solving. 2) Marketing strategy pitch. Teams present for 2 minutes with time signals at 1:30 and 1:55. Presentation order is randomly assigned by judges."
+          },
+          {
+            "Intellectual Property": "All solutions and strategies developed during the event remain the intellectual property of the participants. The event format and evaluation criteria are owned by the organizers."
+          },
+          {
+            "Code of Conduct": "No digital devices are allowed during preparation. Teams are judged on communication, body language, confidence, and feasibility of their solution. Exceeding the time limit results in negative marking."
+          }
+        ]
+        
+      
+      
+    },{
+      id: 'pnt6',
+      title: "Pitch High",
+      desc: "Submit a 1-2 page executive summary covering the business concept, market need, target audience, revenue model, and competitive advantage.",
+      color: "#C026D3",
+      image: "https://images.unsplash.com/photo-1677442136020-2d708cc3eac2?w=800",
+      time: "07/11/2025",
+      venue: "HPTU Campus",
+      category: "Non-Technical Event",
+
+      
+        "highlights": [
+          {
+            "Team Structure": "Teams of 2 to 5 members collaborate to develop and pitch an original business idea. All members must actively participate during the Q&A phase of the final round."
+          },
+          {
+            "Project Requirements": "Participants submit a 1–2 page executive summary detailing their business concept, market need, target audience, revenue model, and competitive advantage. Shortlisted teams present their plan using PPT or PDF."
+          },
+          {
+            "Originality": "All business ideas must be original and developed by the team. Plagiarized or previously published concepts will be disqualified."
+          },
+          {
+            "Submission": "Two-stage submission: 1) Executive Summary for initial screening. 2) Final Presentation with a 7–10 minute pitch followed by a 3–5 minute Q&A session with judges."
+          },
+          {
+            "Intellectual Property": "All submitted ideas remain the intellectual property of the participants. The event organizers retain rights to the event format and evaluation criteria."
+          },
+          {
+            "Code of Conduct": "All presentations and documents must be in English. Use of videos, demos, or prototypes is allowed within the time limit. Exceeding time limits may result in point deductions."
+          }
+        ]
+      
+      
     }
 
   ],
