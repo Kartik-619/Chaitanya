@@ -29,11 +29,36 @@ class OTPService {
             console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
         } else {
             console.log('✅ Nodemailer OTP Service Initialized');
+            console.log(`📧 SMTP Config: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT || 587}`);
+            console.log(`📧 SMTP User: ${process.env.SMTP_USER}`);
+            console.log(`📧 EMAIL_FROM: ${process.env.EMAIL_FROM || 'NOT SET'}`);
+            
+            // Test SMTP connection on startup
+            this.testConnection();
         }
         
         // Track email failures for fallback
         this.consecutiveFailures = 0;
         this.maxConsecutiveFailures = 3;
+    }
+
+    /**
+     * Test SMTP connection on startup
+     */
+    async testConnection() {
+        try {
+            console.log('🔍 Testing SMTP connection...');
+            await transporter.verify();
+            console.log('✅ SMTP connection verified successfully!');
+        } catch (error) {
+            console.error('❌ SMTP connection test failed:', error.message);
+            console.error('⚠️ Emails will be simulated. Please check SMTP credentials.');
+            console.error('💡 Common issues:');
+            console.error('   - Wrong SMTP host/port');
+            console.error('   - Invalid credentials');
+            console.error('   - Firewall blocking SMTP ports');
+            console.error('   - Consider using SendGrid instead of Gmail');
+        }
     }
 
     /**
@@ -88,8 +113,20 @@ class OTPService {
             this.consecutiveFailures++;
             console.error(`❌ Email failed for ${email} (Attempt ${this.consecutiveFailures}/${this.maxConsecutiveFailures}):`, error.message);
             
+            // Log detailed error information
+            if (error.code) {
+                console.error(`   Error Code: ${error.code}`);
+            }
+            if (error.command) {
+                console.error(`   SMTP Command: ${error.command}`);
+            }
+            if (error.response) {
+                console.error(`   SMTP Response: ${error.response}`);
+            }
+            
             // Fallback to simulation mode for this request
             console.warn(`📧 [FALLBACK] OTP ${otp} for ${email}`);
+            console.warn(`💡 TIP: Check Render logs on next deploy for SMTP connection test results`);
             return true; // Always return true to not block registration
         }
     }
