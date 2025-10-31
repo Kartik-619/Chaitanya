@@ -24,11 +24,7 @@ class RegistrationService {
   constructor() {
     this.registrationSessions = new Map();
     this.completedRegistrations = new Map();
-    this.otpStorage = new Map();
     this.MAX_SESSION_AGE = 30 * 60 * 1000;
-    this.OTP_EXPIRY = 10 * 60 * 1000;
-    this.otpAttempts = new Map();
-    this.MAX_OTP_ATTEMPTS = 3;
 
     // Payment lock system
     this.paymentLocks = new Map();
@@ -125,7 +121,6 @@ class RegistrationService {
       const sessionAge = now - new Date(session.createdAt).getTime();
       if (sessionAge > 2 * 60 * 60 * 1000) {
         this.registrationSessions.delete(sessionId);
-        this.otpStorage.delete(sessionId);
         cleanedSessions++;
       }
     }
@@ -153,9 +148,9 @@ class RegistrationService {
   }
 
   /**
-   * Create new registration session with personal details
+   * Create new registration session with personal details (OTP removed)
    */
-  createRegistrationSession(personalDetails, registrationType, otp) {
+  createRegistrationSession(personalDetails, registrationType) {
     try {
       console.log('🔍 Creating session with data:', { personalDetails, registrationType });
       
@@ -182,25 +177,17 @@ class RegistrationService {
       const sessionData = {
         personalDetails: actualPersonalDetails, //  Use the correct personal details
         registrationType,
-        otp,
-        otpVerified: false,
         currentPhase: 'started',
         totalAmount: 0,
         prelimEvents: [],
         teamData: null,
         createdAt: new Date().toISOString(),
-        otpCreatedAt: Date.now(),
         paymentStatus: 'pending',
         isPremium: false,
         needsAccommodation: false
       };
       
       this.registrationSessions.set(sessionId, sessionData);
-      this.otpStorage.set(sessionId, { 
-        otp, 
-        createdAt: Date.now(),
-        attempts: 0 
-      });
       
       console.log(`✅ ${registrationType} session created: ${sessionId}`);
       return sessionId;
@@ -210,64 +197,13 @@ class RegistrationService {
     }
   }
 
-  /**
-   * Verify OTP with security enhancements and rate limiting
-   */
-  verifyOTP(sessionId, enteredOTP) {
-    const session = this.registrationSessions.get(sessionId);
-    const storedOTP = this.otpStorage.get(sessionId);
-    
-    if (!session || !storedOTP) {
-      return { success: false, message: 'Session not found or OTP expired' };
-    }
-
-    //  Rate limiting
-    if (storedOTP.attempts >= this.MAX_OTP_ATTEMPTS) {
-      this.otpStorage.delete(sessionId);
-      this.registrationSessions.delete(sessionId);
-      return { success: false, message: 'Too many OTP attempts. Session terminated.' };
-    }
-
-    // Check OTP expiry
-    if (Date.now() - storedOTP.createdAt > this.OTP_EXPIRY) {
-      this.otpStorage.delete(sessionId);
-      return { success: false, message: 'OTP has expired' };
-    }
-
-    //  Constant-time comparison
-    let isValid = true;
-    if (storedOTP.otp.length !== enteredOTP.length) {
-      isValid = false;
-    } else {
-      for (let i = 0; i < storedOTP.otp.length; i++) {
-        if (storedOTP.otp.charCodeAt(i) !== enteredOTP.charCodeAt(i)) {
-          isValid = false;
-        }
-      }
-    }
-
-    if (!isValid) {
-      storedOTP.attempts++;
-      this.otpStorage.set(sessionId, storedOTP);
-      return { success: false, message: 'Invalid OTP' };
-    }
-
-    // OTP verified successfully
-    session.otpVerified = true;
-    session.currentPhase = 'otp_verified';
-    this.otpStorage.delete(sessionId);
-    
-    this.registrationSessions.set(sessionId, session);
-    
-    return { success: true, message: 'OTP verified successfully' };
-  }
 
   /**
    * Setup individual events and calculate amount with premium and accommodation
    */
   setupIndividualEvents(sessionId, prelimEvents, isPremium = false, needsAccommodation = false) {
     const session = this.registrationSessions.get(sessionId);
-    if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
+    if (!session) throw new Error('Session not found');
     if (session.registrationType !== 'individual') throw new Error('Invalid registration type');
 
     // Validate prelim events
@@ -305,7 +241,7 @@ class RegistrationService {
    */
   setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false, projectBazaar = false) {
     const session = this.registrationSessions.get(sessionId);
-    if (!session || !session.otpVerified) throw new Error('Session not found or OTP not verified');
+    if (!session) throw new Error('Session not found');
     if (session.registrationType !== 'team') throw new Error('Invalid registration type');
     
     console.log('🔍 [TEAM SETUP DEBUG] Received data:', {
@@ -398,7 +334,6 @@ class RegistrationService {
   async initializePayment(sessionId) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
-    if (!session.otpVerified) throw new Error('OTP not verified');
     if (session.totalAmount <= 0) throw new Error('Invalid amount for payment');
 
     try {
