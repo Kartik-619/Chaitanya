@@ -57,22 +57,7 @@ router.post('/start',
   registrationController.startRegistration // Begin registration process
 );
 
-/**
- * POST /registration/verify-otp
- * 
- * Purpose: Verify user identity using OTP
- * Protection: Rate limiting
- * 
- * Process:
- * - Validates OTP code
- * - Confirms user phone/email
- * - Proceeds to registration setup
- */
-router.post('/verify-otp', 
-  registrationLimiter,                     // Prevent OTP brute force
-  SecurityMiddleware.validateSession,      // Validate session exists
-  registrationController.verifyOTP         // Verify user identity
-);
+// OTP verification removed - direct flow from personal details to setup
 
 /**
  * POST /registration/setup-individual
