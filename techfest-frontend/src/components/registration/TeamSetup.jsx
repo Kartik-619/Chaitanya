@@ -31,7 +31,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Dance": { min: 2, max: 10 },
     "Hackathon": { min: 2, max: 4 },
     "Accurate Prediction": { min: 2, max: 4 },
-    "E-sports": { min: 4, max: 4 },
+    "E-sports": { min: 4, max: 5 },
     "Polymath": { min: 2, max: 4 },
     "Debate": { min: 2, max: 2 },
     "Two Minute Manager": { min: 2, max: 2 }
@@ -39,7 +39,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
 
   // Event pricing
   const eventPricing = {
-    "Hackathon": 199,
+    "Hackathon": 99,
     "Accurate Prediction": 199,
     "Polymath": 149,
     "E-sports": 149,
@@ -161,7 +161,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   // Base pricing logic (unchanged)
   switch (teamData.mainEvent) {
     case 'Hackathon':
-      total = 199 * teamData.teamSize;
+      total = 99 * teamData.teamSize;
       break;
     case 'Accurate Prediction':
       total = 199 * teamData.teamSize;

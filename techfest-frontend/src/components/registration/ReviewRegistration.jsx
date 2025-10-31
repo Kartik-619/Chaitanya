@@ -22,7 +22,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
   const teamEventPrices = {
     "Singing": 99,
     "Dance": 99,
-    "Hackathon": 199,
+    "Hackathon": 99,
     "Accurate Prediction": 199,
     "E-sports": 149,
     "Polymath": 149,

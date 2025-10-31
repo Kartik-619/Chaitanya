@@ -28,7 +28,7 @@ const EVENT_PRICES = {
   "Two Minute Manager_team": 99,
 
   // Base + additional pricing
-  "Hackathon_team": 199,
+  "Hackathon_team": 99,
   "Accurate Prediction_team": 199,
   "Polymath_team": 149,
   
