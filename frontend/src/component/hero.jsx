@@ -197,7 +197,7 @@ export default function Hero() {
   
   const handleRegister = () => {
     console.log('Register button clicked!'); // Debug log
-    window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
+    window.open('http://localhost:3001', '_blank');
   };
 
   const [deviceType, setDeviceType] = useState("desktop");

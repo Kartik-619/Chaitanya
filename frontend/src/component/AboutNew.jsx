@@ -51,7 +51,7 @@ const AboutNew = () => {
   };
 
   const handleRegisterClick = () => {
-    window.open('https://chaitanya-subdomain.vercel.app/', '_blank', 'noopener,noreferrer');
+    window.open('http://localhost:3001', '_blank');
   };
 
   // Auto slide - uses the slideSpeed variable

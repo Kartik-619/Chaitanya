@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from '../../config/api';
 import React from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -45,7 +46,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     try {
       console.log('💰 Final amount being sent to payment:', totalAmount);
       
-      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/review', {
+      const response = await fetch(API_ENDPOINTS.REVIEW, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

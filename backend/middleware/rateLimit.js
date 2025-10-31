@@ -17,18 +17,24 @@ const rateLimit = require('express-rate-limit');
 /**
  * 📝 REGISTRATION RATE LIMIT
  * 
- * Purpose: Prevents people from spamming registration forms
- * Limits: 20 attempts per minute from same IP address
+ * Purpose: Prevents spam while allowing legitimate high traffic
+ * Limits: 50 attempts per minute from same IP (increased for events)
  * 
- * Why: Stops bots from creating fake accounts
+ * Why: Balances security with user experience during peak registration
  */
 const registrationLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute time window
-  max: 20, // Maximum 20 registration attempts per IP per minute
+  max: 50, // Increased from 20 to 50 for high-traffic events
+  standardHeaders: true, // Return rate limit info in headers
+  legacyHeaders: false,  // Disable X-RateLimit-* headers
+  skipSuccessfulRequests: false, // Count all requests
+  skipFailedRequests: false,
   message: {
     success: false,
-    message: 'Too many registration attempts, please try again after 1 minute'
+    message: 'Too many registration attempts. Please wait 1 minute and try again.',
+    retryAfter: 60
   }
+  // Removed custom keyGenerator to avoid IPv6 issues - using default IP-based tracking
 });
 
 /**
@@ -51,17 +57,20 @@ const adminLoginLimiter = rateLimit({
 /**
  * 💳 PAYMENT RATE LIMIT
  * 
- * Purpose: Prevents too many payment attempts
- * Limits: 10 attempts per 15 minutes from same IP address
+ * Purpose: Prevents payment abuse while allowing retries
+ * Limits: 20 attempts per 15 minutes (increased for legitimate retries)
  * 
- * Why: Stops payment system abuse and protects money transactions
+ * Why: Balances security with payment gateway retry scenarios
  */
 const paymentLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minute time window
-  max: 10, // Maximum 10 payment attempts per IP per 15 minutes
+  max: 20, // Increased from 10 to 20 for payment retries
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many payment attempts, please try again after 15 minutes'
+    message: 'Too many payment attempts. Please wait 15 minutes and try again.',
+    retryAfter: 900
   }
 });
 

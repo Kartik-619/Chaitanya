@@ -64,6 +64,7 @@ const corsOptions = {
     const allowedOrigins = [
       'https://chaitanya-subdomain.vercel.app', // Replace with your actual Vercel domain
       'http://localhost:3000',
+      'http://localhost:3001', // techfest-frontend
       'http://localhost:5173',
       'http://localhost:5174',
       /\.vercel\.app$/  // Allow all Vercel preview deployments
@@ -103,6 +104,15 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static('public'));
+
+// Handle preflight requests explicitly (fixed for path-to-regexp compatibility)
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    cors(corsOptions)(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // ==================== ROUTES ====================
 app.use('/api/payment', paymentRoutes);
