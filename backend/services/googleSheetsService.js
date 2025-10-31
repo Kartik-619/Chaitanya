@@ -228,11 +228,23 @@ class GoogleSheetsService {
         } // ✅ CORRECTLY CLOSED THE FOR LOOP
         
         // SINGLE API CALL for entire batch (saves 80% API calls)
-        await this.sheets.spreadsheets.values.append({
+                // 🎯 FIX: Use update with explicit range instead of append
+        const nextRowResponse = await this.sheets.spreadsheets.values.get({
           spreadsheetId: this.spreadsheetId,
-          range: 'Registrations!A:X',
-          valueInputOption: 'RAW', // Don't convert data types
-          resource: { values }, // All batch data in one request
+          range: 'Registrations!A:A',
+        });
+        
+        const existingRows = nextRowResponse.data.values || [];
+        const nextRow = existingRows.length + 1;
+        const range = `Registrations!A${nextRow}:X${nextRow + values.length - 1}`;
+        
+        console.log(`📍 [BATCH] Saving to explicit range: ${range}`);
+        
+        await this.sheets.spreadsheets.values.update({
+          spreadsheetId: this.spreadsheetId,
+          range: range,
+          valueInputOption: 'RAW',
+          resource: { values },
         });
         
         console.log(`✅ Batch of ${batch.length} saved to Sheets`);
@@ -455,9 +467,9 @@ class GoogleSheetsService {
         registrationData.esportsGame || 'N/A',              // W: E-sports Game
         registrationData.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
       ]);
-    } else {
+        } else {
       // Team registration
-      // TEAM LEADER
+      // TEAM LEADER - CORRECT COLUMN MAPPING
       values.push([
         registrationData.registrationId,                    // A
         registrationData.teamLeader.name,                   // B
@@ -480,57 +492,71 @@ class GoogleSheetsService {
         JSON.stringify(registrationData.qrData || {}),      // S
         registrationData.isPremium ? 'Yes' : 'No',          // T
         registrationData.needsAccommodation ? 'Yes' : 'No', // U
-        400 * registrationData.teamSize,                    // V: Food Amount
+        400 * registrationData.teamSize,                    // V: Food Amount (TOTAL FOR TEAM)
         registrationData.esportsGame || 'N/A',              // W
         registrationData.projectBazaar ? 'Yes' : 'No'       // X
       ]);
 
+      // TEAM MEMBERS - ONLY ONCE!
       if (registrationData.teamMembers && registrationData.teamMembers.length > 0) {
-          registrationData.teamMembers.forEach((member, index) => {
-            const memberRegId = `${registrationData.registrationId}-M${index + 1}`;
-            values.push([
-              memberRegId,
-              member.name,
-              member.email,
-              member.phone,
-              member.college, // College from dropdown
-              registrationData.mainEvent,
-              registrationData.teamSize,
-              0, // Amount (free for members)
-              'completed',
-              new Date().toISOString(),
-              JSON.stringify(member.prelimEvents || []),
-              registrationData.teamLeader.name,
-              registrationData.teamLeader.email,
-              registrationData.teamId,
-              registrationData.teamName,
-              registrationData.paymentDetails?.method || 'razorpay',
-              registrationData.paymentDetails?.paymentId || '',
-              registrationData.paymentDetails?.transactionDate || new Date().toISOString(),
-              JSON.stringify(registrationData.qrData || {}),
-              registrationData.isPremium ? 'Yes' : 'No', // Members don't have premium
-              registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation Status
-              400,                                // V: Food Amount ₹400 per member (NEW)
-              registrationData.esportsGame || 'N/A', // W: E-sports Game
-              registrationData.projectBazaar ? 'Yes' : 'No' 
-            ]);
-          });
-        }
+        registrationData.teamMembers.forEach((member, index) => {
+          const memberRegId = `${registrationData.registrationId}-M${index + 1}`;
+          values.push([
+            memberRegId,                                    // A: Member Registration ID
+            member.name,                                    // B: Name
+            member.email,                                   // C: Email
+            member.phone,                                   // D: Phone
+            member.college,                                 // E: College
+            registrationData.mainEvent,                     // F: Main Event
+            registrationData.teamSize,                      // G: Team Size
+            0,                                              // H: Amount (free for members)
+            'completed',                                    // I: Payment Status
+            new Date().toISOString(),                       // J: Registration Date
+            JSON.stringify(member.prelimEvents || []),      // K: Prelim Events
+            registrationData.teamLeader.name,               // L: Team Leader Name
+            registrationData.teamLeader.email,              // M: Team Leader Email
+            registrationData.teamId,                        // N: Team ID
+            registrationData.teamName,                      // O: Team Name
+            registrationData.paymentDetails?.method || 'razorpay', // P: Payment Method
+            registrationData.paymentDetails?.paymentId || '', // Q: Transaction ID
+            registrationData.paymentDetails?.transactionDate || new Date().toISOString(), // R: Payment Date
+            JSON.stringify(registrationData.qrData || {}),  // S: QR Data
+            registrationData.isPremium ? 'Yes' : 'No',      // T: Premium Status
+            registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
+            400,                                            // V: Food Amount ₹400 per member
+            registrationData.esportsGame || 'N/A',          // W: E-sports Game
+            registrationData.projectBazaar ? 'Yes' : 'No'   // X: Project Bazaar
+          ]);
+        });
+      }
     }
 
     console.log(`📊 [SHEETS DEBUG] Prepared ${values.length} rows for saving`);
 
-    // Save to Google Sheets
-    console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
-    const response = await this.sheets.spreadsheets.values.append({
-      spreadsheetId: this.spreadsheetId,
-      range: 'Registrations!A:X',
-      valueInputOption: 'RAW',
-      resource: { values },
-    });
+        // Save to Google Sheets
+        console.log('🔄 [SHEETS DEBUG] Calling Google Sheets API...');
+        
+        // 🎯 FIX: Use update with explicit range instead of append
+        // First get the next available row
+        const nextRowResponse = await this.sheets.spreadsheets.values.get({
+          spreadsheetId: this.spreadsheetId,
+          range: 'Registrations!A:A',
+        });
+        
+        const existingRows = nextRowResponse.data.values || [];
+        const nextRow = existingRows.length + 1;
+        const range = `Registrations!A${nextRow}:X${nextRow + values.length - 1}`;
+        
+        console.log(`📍 [SHEETS DEBUG] Saving to explicit range: ${range}`);
+        
+        const response = await this.sheets.spreadsheets.values.update({
+          spreadsheetId: this.spreadsheetId,
+          range: range,
+          valueInputOption: 'RAW',
+          resource: { values },
+        });
 
-    console.log('✅ [SHEETS DEBUG] Successfully saved to Google Sheets:', response.data.updates.updatedRange);
-    
+    console.log('✅ [SHEETS DEBUG] Successfully saved to Google Sheets:', response.data.updatedRange);
     return {
       success: true,
       message: 'Registration saved to Google Sheets successfully',
