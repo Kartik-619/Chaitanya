@@ -96,7 +96,7 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
           sessionId: result.sessionId
         });
         nextStep();
-        toast.success('OTP sent to your email and phone!');
+        toast.success('Registration started successfully!');
       } else {
         toast.error(result.message || 'Registration failed');
       }
@@ -267,7 +267,7 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
               <span>Processing...</span>
             </div>
           ) : (
-            'Continue to OTP Verification'
+            'Continue to Event Selection'
           )}
         </button>
       </form>

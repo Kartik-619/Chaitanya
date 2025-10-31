@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PersonalDetails from './registration/PersonalDetails';
-import OTPVerification from './registration/OTPVerification';
 import IndividualSetup from './registration/IndividualSetup';
 import TeamSetup from './registration/TeamSetup';
 import ReviewRegistration from './registration/ReviewRegistration';
@@ -13,7 +12,6 @@ const RegistrationFlow = () => {
     personalDetails: null,
     registrationType: '',
     sessionId: '',
-    otpVerified: false,
     individualData: null,
     teamData: null,
     reviewData: null,
@@ -22,14 +20,13 @@ const RegistrationFlow = () => {
 
   const steps = [
     { number: 1, title: 'Personal Details', shortTitle: 'Personal' },
-    { number: 2, title: 'OTP Verification', shortTitle: 'OTP' },
-    { number: 3, 
+    { number: 2, 
       title: registrationData.registrationType === 'individual' ? 'Events Selection' : 'Team Setup', 
       shortTitle: registrationData.registrationType === 'individual' ? 'Events' : 'Team' 
     },
-    { number: 4, title: 'Review', shortTitle: 'Review' },
-    { number: 5, title: 'Payment', shortTitle: 'Payment' },
-    { number: 6, title: 'Complete', shortTitle: 'Complete' }
+    { number: 3, title: 'Review', shortTitle: 'Review' },
+    { number: 4, title: 'Payment', shortTitle: 'Payment' },
+    { number: 5, title: 'Complete', shortTitle: 'Complete' }
   ];
 
   const updateRegistrationData = (newData) => {
@@ -50,15 +47,6 @@ const RegistrationFlow = () => {
           />
         );
       case 2:
-        return (
-          <OTPVerification
-            data={registrationData}
-            updateData={updateRegistrationData}
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
-      case 3:
         return registrationData.registrationType === 'individual' ? (
           <IndividualSetup
             data={registrationData}
@@ -74,7 +62,7 @@ const RegistrationFlow = () => {
             prevStep={prevStep}
           />
         );
-      case 4:
+      case 3:
         return (
           <ReviewRegistration
             data={registrationData}
@@ -83,7 +71,7 @@ const RegistrationFlow = () => {
             prevStep={prevStep}
           />
         );
-      case 5:
+      case 4:
         return (
           <Payment
             data={registrationData}
@@ -92,7 +80,7 @@ const RegistrationFlow = () => {
             prevStep={prevStep}
           />
         );
-      case 6:
+      case 5:
         return <Success data={registrationData} />;
       default:
         return <PersonalDetails data={registrationData} updateData={updateRegistrationData} nextStep={nextStep} />;
