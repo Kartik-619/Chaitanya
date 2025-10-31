@@ -17,7 +17,7 @@ class OTPService {
         if (!this.initialized) {
             console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
         } else {
-            console.log('✅ Nodemailer OTP Service Initialized');
+            console.log(' Nodemailer OTP Service Initialized');
         }
     }
 
@@ -33,7 +33,7 @@ class OTPService {
      */
     async sendOTPEmail(email, otp) {
         if (!this.initialized) {
-            console.warn(📧 [SIMULATED] OTP ${otp} for ${email});
+            console.warn( [SIMULATED] OTP ${otp} for ${email});
             return true; // Return true for testing
         }
 
@@ -70,7 +70,7 @@ class OTPService {
   async sendOTPSMS(phone, otp) {
     try {
       // Placeholder for SMS integration
-      console.log(📱 SMS OTP for ${phone}: ${otp});
+      console.log( SMS OTP for ${phone}: ${otp});
       return true;
     } catch (error) {
       console.error('❌ Error sending OTP SMS:', error);
@@ -92,7 +92,7 @@ class OTPService {
       const emailSent = await this.sendOTPEmail(email, otp);
       const emailTime = Date.now() - emailStartTime;
       
-      console.log(📧 Email delivery attempt took ${emailTime}ms);
+      console.log( Email delivery attempt took ${emailTime}ms);
       
       // Send OTP via SMS (optional)
       const smsSent = await this.sendOTPSMS(phone, otp);
