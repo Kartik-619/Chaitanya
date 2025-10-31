@@ -18,14 +18,13 @@
 const RegistrationService = require('../services/registrationService');
 const GoogleSheetsService = require('../services/googleSheetsService');
 const EmailService = require('../services/emailService');
-const OTPService = require('../services/otpService');
 const PaymentService = require('../services/paymentService'); 
 const { TEAM_SIZE_RULES, E_SPORTS_GAMES } = require('../config/constants');
 
 class RegistrationController {
   
   /**
-   * Phase 1: Start registration with personal details and send OTP
+   * Phase 1: Start registration with personal details (OTP removed)
    */
   async startRegistration(req, res) {
     try {
@@ -57,24 +56,15 @@ class RegistrationController {
         });
       }
 
-      // Generate and send OTP
-      const otpResult = await OTPService.generateAndSendOTP(email, phone);
-      
-      if (!otpResult.success) {
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to send OTP'
-        });
-      }
-
-      // Create registration session
-      const sessionId = RegistrationService.createRegistrationSession(personalDetails, registrationType, otpResult.otp);
+      // Create registration session (no OTP needed)
+      const sessionId = RegistrationService.createRegistrationSession(personalDetails, registrationType);
 
       res.json({
         success: true,
-        message: 'OTP sent successfully',
+        message: 'Registration started successfully',
         sessionId: sessionId,
-        nextPhase: 'otp_verification'
+        registrationType: registrationType,
+        nextPhase: registrationType === 'individual' ? 'individual_setup' : 'team_setup'
       });
 
     } catch (error) {
@@ -83,46 +73,6 @@ class RegistrationController {
         success: false,
         message: 'Internal server error'
       });
-    }
-  }
-
-  /**
-   * Phase 1.5: OTP Verification for user identity confirmation
-   */
-  async verifyOTP(req, res) {
-    try {
-      const { sessionId, otp } = req.body;
-      
-      if (!sessionId || !otp) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Session ID and OTP are required' 
-        });
-      }
-
-      // Verify OTP
-      const verificationResult = RegistrationService.verifyOTP(sessionId, otp);
-      
-      if (!verificationResult.success) {
-        return res.status(400).json({
-          success: false,
-          message: verificationResult.message
-        });
-      }
-
-      const session = RegistrationService.getSession(sessionId);
-      
-      res.json({
-        success: true,
-        message: 'OTP verified successfully',
-        sessionId: sessionId,
-        registrationType: session.registrationType,
-        nextPhase: session.registrationType === 'individual' ? 'individual_setup' : 'team_setup'
-      });
-
-    } catch (error) {
-      console.error('Error in verifyOTP:', error);
-      res.status(400).json({ success: false, message: error.message });
     }
   }
 
