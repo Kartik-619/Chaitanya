@@ -16,7 +16,7 @@ const RegistrationFlow = () => {
     teamData: null,
     reviewData: null,
     paymentResult: null
-  });
+  }); 
 
   const steps = [
     { number: 1, title: 'Personal Details', shortTitle: 'Personal' },
