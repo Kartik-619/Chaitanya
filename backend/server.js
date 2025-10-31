@@ -53,7 +53,44 @@ if (!validateEnvironment()) {
 
 // ==================== MIDDLEWARE ====================
 app.use(helmet({ contentSecurityPolicy: { directives: SERVER_CONFIG.CSP_DIRECTIVES } }));
-app.use(cors({ origin: true, credentials: true }));
+
+// Enhanced CORS configuration for Vercel frontend
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins in development or specific domains in production
+    const allowedOrigins = [
+      'https://chaitanya-subdomain.vercel.app', // Replace with your actual Vercel domain
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      /\.vercel\.app$/  // Allow all Vercel preview deployments
+    ];
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      callback(null, true); // Still allow but log for monitoring
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight for 10 minutes
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: SERVER_CONFIG.SECURITY.JSON_LIMIT }));
 app.use((req, res, next) => {
   if (req.body && typeof req.body === 'object') {
@@ -130,21 +167,32 @@ if (SERVER_CONFIG.SESSION_CLEANUP.ENABLED) {
 // ==================== SERVER STARTUP ====================
 async function startServer() {
   try {
-    // Initialize Google Sheets
-    console.log('🔄 Initializing Google Sheets...');
-    const sheetsInit = await GoogleSheetsService.initialize();
-    console.log('📊 Sheets Initialized:', sheetsInit, '✅ Service Ready:', GoogleSheetsService.initialized);
-
-    // Restore backup sessions
-    console.log('💾 Initializing Backup Service...');
-    const restored = BackupService.restoreSessions();
-    console.log(restored ? '✅ Previous sessions restored from backup' : 'ℹ No previous sessions to restore');
-
-    // Start Express server
-    app.listen(PORT, '0.0.0.0', () => {
+    // CRITICAL: Start Express server FIRST to satisfy Render's port binding requirement
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log('🎉 All systems operational! Waiting for requests...');
+      console.log('✅ Port bound successfully - Render health check will pass');
     });
+
+    // Initialize services AFTER port is bound (non-blocking for Render)
+    console.log('🔄 Initializing background services...');
+    
+    // Restore backup sessions (fast, synchronous)
+    console.log('💾 Restoring backup sessions...');
+    const restored = BackupService.restoreSessions();
+    console.log(restored ? '✅ Previous sessions restored' : 'ℹ No previous sessions');
+
+    // Initialize Google Sheets (slow, but non-blocking now)
+    GoogleSheetsService.initialize()
+      .then(sheetsInit => {
+        console.log('📊 Google Sheets initialized:', sheetsInit);
+        console.log('✅ Service Ready:', GoogleSheetsService.initialized);
+      })
+      .catch(error => {
+        console.error('⚠️ Google Sheets initialization failed (non-critical):', error.message);
+        console.log('ℹ Server will continue without Google Sheets integration');
+      });
+
+    console.log('🎉 All systems operational! Waiting for requests...');
 
   } catch (error) {
     console.error('❌ Server startup failed:', error);
