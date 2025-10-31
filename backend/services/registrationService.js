@@ -19,7 +19,7 @@ const { calculateIndividualAmount, calculateTeamAmount } = require('../utils/cal
 const { VALIDATION_CONFIG } = require('../config/validationConfig');
 const { TEAM_SIZE_RULES, E_SPORTS_GAMES, EVENT_CONFIG } = require('../config/constants');
 const crypto = require('crypto');
-
+ 
 class RegistrationService {
   constructor() {
     this.registrationSessions = new Map();
