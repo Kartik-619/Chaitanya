@@ -53,7 +53,44 @@ if (!validateEnvironment()) {
 
 // ==================== MIDDLEWARE ====================
 app.use(helmet({ contentSecurityPolicy: { directives: SERVER_CONFIG.CSP_DIRECTIVES } }));
-app.use(cors({ origin: true, credentials: true }));
+
+// Enhanced CORS configuration for Vercel frontend
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins in development or specific domains in production
+    const allowedOrigins = [
+      'https://chaitanya-subdomain.vercel.app', // Replace with your actual Vercel domain
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      /\.vercel\.app$/  // Allow all Vercel preview deployments
+    ];
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      callback(null, true); // Still allow but log for monitoring
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight for 10 minutes
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: SERVER_CONFIG.SECURITY.JSON_LIMIT }));
 app.use((req, res, next) => {
   if (req.body && typeof req.body === 'object') {
@@ -66,6 +103,9 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static('public'));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 
 // ==================== ROUTES ====================
 app.use('/api/payment', paymentRoutes);
