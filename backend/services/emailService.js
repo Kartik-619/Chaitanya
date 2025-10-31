@@ -1,28 +1,23 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const { EMAIL_CONFIG, ID_CONFIG } = require('../config/emailConfig');
 
 class EmailService {
   constructor() {
-    // Initialize Nodemailer transporter with connection pooling and rate limiting
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT, 10),
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      pool: true, // Enable connection pooling
-      maxConnections: 5,
-      maxMessages: 100
-    });
-
-    this.initialized = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    // Initialize email transporter with connection pooling and rate limiting
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    this.initialized = !!process.env.SENDGRID_API_KEY;
   
     if (!this.initialized) {
-      console.warn('⚠ SMTP configuration not found. Registration emails will not be sent.');
+      console.warn('⚠ SendGrid API key not found. Registration emails will not be sent.');
     } else {
-      console.log('✅ Nodemailer Email Service Initialized');
+      console.log('✅ SendGrid Email Service Initialized');
     }
+
+    // Initialize sequence numbers - FIXED: Moved inside constructor
+    this.sequenceNumbers = {
+      individual: 1,
+      team: 1
+    };
 
     // Rate limiting system
     this.dailyEmailCount = 0;              // Track emails sent today
@@ -38,26 +33,26 @@ class EmailService {
     // Event pricing for amount calculations
     this.eventPrices = {
       // Individual Events
-      "Integration Bee": 299,
-      "Human vs AI": 299,
+      "Integration Bee": 199,
+      "Human vs AI": 199,
       "Retro Theming": 199,
       "Prompt Engineering": 199,
       "Reverse Engineering": 199,
-      "Jack of Hearts": 399,
+      "Jack of Hearts": 199,
       "Singing": 99,
       "Dancing": 99,
 
       // Team Events
       "Singing Team": 99,
       "Dance Team": 99,
-      "Hackathon Team": 999,
-      "Accurate Prediction Team": 999,
-      "E-sports Team": 799,
-      "Polymath Team": 499,
+      "Hackathon Team": 99,
+      "Accurate Prediction Team": 199,
+      "E-sports Team": 199,
+      "Polymath Team": 99,
       "Reverse Engineering Team": 199,
-      "Retro Theming Team": 199,
-      "Debate Team": 199,
-      "Two Minute Manager Team": 149
+      "Retro Theming Team": 99,
+      "Debate Team": 99,
+      "Two Minute Manager Team": 49
     };
     
     // Update premium and accommodation fees
@@ -146,12 +141,12 @@ class EmailService {
     const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
     
     if (registrationType === 'individual') {
-      return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;  // ✅ Correct syntax
+      return `${INDIVIDUAL_PREFIX}${sequenceNumber.toString().padStart(4, '0')}`;
     } else {
-      return `${TEAM_PREFIX}${sequenceNumber}`;        // ✅ Correct syntax
+      return `${TEAM_PREFIX}${sequenceNumber.toString().padStart(3, '0')}`;
     }
   }
-}
+
   /**
    * Generate team member IDs (CH25-T1-M1, CH25-T1-M2, etc.)
    */
@@ -286,7 +281,7 @@ class EmailService {
       }
 
       if (!this.initialized) {
-        console.warn(📧 [SIMULATED] Quick confirmation for: ${email});
+        console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
         return { success: true, quick: true, simulated: true };
       }
 
@@ -296,27 +291,20 @@ class EmailService {
         return { success: true, rateLimited: true };
       }
 
-      const mailOptions = {
+      const msg = {
         to: email,
         from: {
-          name: 'Chaitanya 2025',
-          address: process.env.EMAIL_FROM || 'chaitanyahptu@gmail.com'
+          email: 'chaitanyahptu@gmail.com',
+          name: 'Chaitanya 2025'
         },
-        subject: Your Chaitanya 2025 Registration Confirmation,
+        subject: 'Your Chaitanya 2025 Registration Confirmation',
         text: this._generateConfirmationText(registrationData, name),
-        html: this._generateConfirmationHTML(registrationData, name),
-        // Priority headers
-        headers: {
-          'Priority': 'Urgent',
-          'Importance': 'high',
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High'
-        }
+        html: this._generateConfirmationHTML(registrationData, name)
       };
 
-      const info = await this.transporter.sendMail(mailOptions);
+      await sgMail.send(msg);
       this.dailyEmailCount++;
-      console.log('✅ Confirmation email sent to:', email, 'Message ID:', info.messageId);
+      console.log('✅ Confirmation email sent to:', email);
       return { success: true, quick: true };
 
     } catch (error) {
@@ -332,7 +320,7 @@ We have received your application request. Your ID card will be sent to you with
 
 REGISTRATION DETAILS:
 Registration ID: ${registrationData.registrationId}
-${registrationData.teamId ? Team ID: ${registrationData.teamId} : ''}
+${registrationData.teamId ? `Team ID: ${registrationData.teamId}` : ''}
 
 Your official ID card will be sent to this email within the next 48 hours.
 
@@ -345,32 +333,32 @@ Himachal Pradesh Technical University`;
 
   _generateConfirmationHTML(registrationData, name) {
     const teamInfo = registrationData.teamId ? 
-      <p><strong>Team ID:</strong> ${registrationData.teamId}</p> : '';
+      `<p><strong>Team ID:</strong> ${registrationData.teamId}</p>` : '';
 
     // Premium info
     const premiumInfo = registrationData.isPremium ? 
-      <p><strong>Premium Package:</strong> ₹200 (Access to all individual events)</p> : '';
+      `<p><strong>Premium Package:</strong> ₹200 (Access to all individual events)</p>` : '';
 
     // Accommodation info
     let accommodationInfo = '';
     if (registrationData.needsAccommodation) {
       if (registrationData.registrationType === 'individual') {
-        accommodationInfo = <p><strong>Accommodation Fee:</strong> ₹600 (3 days stay)</p>;
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹600 (3 days stay)</p>`;
       } else {
         const accommodationTotal = 600 * (registrationData.teamSize || 1);
-        accommodationInfo = <p><strong>Accommodation Fee:</strong> ₹${accommodationTotal} (for ${registrationData.teamSize} members × ₹600 each)</p>;
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹${accommodationTotal} (for ${registrationData.teamSize} members × ₹600 each)</p>`;
       }
     }
 
     // Events info
     let eventsInfo = '';
     if (registrationData.registrationType === 'individual' && registrationData.prelimEvents) {
-      const eventsList = registrationData.prelimEvents.map(event => • ${event}).join('<br>');
-      eventsInfo = <p><strong>Selected Events:</strong><br>${eventsList}</p>;
+      const eventsList = registrationData.prelimEvents.map(event => `• ${event}`).join('<br>');
+      eventsInfo = `<p><strong>Selected Events:</strong><br>${eventsList}</p>`;
     } else if (registrationData.registrationType === 'team') {
-      eventsInfo = <p><strong>Main Event:</strong> ${registrationData.mainEvent || 'N/A'}</p>;
+      eventsInfo = `<p><strong>Main Event:</strong> ${registrationData.mainEvent || 'N/A'}</p>`;
       if (registrationData.esportsGame) {
-        eventsInfo += <p><strong>E-sports Game:</strong> ${registrationData.esportsGame}</p>;
+        eventsInfo += `<p><strong>E-sports Game:</strong> ${registrationData.esportsGame}</p>`;
       }
     }
 
@@ -410,7 +398,7 @@ Himachal Pradesh Technical University`;
               <p><strong>Registration ID:</strong> <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${registrationData.registrationId}</code></p>
               ${teamInfo}
               <p><strong>Registration Type:</strong> ${registrationData.registrationType === 'individual' ? 'Individual' : 'Team'}</p>
-              ${registrationData.registrationType === 'team' && registrationData.teamSize ? <p><strong>Team Size:</strong> ${registrationData.teamSize} members</p> : ''}
+              ${registrationData.registrationType === 'team' && registrationData.teamSize ? `<p><strong>Team Size:</strong> ${registrationData.teamSize} members</p>` : ''}
               ${eventsInfo}
               ${premiumInfo}
               ${accommodationInfo}
@@ -509,7 +497,8 @@ Himachal Pradesh Technical University`;
     return {
       dailyEmailCount: this.dailyEmailCount,
       maxDailyEmails: this.MAX_EMAILS_PER_DAY,
-      emailsRemaining: Math.max(0, this.MAX_EMAILS_PER_DAY - this.dailyEmailCount)
+      emailsRemaining: Math.max(0, this.MAX_EMAILS_PER_DAY - this.dailyEmailCount),
+      sequenceNumbers: this.sequenceNumbers
     };
   }
 
@@ -522,9 +511,9 @@ Himachal Pradesh Technical University`;
         phone: '9876543210',
         college: 'Himachal Pradesh Technical University'
       },
-      prelimEvents: ['Code Forge', 'Robo Rampage'],
+      prelimEvents: ['Integration Bee', 'Human vs AI'],
       registrationId: 'CH25-I0001',
-      totalAmount: 400
+      totalAmount: 598
     };
 
     console.log('🧪 Testing email service with sample data...');
@@ -533,26 +522,11 @@ Himachal Pradesh Technical University`;
 
   clearCounters() {
     this.dailyEmailCount = 0;
+    this.sequenceNumbers = { individual: 1, team: 1 };
     console.log('🧹 Email counters cleared');
     return { success: true, message: 'Counters cleared' };
   }
-
-  /**
-   * Close the transporter connection pool
-   */
-  async close() {
-    if (this.transporter) {
-      this.transporter.close();
-      console.log('📧 Nodemailer transporter closed');
-    }
-  }
 }
-
-// Initialize sequence numbers
-EmailService.prototype.sequenceNumbers = {
-  individual: 1,
-  team: 1
-};
 
 // Export service instance
 module.exports = new EmailService();

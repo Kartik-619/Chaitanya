@@ -1,76 +1,73 @@
-const nodemailer = require('nodemailer');
+/**
+ * 🔐 OTP SERVICE
+ * 
+ * This service handles OTP (One-Time Password) generation and delivery:
+ * - OTP generation and validation
+ * - Email delivery via SendGrid API
+ * - OTP expiry management
+ * - Security verification for user authentication
+ */
+
+const sgMail = require('@sendgrid/mail');
 const { SESSION_CONFIG } = require('../config/constants');
 
-// Initialize Nodemailer transporter
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10),
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-}); 
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 class OTPService {
-    constructor() {
-        this.initialized = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-        if (!this.initialized) {
-            console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
-        } else {
-            console.log('✅ Nodemailer OTP Service Initialized');
-        }
+  constructor() {
+    this.initialized = !!process.env.SENDGRID_API_KEY;
+    if (!this.initialized) {
+      console.warn('⚠️ SendGrid API key not found. OTP emails will not be sent.');
+    } else {
+      console.log('✅ SendGrid OTP Service Initialized');
+    }
+  }
+
+  /**
+   * Generate random 6-digit OTP
+   */
+  generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  /**
+   * Send OTP via email using SendGrid API
+   */
+  async sendOTPEmail(email, otp) {
+    if (!this.initialized) {
+      console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
+      return true; // Return true for testing
     }
 
-    /**
-     * Generate random 6-digit OTP
-     */
-    generateOTP() {
-        return Math.floor(100000 + Math.random() * 900000).toString();
+    try {
+      const msg = {
+        to: email,
+        from: {
+          email: 'chaitanyahptu@gmail.com',
+          name: 'Chaitanya 2025'
+        },
+        subject: 'Your Verification Code for Chaitanya 2025 Registration',
+        text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
+        html: this.generateOTPEmailHTML(otp)
+      };
+
+      await sgMail.send(msg);
+      console.log(`✅ OTP email sent to ${email}`);
+      return true;
+    } catch (error) {
+      console.error('❌ SendGrid error:', error.response?.body || error.message);
+      return false;
     }
+  }
 
-    /**
-     * Send OTP via email using Nodemailer
-     */
-    async sendOTPEmail(email, otp) {
-        if (!this.initialized) {
-            console.warn(📧 [SIMULATED] OTP ${otp} for ${email});
-            return true; // Return true for testing
-        }
-
-        try {
-            const mailOptions = {
-                from: {
-                    name: 'Chaitanya 2025',
-                    address: process.env.EMAIL_FROM 
-                },
-                to: email,
-                subject: 'Your Verification Code for Chaitanya 2025 Registration',
-                text: Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.,
-                html: this.generateOTPEmailHTML(otp),
-                // Priority headers
-                headers: {
-                    'Priority': 'Urgent',
-                    'Importance': 'high',
-                    'X-Priority': '1',
-                    'X-MSMail-Priority': 'High'
-                }
-            };
-
-            const info = await transporter.sendMail(mailOptions);
-            console.log(✅ OTP email sent to ${email}, info.messageId);
-            return true;
-        } catch (error) {
-            console.error('❌ Nodemailer error:', error);
-            return false;
-        }
-    }
   /**
    * Send OTP via SMS (placeholder for SMS service integration)
    */
   async sendOTPSMS(phone, otp) {
     try {
       // Placeholder for SMS integration
-      console.log(📱 SMS OTP for ${phone}: ${otp});
+      console.log(`📱 SMS OTP for ${phone}: ${otp}`);
       return true;
     } catch (error) {
       console.error('❌ Error sending OTP SMS:', error);
@@ -85,14 +82,10 @@ class OTPService {
     try {
       const otp = this.generateOTP();
       
-      console.log(🔐 Generated OTP for ${email}: ${otp});
+      console.log(`🔐 Generated OTP for ${email}: ${otp}`);
       
-      // ✅ ADDED: Track email send time for monitoring delays
-      const emailStartTime = Date.now();
+      // Send OTP via email
       const emailSent = await this.sendOTPEmail(email, otp);
-      const emailTime = Date.now() - emailStartTime;
-      
-      console.log(📧 Email delivery attempt took ${emailTime}ms);
       
       // Send OTP via SMS (optional)
       const smsSent = await this.sendOTPSMS(phone, otp);
@@ -120,21 +113,18 @@ class OTPService {
 
   /**
    * Generate professional OTP email HTML template
-   * ✅ UPDATED: Simplified for faster processing and delivery
    */
   generateOTPEmailHTML(otp) {
     return `
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification - Chaitanya 2025</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background: #f9f9f9; }
-        .header { background: #8B0000; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background: white; }
-        .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8B0000; margin: 20px 0; text-align: center; }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
+        .header { background: #8B0000; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; background: #f9f9f9; border-radius: 0 0 8px 8px; }
+        .otp-box { background: #ffffff; padding: 20px; text-align: center; margin: 20px 0; border: 2px dashed #8B0000; border-radius: 8px; }
+        .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8B0000; margin: 10px 0; }
         .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
         .warning { background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 15px 0; }
     </style>
@@ -150,13 +140,13 @@ class OTPService {
         
         <p>Your One-Time Password (OTP) for Chaitanya 2025 registration is:</p>
         
-        <div style="background: #ffffff; padding: 20px; text-align: center; margin: 20px 0; border: 2px dashed #8B0000; border-radius: 8px;">
+        <div class="otp-box">
             <div class="otp-code">${otp}</div>
             <p>This OTP is valid for 10 minutes</p>
         </div>
 
         <div class="warning">
-            <strong>⚠ Security Notice:</strong> Do not share this OTP with anyone.
+            <strong>⚠️ Security Notice:</strong> Do not share this OTP with anyone.
         </div>
 
         <p>If you didn't request this OTP, please ignore this email.</p>
