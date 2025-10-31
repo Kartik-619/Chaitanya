@@ -17,7 +17,7 @@ class OTPService {
         if (!this.initialized) {
             console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
         } else {
-            console.log(' Nodemailer OTP Service Initialized');
+            console.log('✅ Nodemailer OTP Service Initialized');
         }
     }
 
@@ -33,6 +33,7 @@ class OTPService {
      */
     async sendOTPEmail(email, otp) {
         if (!this.initialized) {
+            console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
             return true; // Return true for testing
         }
 
@@ -44,7 +45,7 @@ class OTPService {
                 },
                 to: email,
                 subject: 'Your Verification Code for Chaitanya 2025 Registration',
-                text: Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.,
+                text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
                 html: this.generateOTPEmailHTML(otp),
                 // Priority headers
                 headers: {
@@ -56,73 +57,74 @@ class OTPService {
             };
 
             const info = await transporter.sendMail(mailOptions);
-            console.log(✅ OTP email sent to ${email}, info.messageId);
+            console.log(`✅ OTP email sent to ${email}, info.messageId`);
             return true;
         } catch (error) {
             console.error('❌ Nodemailer error:', error);
             return false;
         }
     }
-  /**
-   * Send OTP via SMS (placeholder for SMS service integration)
-   */
-  async sendOTPSMS(phone, otp) {
-    try {
-      // Placeholder for SMS integration
-      console.log( SMS OTP for ${phone}: ${otp});
-      return true;
-    } catch (error) {
-      console.error('❌ Error sending OTP SMS:', error);
-      return false;
-    }
-  }
 
-  /**
-   * Generate and send OTP via both email and SMS
-   */
-  async generateAndSendOTP(email, phone) {
-    try {
-      const otp = this.generateOTP();
-      
-      console.log(🔐 Generated OTP for ${email}: ${otp});
-      
-      // ✅ ADDED: Track email send time for monitoring delays
-      const emailStartTime = Date.now();
-      const emailSent = await this.sendOTPEmail(email, otp);
-      const emailTime = Date.now() - emailStartTime;
-      
-      console.log( Email delivery attempt took ${emailTime}ms);
-      
-      // Send OTP via SMS (optional)
-      const smsSent = await this.sendOTPSMS(phone, otp);
-      
-      if (emailSent) {
-        return {
-          success: true,
-          otp: otp,
-          message: 'OTP sent successfully to your email'
-        };
-      } else {
-        return {
-          success: false,
-          message: 'Failed to send OTP. Please try again.'
-        };
-      }
-    } catch (error) {
-      console.error('❌ Error in generateAndSendOTP:', error);
-      return {
-        success: false,
-        message: 'Error sending OTP. Please try again.'
-      };
+    /**
+     * Send OTP via SMS (placeholder for SMS service integration)
+     */
+    async sendOTPSMS(phone, otp) {
+        try {
+            // Placeholder for SMS integration
+            console.log(`📱 SMS OTP for ${phone}: ${otp}`);
+            return true;
+        } catch (error) {
+            console.error('❌ Error sending OTP SMS:', error);
+            return false;
+        }
     }
-  }
 
-  /**
-   * Generate professional OTP email HTML template
-   * ✅ UPDATED: Simplified for faster processing and delivery
-   */
-  generateOTPEmailHTML(otp) {
-    return `
+    /**
+     * Generate and send OTP via both email and SMS
+     */
+    async generateAndSendOTP(email, phone) {
+        try {
+            const otp = this.generateOTP();
+            
+            console.log(`🔐 Generated OTP for ${email}: ${otp}`);
+            
+            // ✅ ADDED: Track email send time for monitoring delays
+            const emailStartTime = Date.now();
+            const emailSent = await this.sendOTPEmail(email, otp);
+            const emailTime = Date.now() - emailStartTime;
+            
+            console.log(`📧 Email delivery attempt took ${emailTime}ms`);
+            
+            // Send OTP via SMS (optional)
+            const smsSent = await this.sendOTPSMS(phone, otp);
+            
+            if (emailSent) {
+                return {
+                    success: true,
+                    otp: otp,
+                    message: 'OTP sent successfully to your email'
+                };
+            } else {
+                return {
+                    success: false,
+                    message: 'Failed to send OTP. Please try again.'
+                };
+            }
+        } catch (error) {
+            console.error('❌ Error in generateAndSendOTP:', error);
+            return {
+                success: false,
+                message: 'Error sending OTP. Please try again.'
+            };
+        }
+    }
+
+    /**
+     * Generate professional OTP email HTML template
+     * ✅ UPDATED: Simplified for faster processing and delivery
+     */
+    generateOTPEmailHTML(otp) {
+        return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -177,26 +179,26 @@ class OTPService {
 </body>
 </html>
 `;
-  }
+    }
 
-  /**
-   * Verify OTP validity and expiry
-   */
-  verifyOTP(storedOTP, enteredOTP, otpCreatedAt) {
-    const now = Date.now();
-    
-    // Check OTP expiry
-    if (now - otpCreatedAt > SESSION_CONFIG.OTP_EXPIRY) {
-      return { valid: false, message: 'OTP has expired. Please request a new one.' };
+    /**
+     * Verify OTP validity and expiry
+     */
+    verifyOTP(storedOTP, enteredOTP, otpCreatedAt) {
+        const now = Date.now();
+        
+        // Check OTP expiry
+        if (now - otpCreatedAt > SESSION_CONFIG.OTP_EXPIRY) {
+            return { valid: false, message: 'OTP has expired. Please request a new one.' };
+        }
+        
+        // Check OTP match
+        if (storedOTP !== enteredOTP) {
+            return { valid: false, message: 'Invalid OTP. Please try again.' };
+        }
+        
+        return { valid: true, message: 'OTP verified successfully' };
     }
-    
-    // Check OTP match
-    if (storedOTP !== enteredOTP) {
-      return { valid: false, message: 'Invalid OTP. Please try again.' };
-    }
-    
-    return { valid: true, message: 'OTP verified successfully' };
-  }
 }
 
 // Export service instance
