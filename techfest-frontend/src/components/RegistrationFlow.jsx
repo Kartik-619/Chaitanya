@@ -5,7 +5,7 @@ import TeamSetup from './registration/TeamSetup';
 import ReviewRegistration from './registration/ReviewRegistration';
 import Payment from './registration/Payment';
 import Success from './registration/Success';
- 
+  
 const RegistrationFlow = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [registrationData, setRegistrationData] = useState({
