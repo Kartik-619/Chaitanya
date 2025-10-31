@@ -146,12 +146,12 @@ class EmailService {
     const { INDIVIDUAL_PREFIX, TEAM_PREFIX } = ID_CONFIG;
     
     if (registrationType === 'individual') {
-      return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;  // ✅ Correct syntax
+      return `${INDIVIDUAL_PREFIX}${sequenceNumber}`;
     } else {
-      return `${TEAM_PREFIX}${sequenceNumber}`;        // ✅ Correct syntax
+      return `${TEAM_PREFIX}${sequenceNumber}`;
     }
   }
-}
+
   /**
    * Generate team member IDs (CH25-T1-M1, CH25-T1-M2, etc.)
    */
@@ -286,7 +286,7 @@ class EmailService {
       }
 
       if (!this.initialized) {
-        console.warn(📧 [SIMULATED] Quick confirmation for: ${email});
+        console.warn(`📧 [SIMULATED] Quick confirmation for: ${email}`);
         return { success: true, quick: true, simulated: true };
       }
 
@@ -302,7 +302,7 @@ class EmailService {
           name: 'Chaitanya 2025',
           address: process.env.EMAIL_FROM || 'chaitanyahptu@gmail.com'
         },
-        subject: Your Chaitanya 2025 Registration Confirmation,
+        subject: 'Your Chaitanya 2025 Registration Confirmation',
         text: this._generateConfirmationText(registrationData, name),
         html: this._generateConfirmationHTML(registrationData, name),
         // Priority headers
@@ -332,7 +332,7 @@ We have received your application request. Your ID card will be sent to you with
 
 REGISTRATION DETAILS:
 Registration ID: ${registrationData.registrationId}
-${registrationData.teamId ? Team ID: ${registrationData.teamId} : ''}
+${registrationData.teamId ? `Team ID: ${registrationData.teamId}` : ''}
 
 Your official ID card will be sent to this email within the next 48 hours.
 
@@ -345,32 +345,32 @@ Himachal Pradesh Technical University`;
 
   _generateConfirmationHTML(registrationData, name) {
     const teamInfo = registrationData.teamId ? 
-      <p><strong>Team ID:</strong> ${registrationData.teamId}</p> : '';
+      `<p><strong>Team ID:</strong> ${registrationData.teamId}</p>` : '';
 
     // Premium info
     const premiumInfo = registrationData.isPremium ? 
-      <p><strong>Premium Package:</strong> ₹200 (Access to all individual events)</p> : '';
+      `<p><strong>Premium Package:</strong> ₹200 (Access to all individual events)</p>` : '';
 
     // Accommodation info
     let accommodationInfo = '';
     if (registrationData.needsAccommodation) {
       if (registrationData.registrationType === 'individual') {
-        accommodationInfo = <p><strong>Accommodation Fee:</strong> ₹600 (3 days stay)</p>;
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹600 (3 days stay)</p>`;
       } else {
         const accommodationTotal = 600 * (registrationData.teamSize || 1);
-        accommodationInfo = <p><strong>Accommodation Fee:</strong> ₹${accommodationTotal} (for ${registrationData.teamSize} members × ₹600 each)</p>;
+        accommodationInfo = `<p><strong>Accommodation Fee:</strong> ₹${accommodationTotal} (for ${registrationData.teamSize} members × ₹600 each)</p>`;
       }
     }
 
     // Events info
     let eventsInfo = '';
     if (registrationData.registrationType === 'individual' && registrationData.prelimEvents) {
-      const eventsList = registrationData.prelimEvents.map(event => • ${event}).join('<br>');
-      eventsInfo = <p><strong>Selected Events:</strong><br>${eventsList}</p>;
+      const eventsList = registrationData.prelimEvents.map(event => `• ${event}`).join('<br>');
+      eventsInfo = `<p><strong>Selected Events:</strong><br>${eventsList}</p>`;
     } else if (registrationData.registrationType === 'team') {
-      eventsInfo = <p><strong>Main Event:</strong> ${registrationData.mainEvent || 'N/A'}</p>;
+      eventsInfo = `<p><strong>Main Event:</strong> ${registrationData.mainEvent || 'N/A'}</p>`;
       if (registrationData.esportsGame) {
-        eventsInfo += <p><strong>E-sports Game:</strong> ${registrationData.esportsGame}</p>;
+        eventsInfo += `<p><strong>E-sports Game:</strong> ${registrationData.esportsGame}</p>`;
       }
     }
 
@@ -410,7 +410,7 @@ Himachal Pradesh Technical University`;
               <p><strong>Registration ID:</strong> <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${registrationData.registrationId}</code></p>
               ${teamInfo}
               <p><strong>Registration Type:</strong> ${registrationData.registrationType === 'individual' ? 'Individual' : 'Team'}</p>
-              ${registrationData.registrationType === 'team' && registrationData.teamSize ? <p><strong>Team Size:</strong> ${registrationData.teamSize} members</p> : ''}
+              ${registrationData.registrationType === 'team' && registrationData.teamSize ? `<p><strong>Team Size:</strong> ${registrationData.teamSize} members</p>` : ''}
               ${eventsInfo}
               ${premiumInfo}
               ${accommodationInfo}
