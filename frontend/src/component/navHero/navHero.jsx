@@ -32,7 +32,7 @@ export default function NavHero() {
                 {/* Action Buttons */}
                 <div className="nav-buttons">
                     <a
-                        href="http://localhost:3001"
+                        href="https://chaitanya-subdomain.vercel.app/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="register-link"
@@ -86,7 +86,7 @@ export default function NavHero() {
                 {/* Mobile Register Button */}
                 <div className="mobile-register-section">
                     <a
-                        href="http://localhost:3001"
+                        href="https://chaitanya-subdomain.vercel.app/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mobile-register-btn"
