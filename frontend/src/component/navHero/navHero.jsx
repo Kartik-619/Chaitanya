@@ -33,8 +33,6 @@ export default function NavHero() {
                 <div className="nav-buttons">
                     <a
                         href="https://chaitanya-subdomain.vercel.app/"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="register-link"
                     >
                         Register
@@ -87,8 +85,6 @@ export default function NavHero() {
                 <div className="mobile-register-section">
                     <a
                         href="https://chaitanya-subdomain.vercel.app/"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="mobile-register-btn"
                         onClick={closeMobileMenu}
                     >

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { API_ENDPOINTS } from '../../config/api';
 
 const PersonalDetails = ({ data, updateData, nextStep }) => {
   const [formData, setFormData] = useState({
@@ -31,60 +30,40 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Name validation
     if (!formData.name?.trim()) {
       toast.error('Please enter your full name');
       return;
     }
-    if (formData.name.trim().length < 3) {
-      toast.error('Name must be at least 3 characters long');
-      return;
-    }
-    if (!/^[a-zA-Z\s]+$/.test(formData.name.trim())) {
-      toast.error('Name should only contain letters and spaces');
-      return;
-    }
     
-    // Email validation
     if (!formData.email?.trim()) {
       toast.error('Please enter your email address');
       return;
     }
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
     
-    // Phone validation
     if (!formData.phone?.trim()) {
       toast.error('Please enter your phone number');
       return;
     }
-    const phoneRegex = /^[6-9]\d{9}$/;
-    const cleanPhone = formData.phone.replace(/\s+/g, '');
-    if (!phoneRegex.test(cleanPhone)) {
-      toast.error('Please enter a valid 10-digit Indian phone number (starting with 6-9)');
-      return;
-    }
     
-    // College validation
     if (!formData.college?.trim()) {
       toast.error('Please enter your college name');
       return;
     }
-    if (formData.college.trim().length < 3) {
-      toast.error('College name must be at least 3 characters long');
-      return;
-    }
     
-    // Registration type validation
     if (!formData.registrationType) {
-      toast.error('Please select registration type (Individual or Team)');
+      toast.error('Please select registration type');
       return;
     }
-    if (!['individual', 'team'].includes(formData.registrationType)) {
-      toast.error('Invalid registration type selected');
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
+      toast.error('Please enter a valid 10-digit Indian phone number');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -93,7 +72,7 @@ const PersonalDetails = ({ data, updateData, nextStep }) => {
     try {
       console.log('📤 Sending registration data:', formData);
       
-      const response = await fetch(API_ENDPOINTS.REGISTER_START, {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { API_ENDPOINTS } from '../../config/api';
 
 const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -53,7 +52,7 @@ const OTPVerification = ({ data, updateData, nextStep, prevStep }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(API_ENDPOINTS.VERIFY_OTP, {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/verify-otp', {
       method: 'POST',
         headers: {
           'Content-Type': 'application/json',

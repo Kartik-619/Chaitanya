@@ -90,9 +90,7 @@ export default function Sidebar() {
               </li>
               <li>
                 <a
-                  href="http://localhost:3001"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="https://chaitanya-subdomain.vercel.app/"
                   onClick={() => setMenu(false)}
                   className="price-font text-4xl md:text-4xl text-white hover:text-shadow-white transition"
                 >

@@ -1,296 +1,254 @@
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const { SESSION_CONFIG } = require('../config/constants');
 
-/**
- * OTP Service - Clean, Professional, Fast
- * Handles OTP generation and email delivery
- */
+// Initialize Nodemailer transporter with better configuration
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    secure: false, // Use TLS
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    },
+    connectionTimeout: 15000, // 15 seconds connection timeout
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    // Better error handling
+    logger: false,
+    debug: false
+});
+
 class OTPService {
     constructor() {
-        this.otpStore = new Map(); // Store OTPs temporarily
-        this.transporter = null;
-        this.initialized = false;
-        this.initializeTransporter();
-    }
-
-    /**
-     * Initialize email transporter with connection pooling
-     */
-    initializeTransporter() {
-        try {
-            this.transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST || 'smtp-relay.sendinblue.com',
-                port: parseInt(process.env.SMTP_PORT) || 587,
-                secure: false,
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                },
-                pool: true,
-                maxConnections: 5,
-                maxMessages: 100,
-                rateDelta: 1000,
-                rateLimit: 5,
-                connectionTimeout: 5000,
-                greetingTimeout: 5000,
-                socketTimeout: 10000
-            });
-
-            this.initialized = true;
-            console.log('✅ OTP Service Initialized');
-        } catch (error) {
-            console.error('❌ OTP Service initialization failed:', error);
-            this.initialized = false;
+        this.initialized = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+        if (!this.initialized) {
+            console.warn('⚠ SMTP configuration not found. OTP emails will not be sent.');
+        } else {
+            console.log('✅ Nodemailer OTP Service Initialized');
         }
+        
+        // Track email failures for fallback
+        this.consecutiveFailures = 0;
+        this.maxConsecutiveFailures = 3;
     }
 
     /**
-     * Generate 6-digit OTP
+     * Generate random 6-digit OTP
      */
     generateOTP() {
-        return crypto.randomInt(100000, 999999).toString();
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
     /**
-     * Store OTP with expiry (10 minutes)
+     * Send OTP via email using Nodemailer with timeout and fallback
      */
-    storeOTP(email, phone, otp) {
-        const key = `${email}-${phone}`;
-        const expiryTime = Date.now() + (10 * 60 * 1000); // 10 minutes
-        
-        this.otpStore.set(key, {
-            otp,
-            createdAt: Date.now(),
-            expiresAt: expiryTime
-        });
+    async sendOTPEmail(email, otp) {
+        // If too many consecutive failures, use simulation mode temporarily
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+            console.warn(`🔄 Too many email failures (${this.consecutiveFailures}), using simulation mode`);
+            console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
+            return true;
+        }
 
-        // Auto-cleanup after expiry
-        setTimeout(() => {
-            this.otpStore.delete(key);
-        }, 10 * 60 * 1000);
+        if (!this.initialized) {
+            console.warn(`📧 [SIMULATED] OTP ${otp} for ${email}`);
+            return true;
+        }
+
+        try {
+            const mailOptions = {
+                from: {
+                    name: 'Chaitanya 2025',
+                    address: process.env.EMAIL_FROM 
+                },
+                to: email,
+                subject: 'Your Verification Code for Chaitanya 2025 Registration',
+                text: `Your OTP for Chaitanya 2025 registration is: ${otp}. This OTP will expire in 10 minutes.`,
+                html: this.generateOTPEmailHTML(otp),
+            };
+
+            // Add timeout to email sending
+            const emailPromise = transporter.sendMail(mailOptions);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Email timeout after 15s')), 15000);
+            });
+
+            const info = await Promise.race([emailPromise, timeoutPromise]);
+            
+            // Reset failure counter on success
+            this.consecutiveFailures = 0;
+            console.log(`✅ OTP email sent to ${email}, Message ID: ${info.messageId}`);
+            return true;
+            
+        } catch (error) {
+            this.consecutiveFailures++;
+            console.error(`❌ Email failed for ${email} (Attempt ${this.consecutiveFailures}/${this.maxConsecutiveFailures}):`, error.message);
+            
+            // Fallback to simulation mode for this request
+            console.warn(`📧 [FALLBACK] OTP ${otp} for ${email}`);
+            return true; // Always return true to not block registration
+        }
     }
 
     /**
-     * Verify OTP
+     * Send OTP via SMS (placeholder for SMS service integration)
      */
-    verifyOTP(email, phone, enteredOTP) {
-        const key = `${email}-${phone}`;
-        const stored = this.otpStore.get(key);
-
-        if (!stored) {
-            return { valid: false, message: 'OTP not found or expired' };
+    async sendOTPSMS(phone, otp) {
+        try {
+            // Placeholder for SMS integration
+            console.log(`📱 SMS OTP for ${phone}: ${otp}`);
+            return true;
+        } catch (error) {
+            console.error('❌ Error sending OTP SMS:', error);
+            return false;
         }
-
-        if (Date.now() > stored.expiresAt) {
-            this.otpStore.delete(key);
-            return { valid: false, message: 'OTP expired' };
-        }
-
-        if (stored.otp !== enteredOTP) {
-            return { valid: false, message: 'Invalid OTP' };
-        }
-
-        // OTP is valid, remove it
-        this.otpStore.delete(key);
-        return { valid: true, message: 'OTP verified successfully' };
     }
 
     /**
-     * Generate clean HTML email template
+     * Generate and send OTP via both email and SMS
      */
-    generateEmailHTML(otp) {
-        return `<!DOCTYPE html>
-<html lang="en">
+    async generateAndSendOTP(email, phone) {
+        try {
+            const otp = this.generateOTP();
+            
+            console.log(`🔐 Generated OTP for ${email}: ${otp}`);
+            
+            // Track email performance
+            const emailStartTime = Date.now();
+            const emailSent = await this.sendOTPEmail(email, otp);
+            const emailTime = Date.now() - emailStartTime;
+            
+            if (emailTime > 5000) {
+                console.warn(`⚠ Email delivery took ${emailTime}ms (slow)`);
+            } else {
+                console.log(`📧 Email delivery took ${emailTime}ms`);
+            }
+            
+            // Send OTP via SMS (optional - don't block on failure)
+            try {
+                await this.sendOTPSMS(phone, otp);
+            } catch (smsError) {
+                console.warn('⚠ SMS delivery failed, continuing...');
+            }
+            
+            // Always return success to not block registration
+            // Email is important but shouldn't prevent registration
+            return {
+                success: true,
+                otp: otp,
+                message: 'OTP generated successfully',
+                emailDelivered: emailSent
+            };
+
+        } catch (error) {
+            console.error('❌ Error in generateAndSendOTP:', error);
+            // Even if everything fails, return success with OTP
+            // Let the user verify OTP manually if needed
+            const fallbackOtp = this.generateOTP();
+            console.warn(`🔄 Using fallback OTP due to error: ${fallbackOtp}`);
+            
+            return {
+                success: true,
+                otp: fallbackOtp,
+                message: 'OTP generated (fallback mode)',
+                emailDelivered: false,
+                fallback: true
+            };
+        }
+    }
+
+    /**
+     * Generate professional OTP email HTML template
+     */
+    generateOTPEmailHTML(otp) {
+        return `
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chaitanya 2025 - OTP Verification</title>
+    <title>OTP Verification - Chaitanya 2025</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background: #f9f9f9; }
+        .header { background: #8B0000; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: white; }
+        .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #8B0000; margin: 20px 0; text-align: center; }
+        .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
+        .warning { background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 15px 0; }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4; padding: 20px 0;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-                    
-                    <!-- Header -->
-                    <tr>
-                        <td style="background-color: #8B0000; padding: 30px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">Chaitanya 2025 - OTP Verification</h1>
-                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">Himachal Pradesh Technical University</p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding: 40px 30px;">
-                            <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Dear Participant,</p>
-                            
-                            <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                                Your One-Time Password (OTP) for Chaitanya 2025 registration is:
-                            </p>
-                            
-                            <!-- OTP Box -->
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td align="center" style="padding: 20px 0;">
-                                        <div style="background-color: #f8f8f8; border: 2px solid #8B0000; border-radius: 8px; padding: 20px; display: inline-block;">
-                                            <p style="color: #8B0000; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${otp}</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <p style="color: #666666; font-size: 14px; text-align: center; margin: 20px 0;">
-                                This OTP is valid for <strong>10 minutes</strong>
-                            </p>
-                            
-                            <!-- Security Notice -->
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
-                                <tr>
-                                    <td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px;">
-                                        <p style="color: #856404; font-size: 14px; margin: 0; line-height: 1.5;">
-                                            <strong>Security Notice:</strong> Do not share this OTP with anyone.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
-                                If you didn't request this OTP, please ignore this email.
-                            </p>
-                            
-                            <p style="color: #666666; font-size: 14px; margin: 20px 0 0 0;">
-                                <strong>Contact:</strong> <a href="mailto:chaitanyahptu@gmail.com" style="color: #8B0000; text-decoration: none;">chaitanyahptu@gmail.com</a>
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f8f8f8; padding: 30px; border-top: 1px solid #dddddd;">
-                            <p style="color: #666666; font-size: 14px; margin: 0 0 10px 0; line-height: 1.6;">
-                                Best regards,<br>
-                                <strong>Chaitanya 2025 Team</strong><br>
-                                Himachal Pradesh Technical University
-                            </p>
-                            
-                            <!-- Event Address -->
-                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #dddddd;">
-                                <p style="color: #666666; font-size: 13px; margin: 0; line-height: 1.6;">
-                                    <strong>Event Address:</strong><br>
-                                    Chaitanya 2025, HPTU<br>
-                                    Gandhi Chowk, Hamirpur<br>
-                                    Himachal Pradesh 177001
-                                </p>
-                            </div>
-                            
-                            <!-- Contact Support -->
-                            <div style="margin-top: 20px; padding: 15px; background-color: #ffffff; border-radius: 6px; border: 1px solid #dddddd;">
-                                <p style="color: #333333; font-size: 14px; margin: 0; font-weight: bold;">Contact Support</p>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                </table>
-            </td>
-        </tr>
-    </table>
+<body>
+    <div class="header">
+        <h1>Chaitanya 2025 - OTP Verification</h1>
+        <p>Himachal Pradesh Technical University</p>
+    </div>
+    
+    <div class="content">
+        <p>Dear Participant,</p>
+        
+        <p>Your One-Time Password (OTP) for Chaitanya 2025 registration is:</p>
+        
+        <div style="background: #ffffff; padding: 20px; text-align: center; margin: 20px 0; border: 2px dashed #8B0000; border-radius: 8px;">
+            <div class="otp-code">${otp}</div>
+            <p>This OTP is valid for 10 minutes</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠ Security Notice:</strong> Do not share this OTP with anyone.
+        </div>
+
+        <p>If you didn't request this OTP, please ignore this email.</p>
+
+        <div class="footer">
+            <p><strong>Contact:</strong> chaitanyahptu@gmail.com</p>
+            <p>Best regards,<br>
+            <strong>Chaitanya 2025 Team</strong><br>
+            Himachal Pradesh Technical University</p>
+        </div>
+    </div>
 </body>
 </html>`;
     }
 
     /**
-     * Generate and send OTP (main method called by controllers)
+     * Verify OTP validity and expiry
      */
-    async generateAndSendOTP(email, phone) {
-        try {
-            // Generate OTP
-            const otp = this.generateOTP();
-            
-            // Store OTP
-            this.storeOTP(email, phone, otp);
-            
-            console.log(`🔐 Generated OTP for ${email}: ${otp}`);
-
-            // Check if transporter is initialized
-            if (!this.initialized || !this.transporter) {
-                console.warn('⚠️ Email service not initialized, OTP generated but not sent');
-                return {
-                    success: true,
-                    otp,
-                    message: 'OTP generated (email service unavailable)',
-                    emailSent: false
-                };
-            }
-
-            // Email options
-            const mailOptions = {
-                from: {
-                    name: 'Chaitanya 2025 - HPTU',
-                    address: process.env.EMAIL_FROM
-                },
-                to: email,
-                subject: 'Your OTP Code - Chaitanya 2025 Registration',
-                html: this.generateEmailHTML(otp),
-                headers: {
-                    'X-Priority': '1',
-                    'X-MSMail-Priority': 'High',
-                    'Importance': 'high',
-                    'Content-Type': 'text/html; charset=UTF-8'
-                }
-            };
-
-            // Send email
-            const startTime = Date.now();
-            await this.transporter.sendMail(mailOptions);
-            const deliveryTime = Date.now() - startTime;
-
-            console.log(`✅ OTP email sent to ${email} in ${deliveryTime}ms`);
-
-            return {
-                success: true,
-                otp,
-                message: 'OTP sent successfully',
-                emailSent: true,
-                deliveryTime
-            };
-
-        } catch (error) {
-            console.error('❌ Error sending OTP email:', error);
-            
-            // Still return success with OTP (fallback mode)
-            const otp = this.generateOTP();
-            this.storeOTP(email, phone, otp);
-            
-            return {
-                success: true,
-                otp,
-                message: 'OTP generated (email delivery failed)',
-                emailSent: false,
-                error: error.message
-            };
+    verifyOTP(storedOTP, enteredOTP, otpCreatedAt) {
+        const now = Date.now();
+        
+        // Check OTP expiry
+        if (now - otpCreatedAt > SESSION_CONFIG.OTP_EXPIRY) {
+            return { valid: false, message: 'OTP has expired. Please request a new one.' };
         }
+        
+        // Check OTP match
+        if (storedOTP !== enteredOTP) {
+            return { valid: false, message: 'Invalid OTP. Please try again.' };
+        }
+        
+        return { valid: true, message: 'OTP verified successfully' };
     }
 
     /**
-     * Cleanup expired OTPs
+     * Reset failure counter (call this when SMTP issues are resolved)
      */
-    cleanupExpiredOTPs() {
-        const now = Date.now();
-        let cleaned = 0;
+    resetFailureCounter() {
+        this.consecutiveFailures = 0;
+        console.log('✅ Email failure counter reset');
+    }
 
-        for (const [key, value] of this.otpStore.entries()) {
-            if (now > value.expiresAt) {
-                this.otpStore.delete(key);
-                cleaned++;
-            }
-        }
-
-        if (cleaned > 0) {
-            console.log(`🧹 Cleaned up ${cleaned} expired OTPs`);
-        }
+    /**
+     * Get service status
+     */
+    getStatus() {
+        return {
+            initialized: this.initialized,
+            consecutiveFailures: this.consecutiveFailures,
+            maxConsecutiveFailures: this.maxConsecutiveFailures,
+            inFallbackMode: this.consecutiveFailures >= this.maxConsecutiveFailures
+        };
     }
 }
 
-// Export singleton instance
+// Export service instance
 module.exports = new OTPService();

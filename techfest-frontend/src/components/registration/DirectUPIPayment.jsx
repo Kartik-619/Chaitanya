@@ -1,4 +1,3 @@
-import { API_ENDPOINTS } from '../../config/api';
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -8,7 +7,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
   const [isCompleted, setIsCompleted] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [upiTransactionId, setUpiTransactionId] = useState(''); // NEW: User's actual UPI transaction ID
-  const [timeRemaining, setTimeRemaining] = useState(0); // No timer - immediate input
+  const [timeRemaining, setTimeRemaining] = useState(60); // 1 minute timer
 
   const verificationInProgress = useRef(false);
   const isMounted = useRef(true);
@@ -64,6 +63,11 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       return;
     }
 
+    if (timeRemaining > 0) {
+      toast.error(`Please wait ${timeRemaining} seconds before verifying`);
+      return;
+    }
+
     if (isCompleted) {
       toast.error('Payment already completed! Do not resubmit.');
       return;
@@ -101,7 +105,7 @@ const DirectUPIPayment = ({ amount, sessionId, onPaymentSuccess, onPaymentFailur
       });
 
       // Send to backend with user's actual UPI transaction ID
-      const verifyResponse = await fetch(API_ENDPOINTS.VERIFY_PAYMENT, {
+      const verifyResponse = await fetch('https://chaitanya-4r5f.onrender.com/api/payment/verify-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

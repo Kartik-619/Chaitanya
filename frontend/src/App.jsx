@@ -2,7 +2,6 @@
 import { BrowserRouter ,Route,Routes} from 'react-router-dom'
 import Home from './pages/home';
 import EventPage from './pages/EventPage';
-import RegisterPage from './pages/RegisterPage';
 
 import Hero from './component/hero';
 
@@ -21,7 +20,6 @@ function App() {
         <Route path="/about" element={<AboutPage/>} />
         <Route path="/events" element={<EventPage/>} />
         <Route path="/contact" element={<ContactPage/>}/>
-        <Route path="/register" element={<RegisterPage/>}/>
     
       </Routes>
     

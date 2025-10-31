@@ -1,4 +1,3 @@
-import { API_ENDPOINTS } from '../../config/api';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -205,7 +204,7 @@ const handleSubmit = async () => {
   const totalAmount = calculateTeamTotal();
   
   try {
-    const response = await fetch(API_ENDPOINTS.SETUP_TEAM, {
+    const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -19,10 +19,10 @@ export default function EventModal({ event, onClose, onBack, activeTab, setActiv
       // Use the parent component's register handler
       onRegister();
     } else {
-      // Fallback: close modal and navigate to techfest-frontend
+      // Fallback: close modal and navigate
       if (onClose) onClose();
       setTimeout(() => {
-        window.open('http://localhost:3001', '_blank');
+        window.location.href = "https://chaitanya-subdomain.vercel.app/";
       }, 100);
     }
   };

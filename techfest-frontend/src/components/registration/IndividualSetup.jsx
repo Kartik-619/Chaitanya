@@ -1,4 +1,3 @@
-import { API_ENDPOINTS } from '../../config/api';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -66,10 +65,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
     const calculatedAmount = calculateTotal();
     
     try {
-      console.log('🔗 API URL:', API_ENDPOINTS.SETUP_INDIVIDUAL);
-      console.log('📤 Sending data:', { sessionId: data.sessionId, prelimEvents: selectedEvents });
-      
-      const response = await fetch(API_ENDPOINTS.SETUP_INDIVIDUAL, {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-individual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,17 +79,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
         }),
       });
 
-      console.log('📥 Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
-        toast.error(`Server error: ${response.status} - ${errorText}`);
-        return;
-      }
-      
       const result = await response.json();
-      console.log('✅ Response data:', result);
 
       if (result.success) {
         updateData({
@@ -109,8 +95,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
         toast.error(result.message || 'Failed to setup individual');
       }
     } catch (error) {
-      console.error('❌ Network error:', error);
-      toast.error(`Network error: ${error.message}`);
+      toast.error('Network error. Please try again.');
     }
   };
 
