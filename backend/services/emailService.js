@@ -151,7 +151,7 @@ class EmailService {
       return ${TEAM_PREFIX}${sequenceNumber};
     }
   }
-
+}
   /**
    * Generate team member IDs (CH25-T1-M1, CH25-T1-M2, etc.)
    */
