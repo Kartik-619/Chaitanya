@@ -78,6 +78,11 @@ const Success = ({ data }) => {
                           data.teamData?.needsAccommodation ||
                           finalRegistration?.needsAccommodation;
 
+  // Check if food was selected
+  const hasFood = data.individualData?.needsFood || 
+                 data.teamData?.needsFood ||
+                 finalRegistration?.needsFood;
+
   return (
     <div className="glass-card p-4 sm:p-6 md:p-8 animate-fade-in text-center">
       {/* Success Icon */}
@@ -244,14 +249,24 @@ const Success = ({ data }) => {
             </div>
           </div>
 
-          {/* Food Info - COMPULSORY */}
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 sm:p-3 mb-3">
-            <div className="flex items-center">
-              <span className="text-green-400">🍛</span>
-              <span className="text-green-400 font-semibold text-sm ml-2">Food Package Included</span>
+          {/* Food Info - OPTIONAL */}
+          {hasFood ? (
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 sm:p-3 mb-3">
+              <div className="flex items-center">
+                <span className="text-green-400">🍛</span>
+                <span className="text-green-400 font-semibold text-sm ml-2">Food Package Included</span>
+              </div>
+              <div className="text-green-300 text-xs mt-1">✅ 3-day food package confirmed</div>
             </div>
-            <div className="text-green-300 text-xs mt-1">✅ 3-day food package confirmed for all participants</div>
-          </div>
+          ) : (
+            <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-2 sm:p-3 mb-3">
+              <div className="flex items-center">
+                <span className="text-gray-400">🚫</span>
+                <span className="text-gray-400 font-semibold text-sm ml-2">No Food Package</span>
+              </div>
+              <div className="text-gray-400 text-xs mt-1">Food package not selected</div>
+            </div>
+          )}
           
           {/* Accommodation Info */}
           {hasAccommodation ? (
@@ -268,7 +283,7 @@ const Success = ({ data }) => {
                 <span className="text-gray-400">🚫</span>
                 <span className="text-gray-400 font-semibold text-sm ml-2">No Accommodation</span>
               </div>
-              <div className="text-gray-400 text-xs mt-1">Only food package included</div>
+              <div className="text-gray-400 text-xs mt-1">No food package included</div>
             </div>
           )}
 
