@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📊 GOOGLE SHEETS SERVICE
  * 
  * This service handles all Google Sheets integration:
@@ -26,8 +26,8 @@ class GoogleSheetsService {
 
     // Google Sheets configuration from environment
     this.spreadsheetId = SHEETS_CONFIG.SPREADSHEET_ID;
-    this.range = 'Registrations!A:X'; // Main registrations sheet range (Columns A-S)
-    this.eventsRange = 'Events Participation!A:M'; // Events participation sheet range (Columns A-J)
+    this.range = 'Registrations!A:Y'; // Main registrations sheet range (Columns A-Y)
+    this.eventsRange = 'Events Participation!A:M'; // Events participation sheet range (Columns A-M)
     this.sheets = null; // Google Sheets API client
     this.initialized = false; // Track if Sheets API is ready
     
@@ -157,9 +157,10 @@ class GoogleSheetsService {
               JSON.stringify(reg.qrData || {}),      // S: QR Data
               reg.isPremium ? 'Yes' : 'No',          // T: Premium Status
               reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-              400,                                   // V: Food Amount ₹400
-              reg.esportsGame || 'N/A',              // W: E-sports Game
-              reg.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
+              reg.needsFood ? 'Yes' : 'No',          // V: Food
+              reg.needsFood ? 400 : 0,               // W: Food Amount
+              reg.esportsGame || 'N/A',              // X: E-sports Game
+              reg.projectBazaar ? 'Yes' : 'No'       // Y: Project Bazaar
             ]);
           } else {
             // Team registration - multiple rows (leader + members)
@@ -187,9 +188,10 @@ class GoogleSheetsService {
               JSON.stringify(reg.qrData || {}),      // S: QR Data
               reg.isPremium ? 'Yes' : 'No',          // T: Premium Status
               reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-              400 * reg.teamSize,                    // V: Food Amount ₹400 × team_size
-              reg.esportsGame || 'N/A',              // W: E-sports Game
-              reg.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
+              reg.needsFood ? 'Yes' : 'No',          // V: Food
+              reg.needsFood ? (400 * reg.teamSize) : 0, // W: Food Amount
+              reg.esportsGame || 'N/A',              // X: E-sports Game
+              reg.projectBazaar ? 'Yes' : 'No'       // Y: Project Bazaar
             ]);
             
             // Team Members rows (each member gets their own row)
@@ -218,9 +220,10 @@ class GoogleSheetsService {
                   JSON.stringify(reg.qrData || {}),    // S: QR Data
                   reg.isPremium ? 'Yes' : 'No',        // T: Premium Status
                   reg.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-                  400,                                 // V: Food Amount ₹400 per member
-                  reg.esportsGame || 'N/A',            // W: E-sports Game
-                  reg.projectBazaar ? 'Yes' : 'No'     // X: Project Bazaar
+                  reg.needsFood ? 'Yes' : 'No',        // V: Food
+                  reg.needsFood ? 400 : 0,             // W: Food Amount per member
+                  reg.esportsGame || 'N/A',            // X: E-sports Game
+                  reg.projectBazaar ? 'Yes' : 'No'     // Y: Project Bazaar
                 ]);
               });
             }
@@ -230,7 +233,7 @@ class GoogleSheetsService {
         // SINGLE API CALL for entire batch (saves 80% API calls)
         await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: 'Registrations!A:X',
+          range: 'Registrations!A:Y',
           valueInputOption: 'RAW', // Don't convert data types
           resource: { values }, // All batch data in one request
         });
@@ -367,9 +370,10 @@ class GoogleSheetsService {
             qrData: row[18] ? JSON.parse(row[18]) : null,
             isPremium: row[19] === 'Yes', // Column T
             needsAccommodation: row[20] === 'Yes', // Column U
-            foodAmount: parseFloat(row[21]) || 0,  // NEW: Column V - Food Amount
-            esportsGame: row[22] || null,          // Column W (shifted from V)
-            projectBazaar: row[23] === 'Yes'       // Column X (shifted from W)
+            needsFood: row[21] === 'Yes',         // Column V - Food
+            foodAmount: parseFloat(row[22]) || 0,  // Column W - Food Amount
+            esportsGame: row[23] || null,          // Column X - E-sports Game
+            projectBazaar: row[24] === 'Yes'       // Column Y - Project Bazaar
           };
 
           console.log(`📝 Processed ${registrationType} registration ${index + 1}:`, personalDetails.name);
@@ -451,9 +455,10 @@ class GoogleSheetsService {
         JSON.stringify(registrationData.qrData || {}),      // S: QR Data
         registrationData.isPremium ? 'Yes' : 'No',          // T: Premium Status
         registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-        400,                                                // V: Food Amount ₹400
-        registrationData.esportsGame || 'N/A',              // W: E-sports Game
-        registrationData.projectBazaar ? 'Yes' : 'No'       // X: Project Bazaar
+        registrationData.needsFood ? 'Yes' : 'No',          // V: Food
+        registrationData.needsFood ? 400 : 0,               // W: Food Amount
+        registrationData.esportsGame || 'N/A',              // X: E-sports Game
+        registrationData.projectBazaar ? 'Yes' : 'No'       // Y: Project Bazaar
       ]);
         } else {
       // Team registration
@@ -480,9 +485,10 @@ class GoogleSheetsService {
         JSON.stringify(registrationData.qrData || {}),      // S
         registrationData.isPremium ? 'Yes' : 'No',          // T
         registrationData.needsAccommodation ? 'Yes' : 'No', // U
-        400 * registrationData.teamSize,                    // V: Food Amount (TOTAL FOR TEAM)
-        registrationData.esportsGame || 'N/A',              // W
-        registrationData.projectBazaar ? 'Yes' : 'No'       // X
+        registrationData.needsFood ? 'Yes' : 'No',          // V: Food
+        registrationData.needsFood ? (400 * registrationData.teamSize) : 0, // W: Food Amount (TOTAL FOR TEAM)
+        registrationData.esportsGame || 'N/A',              // X
+        registrationData.projectBazaar ? 'Yes' : 'No'       // Y
       ]);
 
       // TEAM MEMBERS - ONLY ONCE!
@@ -511,9 +517,10 @@ class GoogleSheetsService {
             JSON.stringify(registrationData.qrData || {}),  // S: QR Data
             registrationData.isPremium ? 'Yes' : 'No',      // T: Premium Status
             registrationData.needsAccommodation ? 'Yes' : 'No', // U: Accommodation
-            400,                                            // V: Food Amount ₹400 per member
-            registrationData.esportsGame || 'N/A',          // W: E-sports Game
-            registrationData.projectBazaar ? 'Yes' : 'No'   // X: Project Bazaar
+            registrationData.needsFood ? 'Yes' : 'No',      // V: Food
+            registrationData.needsFood ? 400 : 0,           // W: Food Amount per member
+            registrationData.esportsGame || 'N/A',          // X: E-sports Game
+            registrationData.projectBazaar ? 'Yes' : 'No'   // Y: Project Bazaar
           ]);
         });
       }
