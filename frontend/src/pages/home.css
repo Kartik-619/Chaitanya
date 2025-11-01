@@ -13,7 +13,7 @@ body {
 
 /* Hero Section */
 .hero-section {
-  height: 110vh;
+  height: 100vh;
   width: 100vw;
   position: relative;
   z-index: 1;
