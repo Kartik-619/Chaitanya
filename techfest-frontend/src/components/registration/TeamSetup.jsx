@@ -12,7 +12,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   
   const [esportsGame, setEsportsGame] = useState('');
   const [projectBazaar, setProjectBazaar] = useState(false);
-  const [needsAccommodation, setNeedsAccommodation] = useState(false); 
+  const [needsAccommodation, setNeedsAccommodation] = useState(false);
+  const [needsFood, setNeedsFood] = useState(false); 
 
   const mainEvents = [
     "Singing",
@@ -182,8 +183,10 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
       total = 0;
   }
 
-  // COMPULSORY food for all team members
-  total += 400 * teamData.teamSize;
+  // OPTIONAL food for all team members
+  if (needsFood) {
+    total += 400 * teamData.teamSize;
+  }
 
   // OPTIONAL accommodation for all team members
   if (needsAccommodation) {
@@ -216,7 +219,8 @@ const handleSubmit = async () => {
         teamMembers: teamData.teamMembers,
         teamSize: teamData.teamSize,
         esportsGame: esportsGame,
-        needsAccommodation: needsAccommodation, // UPDATE: Pass the accommodation choice
+        needsAccommodation: needsAccommodation,
+        needsFood: needsFood, // NEW: Pass the food choice
         isPremium: teamData.isPremium,
         projectBazaar: projectBazaar,
         totalAmount: totalAmount
@@ -231,7 +235,8 @@ const handleSubmit = async () => {
           ...result.teamData,
           totalAmount: totalAmount,
           isPremium: teamData.isPremium,
-          needsAccommodation: needsAccommodation, // UPDATE: Store accommodation choice
+          needsAccommodation: needsAccommodation,
+          needsFood: needsFood, // NEW: Store food choice
           projectBazaar: projectBazaar
         }
       });
@@ -514,16 +519,17 @@ const handleSubmit = async () => {
                 <div>
                   <div className="font-semibold text-white">Team Leader (You)</div>
                   <div className="text-xs text-gray-300">
-                    Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                    Main Event (₹{getIndividualEventFee()})
+                    {needsFood && ' + Food (₹400)'}
                     {needsAccommodation && ' + Accommodation (₹200)'}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-white">
-                    ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                    ₹{getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)}
                   </div>
                   <div className="text-xs text-gray-300">
-                    ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
+                    ₹{getIndividualEventFee()}{needsFood ? ' + ₹400' : ''}{needsAccommodation ? ' + ₹200' : ''}
                   </div>
                 </div>
               </div>
@@ -534,16 +540,17 @@ const handleSubmit = async () => {
                   <div>
                     <div className="font-semibold text-white">Team Member {index + 1}</div>
                     <div className="text-xs text-gray-300">
-                      Main Event (₹{getIndividualEventFee()}) + Food (₹400)
+                      Main Event (₹{getIndividualEventFee()})
+                      {needsFood && ' + Food (₹400)'}
                       {needsAccommodation && ' + Accommodation (₹200)'}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-white">
-                      ₹{getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)}
+                      ₹{getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)}
                     </div>
                     <div className="text-xs text-gray-300">
-                      ₹{getIndividualEventFee()} + ₹400{needsAccommodation ? ' + ₹200' : ''}
+                      ₹{getIndividualEventFee()}{needsFood ? ' + ₹400' : ''}{needsAccommodation ? ' + ₹200' : ''}
                     </div>
                   </div>
                 </div>
@@ -553,7 +560,7 @@ const handleSubmit = async () => {
               <div className="flex justify-between items-center pt-3 border-t border-white/20">
                 <div className="font-bold text-white">Sub-total ({teamData.teamSize} members)</div>
                 <div className="font-bold text-green-400">
-                  ₹{(getIndividualEventFee() + 400 + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
+                  ₹{(getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
                 </div>
               </div>
             </div>
@@ -627,10 +634,16 @@ const handleSubmit = async () => {
           </label>
         </div>
 
-        {/* COMPULSORY Food for Team */}
+        {/* OPTIONAL Food for Team */}
         <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
-          <div className="flex items-center justify-between">
+          <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center space-x-3 sm:space-x-4">
+              <input
+                type="checkbox"
+                checked={needsFood}
+                onChange={(e) => setNeedsFood(e.target.checked)}
+                className="w-5 h-5 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+              />
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-green-400 text-sm sm:text-lg">🍛</span>
               </div>
@@ -639,17 +652,17 @@ const handleSubmit = async () => {
                   Food Package - ₹{400 * teamData.teamSize}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-300">
-                  {teamData.teamSize} members × ₹400 (Compulsory for all)
+                  {teamData.teamSize} members × ₹400 (Optional - select if needed)
                 </div>
               </div>
             </div>
             <div className="text-green-400 font-bold text-base sm:text-lg">
               ₹{400 * teamData.teamSize}
             </div>
-          </div>
+          </label>
         </div>
         
-        {/* OPTIONAL Accommodation for Team - FIXED TEXT */}
+        {/* OPTIONAL Accommodation for Team */}
         <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -692,10 +705,12 @@ const handleSubmit = async () => {
                   <div className="text-gray-300">Event Fee</div>
                   <div className="text-white font-semibold">₹{getIndividualEventFee()} × {teamData.teamSize}</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-gray-300">Food</div>
-                  <div className="text-white font-semibold">₹400 × {teamData.teamSize}</div>
-                </div>
+                {needsFood && (
+                  <div className="text-center">
+                    <div className="text-gray-300">Food</div>
+                    <div className="text-white font-semibold">₹400 × {teamData.teamSize}</div>
+                  </div>
+                )}
                 {needsAccommodation && (
                   <div className="text-center">
                     <div className="text-gray-300">Accommodation</div>
@@ -709,7 +724,7 @@ const handleSubmit = async () => {
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-gray-300">Team Members Sub-total:</span>
                 <span className="text-white font-medium">
-                  ₹{(getIndividualEventFee() + 600) * teamData.teamSize}
+                  ₹{(getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
                 </span>
               </div>
 
