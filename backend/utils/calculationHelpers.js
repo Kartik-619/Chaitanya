@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 🧮 CALCULATION HELPERS
  * 
  * This file contains all calculation and statistics functions:
@@ -16,21 +16,24 @@ const { EVENT_PRICES, calculateTeamTotal } = require('../config/eventPricing');
 const { EVENT_CONFIG } = require('../config/constants');
 
 /**
- * Calculate individual registration amount with premium and accommodation
+ * Calculate individual registration amount with premium, food, and accommodation
  * @param {Array} prelimEvents - List of events selected by individual
  * @param {boolean} isPremium - Whether premium package is selected
  * @param {boolean} needsAccommodation - Whether accommodation is needed
+ * @param {boolean} needsFood - Whether food is needed
  * @returns {number} Total amount to pay
  */
-const calculateIndividualAmount = (prelimEvents, isPremium = false, needsAccommodation = false) => {
+const calculateIndividualAmount = (prelimEvents, isPremium = false, needsAccommodation = false, needsFood = false) => {
   console.log('🧮 Calculating individual amount - NEW PRICING');
   
   const baseAmount = calculateIndividualTotal(prelimEvents);
   let total = baseAmount;
   
-  // COMPULSORY food fee - ₹400 per person
-  total += 400;
-  console.log('💰 Added compulsory food fee: 400');
+  // OPTIONAL food fee - ₹400 per person
+  if (needsFood) {
+    total += 400;
+    console.log('💰 Added optional food fee: 400');
+  }
   
   // OPTIONAL accommodation - ₹200 per person
   if (needsAccommodation) {
@@ -47,18 +50,20 @@ const calculateIndividualAmount = (prelimEvents, isPremium = false, needsAccommo
 };
 
 /**
- * Calculate team registration amount with accommodation AND PREMIUM
+ * Calculate team registration amount with accommodation, food, AND PREMIUM
  */
 
-  const calculateTeamAmount = (mainEvent, teamSize, needsAccommodation = false, esportsGame = null, isPremium = false) => {
+  const calculateTeamAmount = (mainEvent, teamSize, needsAccommodation = false, esportsGame = null, isPremium = false, needsFood = false) => {
   console.log('🧮 Calculating team amount - NEW PRICING');
   
   const baseAmount = calculateTeamTotal(mainEvent, teamSize, esportsGame);
   let total = baseAmount;
   
-  // COMPULSORY food for all team members
-  total += 400 * teamSize;
-  console.log('💰 Added compulsory food for', teamSize, 'members:', 400 * teamSize);
+  // OPTIONAL food for all team members
+  if (needsFood) {
+    total += 400 * teamSize;
+    console.log('💰 Added optional food for', teamSize, 'members:', 400 * teamSize);
+  }
   
   // OPTIONAL accommodation for all team members
   if (needsAccommodation) {
