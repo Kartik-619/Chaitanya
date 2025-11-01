@@ -15,7 +15,6 @@
  * 5. Complete → Save data + send confirmations
  */
 
-
 const RegistrationService = require('../services/registrationService');
 const GoogleSheetsService = require('../services/googleSheetsService');
 const EmailService = require('../services/emailService');
@@ -82,7 +81,7 @@ class RegistrationController {
    */
   async setupIndividual(req, res) {
     try {
-      const { sessionId, prelimEvents, isPremium = false, needsAccommodation = false } = req.body; 
+      const { sessionId, prelimEvents, isPremium = false, needsAccommodation = false, needsFood = false } = req.body; 
       
       if (!sessionId) {
         return res.status(400).json({ success: false, message: 'Session ID is required' });
@@ -99,7 +98,8 @@ class RegistrationController {
         sessionId, 
         prelimEvents, 
         isPremium, 
-        needsAccommodation
+        needsAccommodation,
+        needsFood
       );
 
       res.json({
@@ -112,6 +112,7 @@ class RegistrationController {
           prelimEvents: individualData.prelimEvents,
           isPremium: individualData.isPremium,
           needsAccommodation: individualData.needsAccommodation,
+          needsFood: individualData.needsFood,
           totalAmount: individualData.totalAmount 
         }
       });
@@ -137,7 +138,8 @@ class RegistrationController {
         esportsGame = null,
         needsAccommodation = false,
         isPremium = false, 
-        projectBazaar = false
+        projectBazaar = false,
+        needsFood = false
       } = req.body;
       
       console.log('🔍 [ROUTE DEBUG] Team setup request:', {
@@ -150,7 +152,8 @@ class RegistrationController {
         esportsGame,
         needsAccommodation,
         isPremium,
-        projectBazaar
+        projectBazaar,
+        needsFood
       });
 
       if (!sessionId || !teamName || !mainEvent || !teamSize) {
@@ -198,7 +201,7 @@ class RegistrationController {
         }
       }
 
-      // ✅ FIXED: Pass isPremium parameter to setupTeamDetails
+      // ✅ FIXED: Pass isPremium and needsFood parameters to setupTeamDetails
       const teamData = RegistrationService.setupTeamDetails(
         sessionId, 
         teamName, 
@@ -209,7 +212,8 @@ class RegistrationController {
         esportsGame,
         needsAccommodation,
         isPremium,
-        projectBazaar
+        projectBazaar,
+        needsFood
       );
 
       console.log('✅ [ROUTE DEBUG] Team setup completed:', {
@@ -218,8 +222,9 @@ class RegistrationController {
         teamMembers: teamData.teamMembers.length,
         teamSize: teamData.teamSize,
         esportsGame: teamData.esportsGame,
-        isPremium: teamData.isPremium, // ✅ ADDED: Log premium status
+        isPremium: teamData.isPremium,
         projectBazaar: teamData.projectBazaar,
+        needsFood: teamData.needsFood,
         totalAmount: teamData.totalAmount
       });
 
@@ -238,7 +243,8 @@ class RegistrationController {
           totalAmount: teamData.totalAmount,
           needsAccommodation: teamData.needsAccommodation,
           isPremium: teamData.isPremium, 
-          projectBazaar: teamData.projectBazaar
+          projectBazaar: teamData.projectBazaar,
+          needsFood: teamData.needsFood
         }
       });
 
