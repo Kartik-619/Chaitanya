@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
   const [selectedEvents, setSelectedEvents] = useState([]);
   const [needsAccommodation, setNeedsAccommodation] = useState(false);
+  const [needsFood, setNeedsFood] = useState(false);
 
   const prelimEvents = [
     "Integration Bee",
@@ -45,8 +46,10 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
       total += eventPrices[eventName] || 0;
     });
     
-    // COMPULSORY food fee - ₹400
-    total += 400;
+    // OPTIONAL food fee - ₹400
+    if (needsFood) {
+      total += 400;
+    }
     
     // OPTIONAL accommodation fee - ₹200
     if (needsAccommodation) {
@@ -75,6 +78,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           prelimEvents: selectedEvents,
           isPremium: false,
           needsAccommodation: needsAccommodation,
+          needsFood: needsFood,
           totalAmount: calculatedAmount
         }),
       });
@@ -87,7 +91,8 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
             ...result.individualData,
             totalAmount: calculatedAmount,
             isPremium: false,
-            needsAccommodation: needsAccommodation
+            needsAccommodation: needsAccommodation,
+            needsFood: needsFood
           }
         });
         nextStep();
@@ -152,22 +157,28 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
           </div>
         </div>
 
-        {/* COMPULSORY Food */}
+        {/* OPTIONAL Food */}
         <div className="glass-card p-4 sm:p-6 border-2 border-green-500/30 bg-green-500/5">
-          <div className="flex items-center justify-between space-x-3">
+          <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <input
+                type="checkbox"
+                checked={needsFood}
+                onChange={(e) => setNeedsFood(e.target.checked)}
+                className="w-5 h-5 text-green-600 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+              />
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-green-400 text-sm sm:text-lg">🍛</span>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg truncate">Food Package - ₹400</div>
                 <div className="text-xs sm:text-sm text-gray-300 line-clamp-2">
-                  3-day food package (Compulsory for all participants)
+                  3-day food package (Optional - select if needed)
                 </div>
               </div>
             </div>
             <div className="text-green-400 font-bold text-base sm:text-lg flex-shrink-0">₹400</div>
-          </div>
+          </label>
         </div>
 
         {/* OPTIONAL Accommodation - UPDATED TEXT */}
@@ -207,14 +218,16 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
               </div>
             ))}
             
-            {/* Compulsory Food */}
-            <div className="flex justify-between items-center border-t border-white/20 pt-2">
-              <div>
-                <span className="text-gray-300 text-sm">Food Package</span>
-                <div className="text-xs text-gray-400">Compulsory</div>
+            {/* Optional Food - Only if selected */}
+            {needsFood && (
+              <div className="flex justify-between items-center border-t border-white/20 pt-2">
+                <div>
+                  <span className="text-gray-300 text-sm">Food Package</span>
+                  <div className="text-xs text-gray-400">Optional</div>
+                </div>
+                <span className="text-white font-medium">₹400</span>
               </div>
-              <span className="text-white font-medium">₹400</span>
-            </div>
+            )}
 
             {/* Optional Accommodation - Only if selected */}
             {needsAccommodation && (
