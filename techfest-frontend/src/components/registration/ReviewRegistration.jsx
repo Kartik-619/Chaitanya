@@ -172,20 +172,24 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
               )}
 
               {/* Individual Food & Accommodation */}
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Food Package</span>
-                    <span className="text-white font-medium">₹400</span>
+              {(registrationData?.needsFood || registrationData?.needsAccommodation) && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                  <div className="space-y-2">
+                    {registrationData?.needsFood && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300">Food Package</span>
+                        <span className="text-white font-medium">₹400</span>
+                      </div>
+                    )}
+                    {registrationData?.needsAccommodation && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300">Accommodation</span>
+                        <span className="text-white font-medium">₹200</span>
+                      </div>
+                    )}
                   </div>
-                  {registrationData?.needsAccommodation && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Accommodation</span>
-                      <span className="text-white font-medium">₹200</span>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
               {/* All Events Included (Premium) */}
               {registrationData?.isPremium && (
@@ -285,10 +289,12 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 ))}
 
                 {/* Food Charge */}
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Food Package</span>
-                  <span className="text-white">₹400</span>
-                </div>
+                {registrationData?.needsFood && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400">Food Package</span>
+                    <span className="text-white">₹400</span>
+                  </div>
+                )}
 
                 {/* Accommodation Charge */}
                 {registrationData?.needsAccommodation && (
@@ -309,10 +315,12 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 </div>
                 
                 {/* Food Breakdown */}
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 ml-4">Food Package</span>
-                  <span className="text-white">₹{400 * (registrationData?.teamSize || 1)}</span>
-                </div>
+                {registrationData?.needsFood && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 ml-4">Food Package</span>
+                    <span className="text-white">₹{400 * (registrationData?.teamSize || 1)}</span>
+                  </div>
+                )}
                 
                 {/* Accommodation Breakdown */}
                 {registrationData?.needsAccommodation && (
