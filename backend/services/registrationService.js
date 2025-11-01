@@ -10,7 +10,7 @@
  * 🔒 SECURITY FEATURES:
  * - OTP rate limiting and expiry
  * - Payment lock system to prevent race conditions
- * - Session cleanup and memory management 
+ * - Session cleanup and memory management
  * - Data validation and sanitization
  */
 
@@ -19,7 +19,7 @@ const { calculateIndividualAmount, calculateTeamAmount } = require('../utils/cal
 const { VALIDATION_CONFIG } = require('../config/validationConfig');
 const { TEAM_SIZE_RULES, E_SPORTS_GAMES, EVENT_CONFIG } = require('../config/constants');
 const crypto = require('crypto');
- 
+
 class RegistrationService {
   constructor() {
     this.registrationSessions = new Map();
@@ -111,39 +111,49 @@ class RegistrationService {
    * Clean up old sessions and payment locks
    */
   cleanupMemory() {
-    const now = Date.now();
-    let cleanedSessions = 0;
-    let cleanedLocks = 0;
-    let cleanedTrackers = 0;
-    
-    // Clean old sessions (> 2 hours)
-    for (const [sessionId, session] of this.registrationSessions.entries()) {
-      const sessionAge = now - new Date(session.createdAt).getTime();
-      if (sessionAge > 2 * 60 * 60 * 1000) {
-        this.registrationSessions.delete(sessionId);
-        cleanedSessions++;
-      }
-    }
-    
-    // Clean old payment locks (> 5 minutes)
-    for (const [sessionId, lockTime] of this.paymentLocks.entries()) {
-      if (now - lockTime > 5 * 60 * 1000) {
-        this.paymentLocks.delete(sessionId);
-        cleanedLocks++;
-      }
-    }
-
-    // Clean old PDF delivery trackers (> 7 days)
-     for (const [registrationId, tracker] of this.pdfDeliveryTracker.entries()) {
-        if (tracker.delivered && now - new Date(tracker.deliveredAt).getTime() > 7 * 24 * 60 * 60 * 1000) {
-          this.pdfDeliveryTracker.delete(registrationId);
-          cleanedTrackers++;
+    try {
+      const now = Date.now();
+      let cleanedSessions = 0;
+      let cleanedLocks = 0;
+      let cleanedTrackers = 0;
+      
+      // Clean old sessions (> 2 hours)
+      if (this.registrationSessions && this.registrationSessions.entries) {
+        for (const [sessionId, session] of this.registrationSessions.entries()) {
+          const sessionAge = now - new Date(session.createdAt).getTime();
+          if (sessionAge > 2 * 60 * 60 * 1000) {
+            this.registrationSessions.delete(sessionId);
+            cleanedSessions++;
+          }
         }
       }
-    
-    // Include cleanedTrackers
-    if (cleanedSessions > 0 || cleanedLocks > 0 || cleanedTrackers > 0) {
-      console.log(`🧹 Memory cleanup: ${cleanedSessions} sessions, ${cleanedLocks} locks, ${cleanedTrackers} trackers removed`);
+      
+      // Clean old payment locks (> 5 minutes)
+      if (this.paymentLocks && this.paymentLocks.entries) {
+        for (const [sessionId, lockTime] of this.paymentLocks.entries()) {
+          if (now - lockTime > 5 * 60 * 1000) {
+            this.paymentLocks.delete(sessionId);
+            cleanedLocks++;
+          }
+        }
+      }
+
+      // Clean old PDF delivery trackers (> 7 days)
+      if (this.pdfDeliveryTracker && this.pdfDeliveryTracker.entries) {
+        for (const [registrationId, tracker] of this.pdfDeliveryTracker.entries()) {
+          if (tracker && tracker.delivered && now - new Date(tracker.deliveredAt).getTime() > 7 * 24 * 60 * 60 * 1000) {
+            this.pdfDeliveryTracker.delete(registrationId);
+            cleanedTrackers++;
+          }
+        }
+      }
+      
+      // Include cleanedTrackers
+      if (cleanedSessions > 0 || cleanedLocks > 0 || cleanedTrackers > 0) {
+        console.log(`🧹 Memory cleanup: ${cleanedSessions} sessions, ${cleanedLocks} locks, ${cleanedTrackers} trackers removed`);
+      }
+    } catch (error) {
+      console.error('❌ Session cleanup error:', error.message);
     }
   }
 
@@ -184,7 +194,8 @@ class RegistrationService {
         createdAt: new Date().toISOString(),
         paymentStatus: 'pending',
         isPremium: false,
-        needsAccommodation: false
+        needsAccommodation: false,
+        needsFood: false
       };
       
       this.registrationSessions.set(sessionId, sessionData);
@@ -199,9 +210,9 @@ class RegistrationService {
 
 
   /**
-   * Setup individual events and calculate amount with premium and accommodation
+   * Setup individual events and calculate amount with premium, food, and accommodation
    */
-  setupIndividualEvents(sessionId, prelimEvents, isPremium = false, needsAccommodation = false) {
+  setupIndividualEvents(sessionId, prelimEvents, isPremium = false, needsAccommodation = false, needsFood = false) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
     if (session.registrationType !== 'individual') throw new Error('Invalid registration type');
@@ -211,18 +222,20 @@ class RegistrationService {
       throw new Error('Prelim events array is required');
     }
 
-    // Calculate amount with premium and accommodation
-    const totalAmount = calculateIndividualAmount(prelimEvents, isPremium, needsAccommodation);
+    // Calculate amount with premium, food, and accommodation
+    const totalAmount = calculateIndividualAmount(prelimEvents, isPremium, needsAccommodation, needsFood);
     
     console.log('💰 DEBUG - Individual Events:', prelimEvents);
     console.log('💰 DEBUG - Premium:', isPremium);
     console.log('💰 DEBUG - Accommodation:', needsAccommodation);
+    console.log('💰 DEBUG - Food:', needsFood);
     console.log('💰 DEBUG - Final Amount:', totalAmount);
 
     session.prelimEvents = prelimEvents;
     session.totalAmount = totalAmount;
     session.isPremium = isPremium;
     session.needsAccommodation = needsAccommodation;
+    session.needsFood = needsFood;
     session.currentPhase = 'individual_setup';
     
     this.registrationSessions.set(sessionId, session);
@@ -232,14 +245,15 @@ class RegistrationService {
       prelimEvents: session.prelimEvents,
       totalAmount: session.totalAmount,
       isPremium: session.isPremium,
-      needsAccommodation: session.needsAccommodation
+      needsAccommodation: session.needsAccommodation,
+      needsFood: session.needsFood
     };
   }
 
   /**
    * Setup team details with validation and member management
    */
-  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false, projectBazaar = false) {
+  setupTeamDetails(sessionId, teamName, mainEvent, teamMembers, leaderPrelimEvents = [], teamSize, esportsGame = null, needsAccommodation = false, isPremium = false, projectBazaar = false, needsFood = false) {
     const session = this.registrationSessions.get(sessionId);
     if (!session) throw new Error('Session not found');
     if (session.registrationType !== 'team') throw new Error('Invalid registration type');
@@ -253,7 +267,8 @@ class RegistrationService {
       esportsGame,
       needsAccommodation,
       isPremium,
-      projectBazaar
+      projectBazaar,
+      needsFood
     });
 
     // Validate main event
@@ -292,8 +307,8 @@ class RegistrationService {
       }
     }
 
-    // Calculate team amount with accommodation
-    const totalAmount = calculateTeamAmount(mainEvent, totalTeamSize, needsAccommodation, esportsGame, isPremium);
+    // Calculate team amount with accommodation and food
+    const totalAmount = calculateTeamAmount(mainEvent, totalTeamSize, needsAccommodation, esportsGame, isPremium, needsFood);
     
     session.teamData = {
       teamName: teamName.trim().substring(0, 50), 
@@ -309,7 +324,8 @@ class RegistrationService {
     };
     session.totalAmount = totalAmount;
     session.needsAccommodation = needsAccommodation;
-    session.isPremium = isPremium; 
+    session.isPremium = isPremium;
+    session.needsFood = needsFood;
     session.currentPhase = 'team_setup';
     
     this.registrationSessions.set(sessionId, session);
@@ -324,7 +340,8 @@ class RegistrationService {
       totalAmount: session.totalAmount,
       needsAccommodation: session.needsAccommodation,
       isPremium: session.isPremium,
-      projectBazaar: session.teamData.projectBazaar
+      projectBazaar: session.teamData.projectBazaar,
+      needsFood: session.needsFood
     };
   }
 
@@ -470,6 +487,7 @@ class RegistrationService {
         totalAmount: session.totalAmount,
         isPremium: session.isPremium,
         needsAccommodation: session.needsAccommodation,
+        needsFood: session.needsFood,
         currentPhase: 'review',
         paymentStatus: session.paymentStatus
       };
@@ -484,6 +502,7 @@ class RegistrationService {
         esportsGame: session.teamData.esportsGame,
         totalAmount: session.totalAmount,
         needsAccommodation: session.needsAccommodation,
+        needsFood: session.needsFood,
         currentPhase: 'review',
         paymentStatus: session.paymentStatus
       };
@@ -501,9 +520,10 @@ class RegistrationService {
   const transactionId = paymentResult.paymentId || paymentResult.paymentDetails?.transactionId;
   const orderId = paymentResult.orderId || paymentResult.paymentDetails?.orderId;
 
-  // ✅ CRITICAL FIX: Extract premium and accommodation from session
+  // ✅ CRITICAL FIX: Extract premium, accommodation, and food from session
   const isPremium = session.isPremium || false;
   const needsAccommodation = session.needsAccommodation || false;
+  const needsFood = session.needsFood || false;
 
   let finalRegistration;
 
@@ -515,6 +535,7 @@ class RegistrationService {
       prelimEvents: session.prelimEvents,
       isPremium: isPremium,
       needsAccommodation: needsAccommodation,
+      needsFood: needsFood,
       paymentDetails: {
         transactionId: transactionId,
         orderId: orderId,
@@ -550,6 +571,7 @@ class RegistrationService {
       esportsGame: session.teamData.esportsGame,
       isPremium: isPremium,
       needsAccommodation: needsAccommodation,
+      needsFood: needsFood,
       projectBazaar: session.teamData.projectBazaar,
       paymentDetails: {
         transactionId: transactionId,
