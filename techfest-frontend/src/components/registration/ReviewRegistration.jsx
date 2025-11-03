@@ -28,7 +28,8 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     "Polymath": 149,
     "Debate": 99,
     "Two Minute Manager": 99,
-    "Capture The Flag":0
+    "Capture The Flag": 0,
+    "Pitch High": 99
   };
 
   // Calculate total amount based on actual stored data
@@ -73,17 +74,29 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     }
   };
 
-  // Calculate team breakdown
+  // Calculate team breakdown - FIXED VERSION
   const getTeamBreakdown = () => {
     if (!isIndividual && registrationData) {
       const basePrice = teamEventPrices[registrationData.mainEvent] || 0;
       const teamSize = registrationData.teamSize || 1;
+      const mainEvent = registrationData.mainEvent;
       
-      return {
-        base: basePrice * teamSize,
-        additional: 0,
-        description: `${teamSize} members × ₹${basePrice}`
-      };
+      // Apply team pricing for Singing/Dance with more than 2 members
+      const isTeamPricing = (mainEvent === 'Singing' || mainEvent === 'Dance') && teamSize > 2;
+      
+      if (isTeamPricing) {
+        return {
+          base: 199, // Flat team fee
+          additional: 0,
+          description: `Flat team fee for ${teamSize} members`
+        };
+      } else {
+        return {
+          base: basePrice * teamSize,
+          additional: 0,
+          description: `${teamSize} members × ₹${basePrice}`
+        };
+      }
     }
     return null;
   };
