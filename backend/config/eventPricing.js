@@ -32,6 +32,7 @@ const EVENT_PRICES = {
   "Accurate Prediction_team": 199,
   "Polymath_team": 149,
   "Capture The Flag":0,
+  "Pitch High":99,
   
   // Fixed pricing
   "E-sports_team": 149

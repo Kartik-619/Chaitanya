@@ -65,7 +65,8 @@ const EVENT_CONFIG = {
     "Jack of Hearts",
     "Singing",
     "Dancing",
-    "Project Bazaar"
+    "Project Bazaar",
+    "Pitch High"
   ],
   
   // Team events
@@ -78,7 +79,8 @@ const EVENT_CONFIG = {
     "Polymath",
     "Debate",
     "Two Minute Manager",
-    "Capture The Flag"
+    "Capture The Flag",
+     "Pitch High"
   ],
   
   // Premium settings

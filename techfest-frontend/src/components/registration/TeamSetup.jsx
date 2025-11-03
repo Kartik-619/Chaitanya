@@ -24,7 +24,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Polymath",
     "Debate",
     "Two Minute Manager",
-    "Capture The Flag"
+    "Capture The Flag",
+    "Pitch High"
   ];
 
   // Team size rules
@@ -37,7 +38,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Polymath": { min: 2, max: 4 },
     "Debate": { min: 2, max: 2 },
     "Capture The Flag": { min: 2, max: 4},
-    "Two Minute Manager": { min: 2, max: 2 }
+    "Two Minute Manager": { min: 2, max: 2 },
+    "Pitch High":{min:1,max:3}
   };
 
   // Event pricing
@@ -50,7 +52,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Dance": 99,
     "Debate": 99,
     "Capture The Flag":0,
-    "Two Minute Manager": 99
+    "Two Minute Manager": 99,
+    "Pitch High":99
   };
 
   const getEventFee = () => {
@@ -180,6 +183,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     case 'Dance':
     case 'Debate':
     case 'Two Minute Manager':
+    case 'Pitch High':
       total = 99 * teamData.teamSize;
       break;
     default:
@@ -188,12 +192,12 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
 
   // OPTIONAL food for all team members
   if (needsFood) {
-    total += 400 * teamData.teamSize;
+    total += 300 * teamData.teamSize;
   }
 
   // OPTIONAL accommodation for all team members
   if (needsAccommodation) {
-    total += 200 * teamData.teamSize;
+    total += 300 * teamData.teamSize;
   }
 
   // Add premium if selected

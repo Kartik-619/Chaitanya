@@ -28,6 +28,7 @@ const EVENT_PRICES = {
   'Jack of Hearts': 399,
   'Singing': 99,
   'Dancing': 99,
+ 
 
   // Team Events
   'Singing Team': 99,
@@ -39,7 +40,8 @@ const EVENT_PRICES = {
   'Reverse Engineering Team': 199,
   'Retro Theming Team': 199,
   'Debate Team': 199,
-  'Two Minute Manager Team': 149
+  'Two Minute Manager Team': 149,
+  'Pitch High':0,
 };
 
 class AdminController {
