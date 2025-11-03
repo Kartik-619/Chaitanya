@@ -23,7 +23,8 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "E-sports",
     "Polymath",
     "Debate",
-    "Two Minute Manager"
+    "Two Minute Manager",
+    "Capture The Flag"
   ];
 
   // Team size rules
