@@ -165,42 +165,45 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   const calculateTeamTotal = () => {
   let total = 0;
   
-  // Base pricing logic (unchanged)
-  switch (teamData.mainEvent) {
-    case 'Hackathon':
-      total = 99 * teamData.teamSize;
-      break;
-    case 'Accurate Prediction':
-      total = 199 * teamData.teamSize;
-      break;
-    case 'Polymath':
-      total = 149 * teamData.teamSize;
-      break;
-    case 'E-sports':
-      total = 149 * teamData.teamSize;
-      break;
-    case 'Singing':
-    case 'Dance':
-    case 'Debate':
-    case 'Two Minute Manager':
-    case 'Pitch High':
-      total = 99 * teamData.teamSize;
-      break;
-    default:
-      total = 0;
+  if ((teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2) {
+    total = 199; // Flat team fee
+  } else {
+    // Regular per-person pricing for all other cases
+    switch (teamData.mainEvent) {
+      case 'Hackathon':
+        total = 99 * teamData.teamSize;
+        break;
+      case 'Accurate Prediction':
+        total = 199 * teamData.teamSize;
+        break;
+      case 'Polymath':
+        total = 149 * teamData.teamSize;
+        break;
+      case 'E-sports':
+        total = 149 * teamData.teamSize;
+        break;
+      case 'Singing':
+      case 'Dance':
+      case 'Debate':
+      case 'Two Minute Manager':
+        total = 99 * teamData.teamSize;
+        break;
+      default:
+        total = 0;
+    }
   }
 
-  // OPTIONAL food for all team members
+  // OPTIONAL food for all team members (always per-person)
   if (needsFood) {
-    total += 300 * teamData.teamSize;
+    total += 400 * teamData.teamSize;
   }
 
-  // OPTIONAL accommodation for all team members
+  // OPTIONAL accommodation for all team members (always per-person)
   if (needsAccommodation) {
-    total += 300 * teamData.teamSize;
+    total += 200 * teamData.teamSize;
   }
 
-  // Add premium if selected
+  // Add premium if selected (one-time team fee)
   if (teamData.isPremium) {
     total += 200;
   }
@@ -208,6 +211,10 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   return total;
 };
 
+const isTeamPricing = () => {
+  return (teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2;
+};
+  
 const handleSubmit = async () => {
   if (!validateForm()) return;
 
@@ -268,6 +275,9 @@ const handleSubmit = async () => {
   };
 
   const getIndividualEventFee = () => {
+    if ((teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2) {
+      return 0; // Event fee is covered by team price
+    }
     return eventPricing[teamData.mainEvent] || 0;
   };
 
@@ -513,67 +523,67 @@ const handleSubmit = async () => {
           </div>
         )}
 
-        {/* Individual Member Pricing Breakdown - FIXED */}
-        {teamData.mainEvent && (
-          <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
-            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
-              Individual Member Breakdown
-            </h3>
-            
-            <div className="space-y-3 sm:space-y-4">
-              {/* Team Leader */}
-              <div className="flex justify-between items-center py-2 border-b border-white/10">
-                <div>
-                  <div className="font-semibold text-white">Team Leader (You)</div>
-                  <div className="text-xs text-gray-300">
-                    Main Event (₹{getIndividualEventFee()})
-                    {needsFood && ' + Food (₹400)'}
-                    {needsAccommodation && ' + Accommodation (₹200)'}
+        {/* Individual Member Pricing Breakdown - UPDATED FOR TEAM PRICING */}
+          {teamData.mainEvent && (
+            <div className="glass-card p-4 sm:p-6 border-2 border-blue-500/30 bg-blue-500/5">
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 text-center">
+                {isTeamPricing() ? 'Team Pricing Breakdown' : 'Individual Member Breakdown'}
+              </h3>
+              
+              {isTeamPricing() && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                  <div className="text-yellow-300 text-sm text-center font-semibold">
+                    🎉 Special Team Pricing! Flat ₹199 for entire team ({teamData.teamSize} members)
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-white">
-                    ₹{getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)}
-                  </div>
-                  <div className="text-xs text-gray-300">
-                    ₹{getIndividualEventFee()}{needsFood ? ' + ₹400' : ''}{needsAccommodation ? ' + ₹200' : ''}
-                  </div>
-                </div>
-              </div>
-        
-              {/* Team Members */}
-              {teamData.teamMembers.map((_, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b border-white/10">
-                  <div>
-                    <div className="font-semibold text-white">Team Member {index + 1}</div>
-                    <div className="text-xs text-gray-300">
-                      Main Event (₹{getIndividualEventFee()})
-                      {needsFood && ' + Food (₹400)'}
-                      {needsAccommodation && ' + Accommodation (₹200)'}
+              )}
+              
+              <div className="space-y-3 sm:space-y-4">
+                {/* Team Event Fee Row - Only show for team pricing */}
+                {isTeamPricing() && (
+                  <div className="flex justify-between items-center py-3 bg-yellow-500/5 rounded-lg px-4 border border-yellow-500/20">
+                    <div className="font-semibold text-yellow-300">Team Event Fee</div>
+                    <div className="text-right">
+                      <div className="font-bold text-yellow-300 text-lg">₹199</div>
+                      <div className="text-xs text-yellow-200">Flat fee for {teamData.teamSize} members</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-white">
-                      ₹{getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)}
+                )}
+          
+                {/* Individual Members */}
+                {Array.from({ length: teamData.teamSize }).map((_, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-white/10">
+                    <div>
+                      <div className="font-semibold text-white">
+                        {index === 0 ? 'Team Leader (You)' : `Team Member ${index}`}
+                      </div>
+                      <div className="text-xs text-gray-300">
+                        {!isTeamPricing() && `Main Event (₹${getIndividualEventFee()})`}
+                        {isTeamPricing() && 'Main Event (Included in team fee)'}
+                        {needsFood && ' + Food (₹400)'}
+                        {needsAccommodation && ' + Accommodation (₹200)'}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-300">
-                      ₹{getIndividualEventFee()}{needsFood ? ' + ₹400' : ''}{needsAccommodation ? ' + ₹200' : ''}
+                    <div className="text-right">
+                      <div className="font-bold text-white">
+                        ₹{isTeamPricing() 
+                          ? (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)
+                          : getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)
+                        }
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-        
-              {/* Total Individual */}
-              <div className="flex justify-between items-center pt-3 border-t border-white/20">
-                <div className="font-bold text-white">Sub-total ({teamData.teamSize} members)</div>
-                <div className="font-bold text-green-400">
-                  ₹{(getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
+                ))}
+          
+                {/* Total */}
+                <div className="flex justify-between items-center pt-3 border-t border-white/20">
+                  <div className="font-bold text-white">Total Amount</div>
+                  <div className="font-bold text-green-400 text-lg">₹{calculateTeamTotal()}</div>
                 </div>
               </div>
             </div>
-          </div>
-        )} 
-
+          )}
+        
         {/* Premium Package Option */}
         <div className="glass-card p-4 sm:p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
           <label className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 cursor-pointer group">
@@ -731,7 +741,10 @@ const handleSubmit = async () => {
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-gray-300">Team Members Sub-total:</span>
                 <span className="text-white font-medium">
-                  ₹{(getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize}
+                  ₹{isTeamPricing() 
+                    ? 199 + ((needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize
+                    : (getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize
+                  }
                 </span>
               </div>
 
