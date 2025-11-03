@@ -27,7 +27,8 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     "E-sports": 149,
     "Polymath": 149,
     "Debate": 99,
-    "Two Minute Manager": 99
+    "Two Minute Manager": 99,
+    "Capture The Flag":0
   };
 
   // Calculate total amount based on actual stored data
