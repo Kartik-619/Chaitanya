@@ -46,7 +46,8 @@ const TEAM_SIZE_RULES = {
   "E-sports": { min: 4, max: 4 }, // Fixed 4 members
   "Polymath": { min: 2, max: 4 },
   "Debate": { min: 2, max: 2 }, // Fixed 2 members
-  "Two Minute Manager": { min: 2, max: 2 } // Fixed 2 members
+  "Two Minute Manager": { min: 2, max: 2 }, // Fixed 2 members,
+  "Capture the Flag": { min: 2, max: 4 }
 };
 
 // E-sports games available
@@ -76,7 +77,8 @@ const EVENT_CONFIG = {
     "E-sports",
     "Polymath",
     "Debate",
-    "Two Minute Manager"
+    "Two Minute Manager",
+    "Capture The Flag"
   ],
   
   // Premium settings

@@ -35,6 +35,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "E-sports": { min: 4, max: 5 },
     "Polymath": { min: 2, max: 4 },
     "Debate": { min: 2, max: 2 },
+    "Capture The Flag": { min: 2, max: 4},
     "Two Minute Manager": { min: 2, max: 2 }
   };
 
@@ -47,6 +48,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     "Singing": 99,
     "Dance": 99,
     "Debate": 99,
+    "Capture The Flag":0,
     "Two Minute Manager": 99
   };
 
