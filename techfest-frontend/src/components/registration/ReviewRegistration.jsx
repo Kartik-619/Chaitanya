@@ -320,7 +320,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
               </>
             )}
 
-            {/* Team Registration Breakdown */}
+            {/* Team Registration Breakdown - UPDATED */}
             {!isIndividual && teamBreakdown && (
               <>
                 <div className="flex justify-between items-center text-sm">
@@ -328,26 +328,28 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                   <span className="text-white">₹{teamBreakdown.base}</span>
                 </div>
                 
+                {/* Team Pricing Notice */}
+                {teamBreakdown.base === 199 && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 mb-2">
+                    <div className="text-yellow-400 text-xs text-center">
+                      🎉 Special Team Pricing - Flat ₹199 for {registrationData.teamSize} members
+                    </div>
+                  </div>
+                )}
+                
                 {/* Food Breakdown */}
                 {registrationData?.needsFood && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 ml-4">Food Package</span>
-                    <span className="text-white">₹{400 * (registrationData?.teamSize || 1)}</span>
+                    <span className="text-gray-400 ml-4">Food Package ({registrationData.teamSize} members)</span>
+                    <span className="text-white">₹{400 * (registrationData.teamSize || 1)}</span>
                   </div>
                 )}
                 
                 {/* Accommodation Breakdown */}
                 {registrationData?.needsAccommodation && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 ml-4">Accommodation</span>
-                    <span className="text-white">₹{200 * (registrationData?.teamSize || 1)}</span>
-                  </div>
-                )}
-                
-                {teamBreakdown.additional > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 ml-4">Additional members</span>
-                    <span className="text-white">₹{teamBreakdown.additional}</span>
+                    <span className="text-gray-400 ml-4">Accommodation ({registrationData.teamSize} members)</span>
+                    <span className="text-white">₹{200 * (registrationData.teamSize || 1)}</span>
                   </div>
                 )}
                 
