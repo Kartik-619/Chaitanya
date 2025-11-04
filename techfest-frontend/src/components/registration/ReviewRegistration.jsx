@@ -6,7 +6,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
   const registrationData = isIndividual ? data.individualData : data.teamData;
 
   // Pricing constants
-  const premiumPrice = 49;
+  const premiumPrice = 0;
   const foodPrice = 300;
   const accommodationPrice = 300;
 
@@ -156,7 +156,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                       <span className="text-yellow-400 font-semibold">🌟 Premium Package</span>
                       <div className="text-xs text-yellow-300 mt-1">Access to all individual events</div>
                     </div>
-                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
+                    <span className="text-green-400 font-bold">FREE</span>
                   </div>
                 </div>
               )}
@@ -244,7 +244,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                         All {registrationData?.teamSize} team members get access to ALL individual events
                       </div>
                     </div>
-                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
+                    <span className="text-green-400 font-bold">FREE</span>
                   </div>
                   <div className="text-yellow-300 text-xs mt-2">
                     ✅ Integration Bee, Human vs AI, Retro Theming, Prompt Engineering, Reverse Engineering, Jack of Hearts, Singing, Dancing
@@ -281,7 +281,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.isPremium && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Premium Package</span>
-                    <span className="text-white font-medium">₹49</span>
+                    <span className="text-white font-medium">₹0</span>
                   </div>
                 )}
                 
@@ -348,7 +348,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.isPremium && (
                   <div className="flex justify-between items-center text-sm bg-yellow-500/10 p-2 rounded">
                     <span className="text-yellow-400">Premium Package</span>
-                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
+                    <span className="text-green-400 font-bold">FREE</span>
                   </div>
                 )}
 
