@@ -5,31 +5,36 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
   const isIndividual = data.registrationType === 'individual';
   const registrationData = isIndividual ? data.individualData : data.teamData;
 
+  // Pricing constants
+  const premiumPrice = 49;
+  const foodPrice = 300;
+  const accommodationPrice = 300;
+
   // Event prices for display
   const eventPrices = {
-    "Integration Bee": 99,
-    "Human vs AI": 99,
-    "Retro Theming": 99,
-    "Prompt Engineering": 99,
-    "Reverse Engineering": 99,
-    "Jack of Hearts": 99,
-    "Singing": 99,
-    "Dancing": 99,
+    "Integration Bee": 0,
+    "Human vs AI": 0,
+    "Retro Theming": 0,
+    "Prompt Engineering": 0,
+    "Reverse Engineering": 0,
+    "Jack of Hearts": 0,
+    "Singing": 0,
+    "Dancing": 0,
     "Project Bazaar": 0
   };
 
   // Team event base prices
   const teamEventPrices = {
-    "Singing": 99,
-    "Dance": 99,
-    "Hackathon": 99,
-    "Accurate Prediction": 199,
-    "E-sports": 149,
-    "Polymath": 149,
-    "Debate": 99,
-    "Two Minute Manager": 99,
+    "Singing": 0,
+    "Dance": 0,
+    "Hackathon": 0,
+    "Accurate Prediction": 0,
+    "E-sports": 0,
+    "Polymath": 0,
+    "Debate": 0,
+    "Two Minute Manager": 0,
     "Capture The Flag": 0,
-    "Pitch High": 99
+    "Pitch High": 0
   };
 
   // Calculate total amount based on actual stored data
@@ -84,19 +89,12 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
       // Apply team pricing for Singing/Dance with more than 2 members
       const isTeamPricing = (mainEvent === 'Singing' || mainEvent === 'Dance') && teamSize > 2;
       
-      if (isTeamPricing) {
-        return {
-          base: 199, // Flat team fee
-          additional: 0,
-          description: `Flat team fee for ${teamSize} members`
-        };
-      } else {
-        return {
-          base: basePrice * teamSize,
-          additional: 0,
-          description: `${teamSize} members × ₹${basePrice}`
-        };
-      }
+      // All events are free
+      return {
+        base: 0,
+        additional: 0,
+        description: `Free event for ${teamSize} members`
+      };
     }
     return null;
   };
@@ -165,7 +163,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                       <span className="text-yellow-400 font-semibold">🌟 Premium Package</span>
                       <div className="text-xs text-yellow-300 mt-1">Access to all individual events</div>
                     </div>
-                    <span className="text-yellow-400 font-bold">₹200</span>
+                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
                   </div>
                 </div>
               )}
@@ -192,13 +190,13 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                     {registrationData?.needsFood && (
                       <div className="flex justify-between items-center">
                         <span className="text-gray-300">Food Package</span>
-                        <span className="text-white font-medium">₹400</span>
+                        <span className="text-white font-medium">₹{foodPrice}</span>
                       </div>
                     )}
                     {registrationData?.needsAccommodation && (
                       <div className="flex justify-between items-center">
                         <span className="text-gray-300">Accommodation</span>
-                        <span className="text-white font-medium">₹200</span>
+                        <span className="text-white font-medium">₹{accommodationPrice}</span>
                       </div>
                     )}
                   </div>
@@ -253,7 +251,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                         All {registrationData?.teamSize} team members get access to ALL individual events
                       </div>
                     </div>
-                    <span className="text-yellow-400 font-bold">₹200</span>
+                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
                   </div>
                   <div className="text-yellow-300 text-xs mt-2">
                     ✅ Integration Bee, Human vs AI, Retro Theming, Prompt Engineering, Reverse Engineering, Jack of Hearts, Singing, Dancing
@@ -357,7 +355,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.isPremium && (
                   <div className="flex justify-between items-center text-sm bg-yellow-500/10 p-2 rounded">
                     <span className="text-yellow-400">Premium Package</span>
-                    <span className="text-yellow-400 font-bold">₹200</span>
+                    <span className="text-yellow-400 font-bold">₹{premiumPrice}</span>
                   </div>
                 )}
 
