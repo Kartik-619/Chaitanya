@@ -46,8 +46,9 @@ const TEAM_SIZE_RULES = {
   "E-sports": { min: 4, max: 5 }, // Fixed 4 members
   "Polymath": { min: 2, max: 4 },
   "Debate": { min: 2, max: 2 }, // Fixed 2 members
-  "Two Minute Manager": { min: 2, max: 2 }, // Fixed 2 members,
-  "Capture the Flag": { min: 2, max: 4 }
+  "Two Minute Manager": { min: 2, max: 2 }, // Fixed 2 members
+  "Capture The Flag": { min: 2, max: 4 },
+  "Pitch High": { min: 1, max: 3 }
 };
 
 // E-sports games available
@@ -65,8 +66,7 @@ const EVENT_CONFIG = {
     "Jack of Hearts",
     "Singing",
     "Dancing",
-    "Project Bazaar",
-    "Pitch High"
+    "Project Bazaar"
   ],
   
   // Team events
@@ -84,8 +84,9 @@ const EVENT_CONFIG = {
   ],
   
   // Premium settings
-  PREMIUM_FEE: 200,
-  ACCOMMODATION_FEE: 600
+  PREMIUM_FEE: 49,
+  ACCOMMODATION_FEE: 300,
+  FOOD_FEE: 300
 };
 
 // Export all settings
