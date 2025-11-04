@@ -165,7 +165,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
   const foodPrice = 300;
   const accommodationPrice = 300;
   
-  const premiumPrice = 49; // Premium price constant
+  const premiumPrice = 0; // Premium price constant
   
   const calculateTeamTotal = () => {
     // All events are free (₹0 per person)
@@ -573,7 +573,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                 className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0 transform scale-110 sm:scale-125 group-hover:scale-125 sm:group-hover:scale-150 transition-transform"
               />
               <div className="sm:text-center">
-                <div className="text-yellow-400 font-bold text-lg sm:text-xl">₹49</div>
+                <div className="text-yellow-400 font-bold text-lg sm:text-xl">FREE</div>
                 <div className="text-yellow-300 text-xs">One-time for team</div>
               </div>
             </div>
@@ -729,7 +729,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                     <div className="text-yellow-300 font-semibold">Premium Access Pass</div>
                     <div className="text-yellow-400 text-xs">One-time for entire team</div>
                   </div>
-                  <span className="text-yellow-400 font-bold text-lg">+ ₹49</span>
+                  <span className="text-yellow-400 font-bold text-lg">FREE</span>
                 </div>
               )}
 
