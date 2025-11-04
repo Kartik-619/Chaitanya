@@ -84,7 +84,7 @@ const EVENT_CONFIG = {
   ],
   
   // Premium settings
-  PREMIUM_FEE: 49,
+  PREMIUM_FEE: 0,
   ACCOMMODATION_FEE: 300,
   FOOD_FEE: 300
 };
