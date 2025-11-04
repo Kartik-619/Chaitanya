@@ -348,9 +348,9 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                       : 'border-transparent hover:border-blue-500/50'
                   }`}
                 >
-                  <div className="text-center">
+                  <div className="min-w-0 flex-1 text-center">
                     <div className="font-semibold text-white text-sm sm:text-base">{game}</div>
-                    <div className="text-xs text-gray-300">₹149 per person</div>
+                    <div className="text-xs sm:text-sm text-green-400">Free Team Registration</div>
                   </div>
                 </div>
               ))}
@@ -511,7 +511,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               {isTeamPricing() && (
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
                   <div className="text-yellow-300 text-sm text-center font-semibold">
-                    🎉 Special Team Pricing! Flat ₹199 for entire team ({teamData.teamSize} members)
+                    🎉 Special Team Pricing! Flat ₹0 for entire team ({teamData.teamSize} members)
                   </div>
                 </div>
               )}
@@ -522,7 +522,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                   <div className="flex justify-between items-center py-3 bg-yellow-500/5 rounded-lg px-4 border border-yellow-500/20">
                     <div className="font-semibold text-yellow-300">Team Event Fee</div>
                     <div className="text-right">
-                      <div className="font-bold text-yellow-300 text-lg">₹199</div>
+                      <div className="font-bold text-yellow-300 text-lg">₹0</div>
                       <div className="text-xs text-yellow-200">Flat fee for {teamData.teamSize} members</div>
                     </div>
                   </div>
@@ -719,10 +719,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-gray-300">Team Members Sub-total:</span>
                 <span className="text-white font-medium">
-                  ₹{isTeamPricing() 
-                    ? 199 + ((needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)) * teamData.teamSize
-                    : (0 + (needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)) * teamData.teamSize
-                  }
+                  ₹{((needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)) * teamData.teamSize}
                 </span>
               </div>
 
@@ -732,7 +729,7 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
                     <div className="text-yellow-300 font-semibold">Premium Access Pass</div>
                     <div className="text-yellow-400 text-xs">One-time for entire team</div>
                   </div>
-                  <span className="text-yellow-400 font-bold text-lg">+ ₹200</span>
+                  <span className="text-yellow-400 font-bold text-lg">+ ₹49</span>
                 </div>
               )}
 
