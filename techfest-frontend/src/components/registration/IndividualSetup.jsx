@@ -19,16 +19,19 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
   ];
   
   const eventPrices = {
-    "Integration Bee": 99,
-    "Human vs AI": 99,
-    "Retro Theming": 99,
-    "Prompt Engineering": 99,
-    "Reverse Engineering": 99,
-    "Jack of Hearts": 99,
-    "Singing": 99,
-    "Dancing": 99,
+    "Integration Bee": 0,
+    "Human vs AI": 0,
+    "Retro Theming": 0,
+    "Prompt Engineering": 0,
+    "Reverse Engineering": 0,
+    "Jack of Hearts": 0,
+    "Singing": 0,
+    "Dancing": 0,
     "Project Bazaar": 0       
   };
+  
+  const foodPrice = 300;
+  const accommodationPrice = 300;
 
   const toggleEvent = (eventName) => {
     setSelectedEvents(prev => {
@@ -46,14 +49,14 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
       total += eventPrices[eventName] || 0;
     });
     
-    // OPTIONAL food fee - ₹400
+    // OPTIONAL food fee - ₹300
     if (needsFood) {
-      total += 400;
+      total += foodPrice;
     }
     
-    // OPTIONAL accommodation fee - ₹200
+    // OPTIONAL accommodation fee - ₹300
     if (needsAccommodation) {
-      total += 200;
+      total += accommodationPrice;
     }
     
     return total;
@@ -148,7 +151,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-white text-sm sm:text-base truncate">{event}</div>
-                      <div className="text-xs sm:text-sm text-gray-300">₹{eventPrices[event]}</div>
+                      <div className="text-xs sm:text-sm text-gray-300">+ ₹{accommodationPrice} for accommodation</div>
                     </div>
                   </div>
                 </div>
@@ -171,13 +174,13 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                 <span className="text-green-400 text-sm sm:text-lg">🍛</span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-white text-base sm:text-lg truncate">Food Package - ₹400</div>
+                <div className="font-semibold text-white text-base sm:text-lg truncate">Food Package - ₹{foodPrice}</div>
                 <div className="text-xs sm:text-sm text-gray-300 line-clamp-2">
                   3-day food package (Optional - select if needed)
                 </div>
               </div>
             </div>
-            <div className="text-green-400 font-bold text-base sm:text-lg flex-shrink-0">₹400</div>
+            <div className="text-green-400 font-bold text-base sm:text-lg flex-shrink-0">₹{foodPrice}</div>
           </label>
         </div>
 
@@ -195,7 +198,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                 <span className="text-blue-400 text-sm sm:text-lg">🏨</span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-white text-base sm:text-lg truncate">Accommodation - ₹200</div>
+                <div className="font-semibold text-white text-base sm:text-lg truncate">Accommodation - ₹{accommodationPrice}</div>
                 <div className="text-xs sm:text-sm text-gray-300 line-clamp-2">
                   3-day accommodation (Optional - select if needed)
                 </div>
