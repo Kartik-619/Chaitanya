@@ -44,16 +44,16 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
 
   // Event pricing
   const eventPricing = {
-    "Hackathon": 99,
-    "Accurate Prediction": 199,
-    "Polymath": 149,
-    "E-sports": 149,
-    "Singing": 99,
-    "Dance": 99,
-    "Debate": 99,
-    "Capture The Flag":0,
-    "Two Minute Manager": 99,
-    "Pitch High":99
+    "Hackathon": 0,
+    "Accurate Prediction": 0,
+    "Polymath": 0,
+    "E-sports": 0,
+    "Singing": 0,
+    "Dance": 0,
+    "Debate": 0,
+    "Capture The Flag": 0,
+    "Two Minute Manager": 0,
+    "Pitch High": 0
   };
 
   const getEventFee = () => {
@@ -162,106 +162,84 @@ const TeamSetup = ({ data, updateData, nextStep, prevStep }) => {
     return true;
   };
 
+  const foodPrice = 300;
+  const accommodationPrice = 300;
+  
+  const premiumPrice = 49; // Premium price constant
+  
   const calculateTeamTotal = () => {
-  let total = 0;
-  
-  if ((teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2) {
-    total = 199; // Flat team fee
-  } else {
-    // Regular per-person pricing for all other cases
-    switch (teamData.mainEvent) {
-      case 'Hackathon':
-        total = 99 * teamData.teamSize;
-        break;
-      case 'Accurate Prediction':
-        total = 199 * teamData.teamSize;
-        break;
-      case 'Polymath':
-        total = 149 * teamData.teamSize;
-        break;
-      case 'E-sports':
-        total = 149 * teamData.teamSize;
-        break;
-      case 'Singing':
-      case 'Dance':
-      case 'Debate':
-      case 'Two Minute Manager':
-        total = 99 * teamData.teamSize;
-        break;
-      default:
-        total = 0;
+    // All events are free (₹0 per person)
+    let total = 0;
+    
+    // OPTIONAL food for all team members (always per-person)
+    if (needsFood) {
+      total += foodPrice * teamData.teamSize;
     }
-  }
 
-  // OPTIONAL food for all team members (always per-person)
-  if (needsFood) {
-    total += 400 * teamData.teamSize;
-  }
+    // OPTIONAL accommodation for all team members (always per-person)
+    if (needsAccommodation) {
+      total += accommodationPrice * teamData.teamSize;
+    }
 
-  // OPTIONAL accommodation for all team members (always per-person)
-  if (needsAccommodation) {
-    total += 200 * teamData.teamSize;
-  }
+    // Add premium if selected (one-time team fee)
+    if (teamData.isPremium) {
+      total += premiumPrice;
+    }
+    
+    return total;
+  };
 
-  // Add premium if selected (one-time team fee)
-  if (teamData.isPremium) {
-    total += 200;
-  }
+  const isTeamPricing = () => {
+    return (teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2;
+  };
   
-  return total;
-};
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-const isTeamPricing = () => {
-  return (teamData.mainEvent === 'Singing' || teamData.mainEvent === 'Dance') && teamData.teamSize > 2;
-};
+    const totalAmount = calculateTeamTotal();
   
-const handleSubmit = async () => {
-  if (!validateForm()) return;
-
-  const totalAmount = calculateTeamTotal();
-  
-  try {
-    const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sessionId: data.sessionId,
-        teamName: teamData.teamName,
-        mainEvent: teamData.mainEvent,
-        teamMembers: teamData.teamMembers,
-        teamSize: teamData.teamSize,
-        esportsGame: esportsGame,
-        needsAccommodation: needsAccommodation,
-        needsFood: needsFood, // NEW: Pass the food choice
-        isPremium: teamData.isPremium,
-        projectBazaar: projectBazaar,
-        totalAmount: totalAmount
-      }),
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      updateData({
-        teamData: {
-          ...result.teamData,
-          totalAmount: totalAmount,
-          isPremium: teamData.isPremium,
+    try {
+      const response = await fetch('https://chaitanya-4r5f.onrender.com/api/register/setup-team', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: data.sessionId,
+          teamName: teamData.teamName,
+          mainEvent: teamData.mainEvent,
+          teamMembers: teamData.teamMembers,
+          teamSize: teamData.teamSize,
+          esportsGame: esportsGame,
           needsAccommodation: needsAccommodation,
-          needsFood: needsFood, // NEW: Store food choice
-          projectBazaar: projectBazaar
-        }
+          needsFood: needsFood, // NEW: Pass the food choice
+          isPremium: teamData.isPremium,
+          projectBazaar: projectBazaar,
+          totalAmount: totalAmount
+        }),
       });
-      nextStep();
-    } else {
-      toast.error(result.message || 'Failed to setup team');
+
+      const result = await response.json();
+
+      if (result.success) {
+        updateData({
+          teamData: {
+            ...result.teamData,
+            totalAmount: totalAmount,
+            isPremium: teamData.isPremium,
+            needsAccommodation: needsAccommodation,
+            needsFood: needsFood, // NEW: Store food choice
+            projectBazaar: projectBazaar
+          }
+        });
+        nextStep();
+      } else {
+        toast.error(result.message || 'Failed to setup team');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
     }
-  } catch (error) {
-    toast.error('Network error. Please try again.');
-  }
-};
+  };
 
   const getTeamSizeOptions = () => {
     const currentRules = teamSizeRules[teamData.mainEvent];
@@ -282,7 +260,7 @@ const handleSubmit = async () => {
   };
 
   return (
-    <div className="glass-card p-4 sm:p-6 md:p-8 animate-fade-in">
+    <div className="glass-card p-4 sm:p-6 animate-fade-in">
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-2">
           Team Setup
@@ -560,15 +538,15 @@ const handleSubmit = async () => {
                       <div className="text-xs text-gray-300">
                         {!isTeamPricing() && `Main Event (₹${getIndividualEventFee()})`}
                         {isTeamPricing() && 'Main Event (Included in team fee)'}
-                        {needsFood && ' + Food (₹400)'}
-                        {needsAccommodation && ' + Accommodation (₹200)'}
+                        {needsFood && ' + Food (₹300)'}
+                        {needsAccommodation && ' + Accommodation (₹300)'}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-white">
                         ₹{isTeamPricing() 
-                          ? (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)
-                          : getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)
+                          ? (needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)
+                          : getIndividualEventFee() + (needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)
                         }
                       </div>
                     </div>
@@ -595,7 +573,7 @@ const handleSubmit = async () => {
                 className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0 transform scale-110 sm:scale-125 group-hover:scale-125 sm:group-hover:scale-150 transition-transform"
               />
               <div className="sm:text-center">
-                <div className="text-yellow-400 font-bold text-lg sm:text-xl">₹200</div>
+                <div className="text-yellow-400 font-bold text-lg sm:text-xl">₹49</div>
                 <div className="text-yellow-300 text-xs">One-time for team</div>
               </div>
             </div>
@@ -666,15 +644,15 @@ const handleSubmit = async () => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg">
-                  Food Package - ₹{400 * teamData.teamSize}
+                  Food Package - ₹{300 * teamData.teamSize}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-300">
-                  {teamData.teamSize} members × ₹400 (Optional - select if needed)
+                  {teamData.teamSize} members × ₹300 (Optional - select if needed)
                 </div>
               </div>
             </div>
             <div className="text-green-400 font-bold text-base sm:text-lg">
-              ₹{400 * teamData.teamSize}
+              ₹{300 * teamData.teamSize}
             </div>
           </label>
         </div>
@@ -694,15 +672,15 @@ const handleSubmit = async () => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-white text-base sm:text-lg">
-                  Accommodation - ₹{200 * teamData.teamSize}
+                  Accommodation - ₹{300 * teamData.teamSize}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-300">
-                  {teamData.teamSize} members × ₹200 (Optional - select if needed)
+                  {teamData.teamSize} members × ₹300 (Optional - select if needed)
                 </div>
               </div>
             </div>
             <div className="text-blue-400 font-bold text-base sm:text-lg">
-              ₹{200 * teamData.teamSize}
+              ₹{300 * teamData.teamSize}
             </div>
           </label>
         </div>
@@ -720,18 +698,18 @@ const handleSubmit = async () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs sm:text-sm">
                 <div className="text-center">
                   <div className="text-gray-300">Event Fee</div>
-                  <div className="text-white font-semibold">₹{getIndividualEventFee()} × {teamData.teamSize}</div>
+                  <div className="text-white font-semibold">₹0 × {teamData.teamSize}</div>
                 </div>
                 {needsFood && (
                   <div className="text-center">
                     <div className="text-gray-300">Food</div>
-                    <div className="text-white font-semibold">₹400 × {teamData.teamSize}</div>
+                    <div className="text-white font-semibold">₹300 × {teamData.teamSize}</div>
                   </div>
                 )}
                 {needsAccommodation && (
                   <div className="text-center">
                     <div className="text-gray-300">Accommodation</div>
-                    <div className="text-white font-semibold">₹200 × {teamData.teamSize}</div>
+                    <div className="text-white font-semibold">₹300 × {teamData.teamSize}</div>
                   </div>
                 )}
               </div>
@@ -742,8 +720,8 @@ const handleSubmit = async () => {
                 <span className="text-gray-300">Team Members Sub-total:</span>
                 <span className="text-white font-medium">
                   ₹{isTeamPricing() 
-                    ? 199 + ((needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize
-                    : (getIndividualEventFee() + (needsFood ? 400 : 0) + (needsAccommodation ? 200 : 0)) * teamData.teamSize
+                    ? 199 + ((needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)) * teamData.teamSize
+                    : (0 + (needsFood ? 300 : 0) + (needsAccommodation ? 300 : 0)) * teamData.teamSize
                   }
                 </span>
               </div>
