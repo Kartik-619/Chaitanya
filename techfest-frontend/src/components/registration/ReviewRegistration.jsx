@@ -79,21 +79,14 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
     }
   };
 
-  // Calculate team breakdown - FIXED VERSION
+  // Calculate team breakdown
   const getTeamBreakdown = () => {
     if (!isIndividual && registrationData) {
-      const basePrice = teamEventPrices[registrationData.mainEvent] || 0;
       const teamSize = registrationData.teamSize || 1;
-      const mainEvent = registrationData.mainEvent;
-      
-      // Apply team pricing for Singing/Dance with more than 2 members
-      const isTeamPricing = (mainEvent === 'Singing' || mainEvent === 'Dance') && teamSize > 2;
-      
-      // All events are free
       return {
         base: 0,
         additional: 0,
-        description: `Free event for ${teamSize} members`
+        description: `Free team registration for ${teamSize} members`
       };
     }
     return null;
@@ -288,7 +281,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.isPremium && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300">Premium Package</span>
-                    <span className="text-white font-medium">₹200</span>
+                    <span className="text-white font-medium">₹49</span>
                   </div>
                 )}
                 
@@ -304,7 +297,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.needsFood && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400">Food Package</span>
-                    <span className="text-white">₹400</span>
+                    <span className="text-white">₹300</span>
                   </div>
                 )}
 
@@ -312,7 +305,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.needsAccommodation && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400">Accommodation</span>
-                    <span className="text-white">₹200</span>
+                    <span className="text-white">₹300</span>
                   </div>
                 )}
               </>
@@ -327,10 +320,10 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 </div>
                 
                 {/* Team Pricing Notice */}
-                {teamBreakdown.base === 199 && (
+                {teamBreakdown.base === 0 && (
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 mb-2">
                     <div className="text-yellow-400 text-xs text-center">
-                      🎉 Special Team Pricing - Flat ₹199 for {registrationData.teamSize} members
+                      🎉 Special Team Pricing - Flat ₹0 for {registrationData.teamSize} members
                     </div>
                   </div>
                 )}
@@ -339,7 +332,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.needsFood && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 ml-4">Food Package ({registrationData.teamSize} members)</span>
-                    <span className="text-white">₹{400 * (registrationData.teamSize || 1)}</span>
+                    <span className="text-white">₹{300 * (registrationData.teamSize || 1)}</span>
                   </div>
                 )}
                 
@@ -347,7 +340,7 @@ const ReviewRegistration = ({ data, updateData, nextStep, prevStep }) => {
                 {registrationData?.needsAccommodation && (
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 ml-4">Accommodation ({registrationData.teamSize} members)</span>
-                    <span className="text-white">₹{200 * (registrationData.teamSize || 1)}</span>
+                    <span className="text-white">₹{300 * (registrationData.teamSize || 1)}</span>
                   </div>
                 )}
                 
