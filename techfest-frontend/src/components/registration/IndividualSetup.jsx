@@ -151,7 +151,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-white text-sm sm:text-base truncate">{event}</div>
-                      <div className="text-xs sm:text-sm text-gray-300">+ ₹{accommodationPrice} for accommodation</div>
+                      <div className="text-xs sm:text-sm text-green-400">Free Registration</div>
                     </div>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                 </div>
               </div>
             </div>
-            <div className="text-blue-400 font-bold text-base sm:text-lg flex-shrink-0">₹200</div>
+            <div className="text-blue-400 font-bold text-base sm:text-lg flex-shrink-0">₹300</div>
           </label>
         </div>
 
@@ -228,7 +228,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                   <span className="text-gray-300 text-sm">Food Package</span>
                   <div className="text-xs text-gray-400">Optional</div>
                 </div>
-                <span className="text-white font-medium">₹400</span>
+                <span className="text-white font-medium">₹300</span>
               </div>
             )}
 
@@ -239,7 +239,7 @@ const IndividualSetup = ({ data, updateData, nextStep, prevStep }) => {
                   <span className="text-gray-300 text-sm">Accommodation</span>
                   <div className="text-xs text-gray-400">Optional</div>
                 </div>
-                <span className="text-white font-medium">₹200</span>
+                <span className="text-white font-medium">₹300</span>
               </div>
             )}
             
