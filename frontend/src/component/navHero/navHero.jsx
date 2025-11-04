@@ -84,7 +84,7 @@ export default function NavHero() {
                 {/* Mobile Register Button */}
                 <div className="mobile-register-section">
                     <a
-                        href="https://chaitanya-subdomain.vercel.app/"
+                        href="https://chaitanya-subdomain.vercel.pp/"
                         className="mobile-register-btn"
                         onClick={closeMobileMenu}
                     >
